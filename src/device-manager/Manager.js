@@ -29,7 +29,7 @@ class Manager extends AbstManager {
     let deviceController = null;
     switch (config.connect_type) {
     case 'serial':
-      deviceController = _.has(config, 'parser') ? new SerialWithParser(config) : new Serial(config);
+      deviceController = _.has(config, 'parser') && !_.isEmpty(config.parser) ? new SerialWithParser(config) : new Serial(config);
       break;
     case 'socket':
       deviceController = new Socket(config);

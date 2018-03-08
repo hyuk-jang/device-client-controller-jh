@@ -1,4 +1,5 @@
 
+
 /**
  * @typedef {Object} commandFormat 명령 자료 구조
  * @property {number} rank 우선순위 (0: 현재 진행되고 있는 명령 무시하고 즉시 해당 명령 수행, 1: 1순위 명령, 2: 2순위 명령 ...)
@@ -21,11 +22,11 @@
  * @property {string} host 접속 경로(socket 일 경우 사용)
  * @property {number} baud_rate serial 일 경우 
  * @property {{type: string, option: *}=} parser serial 일 경우 pipe 처리할 parser option
- * @property {string} target_category inverter, connector
- * @property {string} target_protocol s_hex, dm_v2, ...
- * @property {} protocol 프로토콜 변환기 ID
  */
 
+// * @property {string} target_category inverter, connector
+// * @property {string} target_protocol s_hex, dm_v2, ...
+// * @property {} protocol 프로토콜 변환기 ID
 /**
  * @typedef {Object} commandStorage 장치를 제어할 명령 저장소
  * @property {commandFormat} process 현재 진행중인 명령

@@ -3,7 +3,7 @@ const Promise = require('bluebird');
 // const eventToPromise = require('event-to-promise');
 
 const BU = require('base-util-jh').baseUtil;
-
+const AbstCommander = require('../device-commander/AbstCommander');
 
 global._ = _;
 global.BU = BU;
@@ -56,7 +56,7 @@ class TestClass {
  
     setTimeout(() => {
       if(rain < 100){
-        processItem.commander.requestNextCommand();
+        processItem. requestNextCommand();
       } else {
         processItem.commander.requestRetryCommand();
       }

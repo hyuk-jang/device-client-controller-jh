@@ -140,6 +140,7 @@ class Commander extends AbstCommander {
     processItem.observer.updateDcData(processItem, data);
   }
 
+  /** Manager에게 다음 명령을 수행하도록 요청 */
   requestNextCommand(){
     BU.CLI(`requestNextCommand ${this.id}`);
     if(_.isEmpty(this.manager)){
@@ -152,6 +153,7 @@ class Commander extends AbstCommander {
     manager.responseToDataFromCommander(this, 'isOk');
   }
 
+  /** Manager에게 현재 실행중인 명령을 재 전송하도록 요청 */
   requestRetryCommand(){
     BU.CLI('requestRetryCommand', this.id);
     // BU.CLIN(this.manager);

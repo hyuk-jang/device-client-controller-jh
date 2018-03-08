@@ -73,30 +73,30 @@ class Builder extends AbstBuilder {
   }
 
 
-  /**
-   * Create 'Commander'
-   * @param {deviceClientFormat} config 
-   * @return {AbstCommander}
-   */
-  addCommander(config){
-    // try {
-    //   let deviceCommander = this.setDeviceCommnader(config);
-    //   let deviceManager = this.setDeviceManager(config);
+  // /**
+  //  * Create 'Commander'
+  //  * @param {deviceClientFormat} config 
+  //  * @return {AbstCommander}
+  //  */
+  // addCommander(config){
+  //   // try {
+  //   //   let deviceCommander = this.setDeviceCommnader(config);
+  //   //   let deviceManager = this.setDeviceManager(config);
   
-    //   this.mediator.setColleague(deviceCommander, deviceManager);
-    // } catch (error) {
-    //   throw error;
-    // }
-  }
+  //   //   this.mediator.setColleague(deviceCommander, deviceManager);
+  //   // } catch (error) {
+  //   //   throw error;
+  //   // }
+  // }
 
-  /**
-   * Create 'Manager'
-   * @param {deviceClientFormat} config 
-   * @return {AbstManager}
-   */
-  addManager(){
+  // /**
+  //  * Create 'Manager'
+  //  * @param {deviceClientFormat} config 
+  //  * @return {AbstManager}
+  //  */
+  // addManager(){
 
-  }
+  // }
 
   
 
