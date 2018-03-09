@@ -1,12 +1,19 @@
+'use strict';
+
 const BU = require('base-util-jh').baseUtil;
 
-require('../src/format/define');
+const uuidv4 = require('uuid/v4');
 const AbstCommander = require('../device-commander/AbstCommander');
+const AbstManager = require('../device-manager/AbstManager');
+
+require('../format/define');
 
 class AbstDeviceClient {
   constructor() {
     /** @type {AbstCommander} */
     this.commander = {};
+    /** @type {AbstManager} */
+    this.manager = {};
   }
 
   /**
@@ -15,6 +22,7 @@ class AbstDeviceClient {
   getDefaultCreateDeviceConfig(){
     /** @type {deviceClientFormat} */
     const generationConfigInfo = {
+      observer: null,
       target_id: '',
       connect_type: '',
       port: null,
@@ -37,8 +45,8 @@ class AbstDeviceClient {
       name: '',
       uuid: uuidv4(),
       hasOneAndOne: false,
-      observer: {},
-      commander: {},
+      observer: null,
+      commander: null,
       cmdList: [],
       currCmdIndex: 0,
       timeoutMs: 1000,

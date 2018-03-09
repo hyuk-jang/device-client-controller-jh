@@ -1,6 +1,7 @@
 'use strict';
 
 const _ = require('underscore');
+const BU = require('base-util-jh').baseUtil;
 
 const AbstMediator = require('./AbstMediator');
 const AbstCommander = require('../device-commander/AbstCommander');
@@ -78,6 +79,7 @@ class Mediator extends AbstMediator {
   requestAddCommand(cmdInfo){
     try {
       const deviceManager = this.getDeviceManager(cmdInfo.commander);
+      // BU.CLIN(deviceManager);
       return deviceManager.addCommand(cmdInfo);
     } catch (error) {
       throw error;
@@ -90,7 +92,8 @@ class Mediator extends AbstMediator {
    * @return {AbstManager}
    */
   getDeviceManager(deviceCommander){
-    const foundIt = _.findWhere(this.relationList, {commander: deviceCommander});
+    // BU.CLIN(deviceCommander)
+    let foundIt = _.findWhere(this.relationList, {commander: deviceCommander});
     if(_.isEmpty(foundIt)){
       throw new Error(`해당 Commander(${deviceCommander.id})는 장치를 가지고 있지 않습니다.`);
     }

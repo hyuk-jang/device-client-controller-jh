@@ -6,7 +6,6 @@
  * @property {string} name 별칭
  * @property {string} uuid uuid
  * @property {boolean} hasOneAndOne 계속하여 연결을 수립할지 여부
- * @property {Object} observer Commander에게 명령을 지시한 객체
  * @property {AbstCommander} commander 명령을 요청한 Commander
  * @property {Array} cmdList 명령을 보낼 배열
  * @property {number} currCmdIndex cmdList Index
@@ -16,6 +15,7 @@
 
 /**
  * @typedef {Object} deviceClientFormat Device Client 생성 자료 구조
+ * @property {Object=} observer Device Client 주체. (최종적으로 데이터를 수신할 대상)
  * @property {string} target_id device ID
  * @property {string} connect_type 'socket', 'serial', ...
  * @property {number|string} port socket --> number, serial --> string, ...

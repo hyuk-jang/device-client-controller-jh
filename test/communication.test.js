@@ -3,7 +3,7 @@ const Promise = require('bluebird');
 // const eventToPromise = require('event-to-promise');
 
 const BU = require('base-util-jh').baseUtil;
-const AbstCommander = require('../device-commander/AbstCommander');
+const AbstCommander = require('../src/device-commander/AbstCommander');
 
 global._ = _;
 global.BU = BU;

@@ -55,7 +55,7 @@ class AbstController {
   }
 
   notifyEvent(eventName, eventMsg){
-    // BU.CLI('notifyEvent', eventName, eventMsg, this.configInfo);
+    BU.CLI('notifyEvent', eventName, eventMsg, this.configInfo);
     this.observers.forEach(currentItem => {
       currentItem.updateDcEvent(eventName, eventMsg);
     });

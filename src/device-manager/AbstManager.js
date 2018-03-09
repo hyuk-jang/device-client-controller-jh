@@ -31,6 +31,16 @@ class AbstManager extends EventEmitter {
     return true;
   }
 
+  /**
+   * Device가 접속되어 있는지 체크
+   * @return {boolean} 
+   */
+  get hasConnected() {
+    return _.isEmpty(this.deviceController.client) ? false : true;
+  }
+
+
+
   // TODO
   /** 장치와 연결을 해제하고자 할 경우 */
   disconnect(){}
@@ -64,6 +74,7 @@ class AbstManager extends EventEmitter {
    */
   updateDcData(data){
     // BU.log('AbstManager --> updateDcData', data);
+    // BU.CLIN(this.getProcessItem());
     if(_.isEmpty(this.getReceiver())){
       // BU.log('Completed Data', data);
     } else {

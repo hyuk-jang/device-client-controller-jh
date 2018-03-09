@@ -2,6 +2,7 @@
 
 const AbstMediator = require('../device-mediator/AbstMediator');
 const AbstManager = require('../device-manager/AbstManager');
+const AbstDeviceClient = require('../client/AbstDeviceClient');
 
 require('../format/define');
 
@@ -11,6 +12,8 @@ class AbstCommander {
     this.id = null;
     /** @type {AbstMediator} */
     this.mediator = null;
+    /** @type {AbstDeviceClient} */
+    this.observer = null;
   }
 
   /* Mediator에서 Set 함 */

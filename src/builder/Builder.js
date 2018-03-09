@@ -7,6 +7,7 @@ const Commander = require('../device-commander/Commander');
 const Mediator = require('../device-mediator/Mediator');
 
 
+const AbstManager = require('../device-manager/AbstManager');
 const Manager = require('../device-manager/Manager');
 
 
@@ -25,7 +26,7 @@ class Builder extends AbstBuilder {
   /**
    * Create 'Commander', 'Manager'
    * @param {deviceClientFormat} config 
-   * @return {AbstCommander}
+   * @return {{deviceCommander: AbstCommander, deviceManager: AbstManager}}
    */
   addDeviceClient(config){
     try {
@@ -34,7 +35,7 @@ class Builder extends AbstBuilder {
   
       this.mediator.setColleague(deviceCommander, deviceManager);
   
-      return deviceCommander;
+      return {deviceCommander, deviceManager};
     } catch (error) {
       throw error;
     }
@@ -46,7 +47,7 @@ class Builder extends AbstBuilder {
    * Create 'Multi Commander', 'Manager'
    * @param {deviceClientFormat} config 
    * @param {string} idList 
-   * @return {Array.<AbstCommander>}
+   * @return {{commanderList: Array.<AbstCommander>, deviceManager: AbstManager}}
    */
   addDeviceClientGroup(config, idList){
     try {
@@ -60,8 +61,10 @@ class Builder extends AbstBuilder {
   
         commanderList.push(deviceCommander);
       });
+
+      
   
-      return commanderList;
+      return {commanderList, deviceManager};
     } catch (error) {
       throw error;
     }
@@ -71,6 +74,34 @@ class Builder extends AbstBuilder {
   getMediator(){
     return this.mediator;
   }
+
+    
+  /**
+   * @param {deviceClientFormat} config 
+   * @return {AbstCommander}
+   */
+  setDeviceCommnader(config) {
+    let deviceCommander = new Commander(config);
+
+    return deviceCommander;
+  }
+
+  setDeviceMediator() {
+    let deviceMediator = new Mediator();
+
+    return deviceMediator; 
+  }
+
+  /**
+   * @param {deviceClientFormat} config 
+   * @return {AbstManager}
+   */
+  setDeviceManager(config) {
+    let deviceManager = new Manager(config);
+
+    return deviceManager;
+  }
+
 
 
   // /**
@@ -101,32 +132,6 @@ class Builder extends AbstBuilder {
   
 
 
-  
-  /**
-   * @param {deviceClientFormat} config 
-   * @return {AbstCommander}
-   */
-  setDeviceCommnader(config) {
-    let deviceCommander = new Commander(config);
-
-    return deviceCommander;
-  }
-
-  setDeviceMediator() {
-    let deviceMediator = new Mediator();
-
-    return deviceMediator; 
-  }
-
-  /**
-   * @param {deviceClientFormat} config 
-   * @return {AbstManager}
-   */
-  setDeviceManager(config) {
-    let deviceManager = new Manager(config);
-
-    return deviceManager;
-  }
 
 }
 

@@ -83,7 +83,7 @@ class Manager extends AbstManager {
       throw new Error(`현재 진행중인 명령이 존재하지 않습니다. ${this.id}`);
     } else {
       let currCmd = processItem.cmdList[processItem.currCmdIndex];
-      // BU.CLI('명령 발송 테스트 시작', currCmd);
+      BU.CLI('명령 발송 테스트 시작', currCmd);
       // 장치와의 연결을 계속 수립하겠다면
       if(processItem.hasOneAndOne){
         BU.CLI('OneAndOne 진행');
@@ -202,7 +202,7 @@ class Manager extends AbstManager {
   addCommand(cmdInfo) {
     // DeviceController 의 client가 빈 객체라면 연결이 해제된걸로 판단
     if(_.isEmpty(this.deviceController.client)){
-      return false;
+      throw new Error('Client is Disconnected.');
     } 
     // BU.log('addCommand');
     // BU.CLIN(cmdInfo);
@@ -233,12 +233,15 @@ class Manager extends AbstManager {
     BU.CLI('nextCommand');
     // BU.CLIN(this.commandStorage, 2);
     if(this.iterator.isDone()){
+      BU.CLI('updateDcComplete');
       this.getReceiver().updateDcComplete(this.getProcessItem());
     }
     
     this.retryChance = 3;
 
+    BU.CLIN(this.commandStorage, 4);
     let hasNext = this.iterator.nextCmd();
+    BU.CLI(hasNext);
 
     // BU.CLI(this.iterator.getCurrentCmd());
     

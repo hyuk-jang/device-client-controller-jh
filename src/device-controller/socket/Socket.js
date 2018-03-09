@@ -55,7 +55,7 @@ class Socket extends AbstController {
 
   /** 장치 접속 시도 */
   async connect() {
-    BU.CLI('connect', this.port);
+    BU.log('Try Connect', this.port);
     /** 접속 중인 상태라면 접속 시도하지 않음 */
     if(!_.isEmpty(this.client)){
       throw new Error(`이미 접속중입니다. ${this.port}`);

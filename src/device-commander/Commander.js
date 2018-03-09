@@ -8,6 +8,7 @@ const BU = require('base-util-jh').baseUtil;
 const AbstCommander = require('./AbstCommander');
 const AbstMediator = require('../device-mediator/AbstMediator');
 const AbstManager = require('../device-manager/AbstManager');
+const AbstDeviceClient = require('../client/AbstDeviceClient');
 
 require('../format/define');
 
@@ -17,10 +18,13 @@ class Commander extends AbstCommander {
   /** @param {deviceClientFormat} config */
   constructor(config) {
     super();
-
     let foundInstance = _.findWhere(instanceList, {id: config.target_id});
     if(_.isEmpty(foundInstance)){
       this.id = config.target_id;
+      /** Commander를 명령하는 Client 객체 */
+      /** @type {AbstDeviceClient} */
+      BU.CLIN(config.observer);
+      this.observer = config.observer === null ? null : config.observer;
       instanceList.push({id: config.target_id, instance: this});
     } else {
       throw new Error(`같은 ID를 가진 장치가 있습니다.${config.target_id}`);
@@ -29,7 +33,7 @@ class Commander extends AbstCommander {
 
     /** @type {AbstManager} */
     this.manager;
-
+    
     // this.once = true;
   }
 
@@ -43,47 +47,58 @@ class Commander extends AbstCommander {
     this.mediator = deviceMediator;
   }
 
+  // getConnectedDeviceStatus(){
+  //   if(_.isEmpty(this.deviceController.client)){
+
+  //   }
+
+  // }
+
 
   /* Client가 요청 */
   /**
    * 장치로 명령을 내림
-   * @param {Buffer|string|commandFormat|null} cmd 
-   * @param {*=} observer 명령 처리 후 결과를 전달받을 객체
+   * 아무런 명령을 내리지 않을 경우 해당 장치와의 연결고리를 끊지 않는다고 판단
+   * 명시적으로 hasOneAndOne을 True로 줄 경우 주어진 첫번째 명령을 발송
+   * @param {Buffer|string|commandFormat|null} cmdInfo 
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */
-  executeCommand(cmd, observer){
+  executeCommand(cmdInfo){
     /** @type {commandFormat} */
     let commandInfo = {};
     // commandFormat 형식을 따르지 않을 경우 자동으로 구성
-    if(Buffer.isBuffer(cmd) || typeof cmd  === 'string' ){
-      commandInfo.rank = 2;
-      commandInfo.name = this.id;
-      commandInfo.uuid = uuidv4();
-      commandInfo.hasOneAndOne = false;
-      commandInfo.observer = observer || null;
-      commandInfo.commander = this;
-      commandInfo.cmdList = [cmd];
-      commandInfo.currCmdIndex = 0;
-      
-      commandInfo.timeoutMs = 4000;
-      // if(this.id === 'id_0'){
-      //   commandInfo.timeoutMs = 4000;
-      // } else {
-        
-      //   commandInfo.timeoutMs = 5000;
-      // }
+    commandInfo.rank = 2;
+    commandInfo.name = this.id;
+    commandInfo.uuid = uuidv4();
+    commandInfo.hasOneAndOne = false;
+    commandInfo.commander = this;
+    commandInfo.cmdList = [];
+    commandInfo.currCmdIndex = 0;
+    commandInfo.hasOneAndOne = false;
+    
+    commandInfo.timeoutMs = 1000;
 
+    if(Buffer.isBuffer(cmdInfo) || typeof cmdInfo  === 'string' ){
+      BU.CLI('왓더');
       // 아무런 명령을 내리지 않는다면 해당 장치와의 통신을 끊지 않는다고 봄
-      if(cmd.length === 0){
+      if(cmdInfo.length === 0){
+        BU.CLI('왓더');
+        commandInfo.cmdList = [''];
         commandInfo.hasOneAndOne = true;
+      } else {
+        commandInfo.cmdList = [cmdInfo];
       }
     } else {
-      commandInfo = cmd;
+      _.each(commandInfo, (info, key) => {
+        commandInfo[key] = _.has(cmdInfo, key) ? cmdInfo[key] : commandInfo[key];
+      });
       // 이상한 옵션을 걸 경우 정상적인 데이터로 초기화
+      commandInfo.commander = this;
       commandInfo.currCmdIndex = commandInfo.currCmdIndex < 0 ? 0 : commandInfo.currCmdIndex;
-      commandInfo.observer = observer || commandInfo.observer;
       commandInfo.timeoutMs = commandInfo.timeoutMs <= 0 ? 1000 : commandInfo.timeoutMs;
     }
+
+    BU.CLIN(commandInfo);
 
     return this.mediator.requestAddCommand(commandInfo, this);
   }
@@ -111,6 +126,10 @@ class Commander extends AbstCommander {
   updateDcEvent(eventName, eventMsg) {
     // BU.log(`updateDcEvent ${this.id}\t`, eventName);
     this.manager = {};
+
+    if(this.observer){
+      this.observer.updateDcEvent(eventName, eventMsg);
+    }
   }
 
 
@@ -123,6 +142,9 @@ class Commander extends AbstCommander {
   updateDcError(processItem, err){
     // BU.log(`updateDcError ${this.id}\t`, processItem, err);
     this.manager = {};
+    if(this.observer){
+      this.observer.updateDcError(processItem, err);
+    }
   }
 
   // TODO Converter 붙이거나 세분화 작업, 예외 처리 필요
@@ -134,10 +156,12 @@ class Commander extends AbstCommander {
    */
   updateDcData(processItem, data, manager){
     // console.time('gogogo');
-    // BU.log(data.toString());
+    BU.log(data.toString());
     this.manager = manager;
     
-    processItem.observer.updateDcData(processItem, data);
+    if(this.observer){
+      this.observer.updateDcData(processItem, data);
+    }
   }
 
   /** Manager에게 다음 명령을 수행하도록 요청 */
@@ -176,7 +200,9 @@ class Commander extends AbstCommander {
    */
   updateDcComplete(processItem) {
     // BU.CLI('모든 명령이 수행 되었다고 수신 받음.', this.id);
-    return processItem.observer.updateDcComplete(processItem);
+    if(this.observer){
+      return this.observer.updateDcComplete(processItem);
+    }
   }
 }
 

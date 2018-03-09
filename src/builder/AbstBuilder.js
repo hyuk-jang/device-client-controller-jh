@@ -15,6 +15,7 @@ class AbstBuilder {
    * Create 'Commander', 'Manager'
    * @param {deviceClientFormat} config 
    * @return {AbstCommander}
+   * @return {{deviceCommander: AbstCommander, deviceManager: AbstManager}}
    */
   addDeviceClient(config){
 
@@ -25,7 +26,7 @@ class AbstBuilder {
    * Create 'Multi Commander', 'Manager'
    * @param {deviceClientFormat} config 
    * @param {string} idList 
-   * @return {Array.<AbstCommander>}
+   * @return {{commanderList: Array.<AbstCommander>, deviceManager: AbstManager}}
    */
   addDeviceClientGroup(config, idList){
   

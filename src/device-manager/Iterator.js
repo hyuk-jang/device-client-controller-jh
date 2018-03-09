@@ -41,7 +41,7 @@ class Iterator {
     // 현재 진행중인 명령이 비어있다면 다음 순위 명령을 가져옴
     if(_.isEmpty(processInfo)){
       // 다음 명령이 존재하지 않는다면 false
-      if(this.nextRank()){
+      if(this.nextRank() && this.getCurrentCmd() !== undefined){
         // BU.CLI('next rank 존재');
         return true;
       } else {
@@ -51,7 +51,7 @@ class Iterator {
       processInfo.currCmdIndex += 1;
 
       // 현재 진행중인 명령을 모두 실행하였다면 다음 순위 명령 검색 및 수행
-      if(processInfo.currCmdIndex === processInfo.cmdList.length){
+      if(processInfo.cmdList[processInfo.currCmdIndex] === undefined){
         this.aggregate.process = {};
         return this.nextCmd();
       } else {
@@ -96,8 +96,11 @@ class Iterator {
     const processInfo = this.aggregate.process;
 
     const nextIndex = processInfo.currCmdIndex + 1;
-
-    return _.isEmpty(processInfo) || nextIndex < processInfo.cmdList.length ? false : true;
+    if(_.isEmpty(processInfo)){
+      return false;
+    } else {
+      return processInfo.cmdList[nextIndex] === undefined;
+    }
   }
 
 
