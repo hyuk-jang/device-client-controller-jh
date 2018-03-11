@@ -101,7 +101,7 @@ class TestClass {
 if(false){
   config.forEach(currentItem => {
     BU.CLI(currentItem);
-    let commander = builder.addDeviceClient(currentItem);
+    let commander = builder.setDeviceClient(currentItem);
     let storageInfo;
 
     Promise.delay(500)

@@ -14,23 +14,22 @@ class AbstBuilder {
   /**
    * Create 'Commander', 'Manager'
    * @param {deviceClientFormat} config 
-   * @return {AbstCommander}
    * @return {{deviceCommander: AbstCommander, deviceManager: AbstManager}}
    */
-  addDeviceClient(config){
+  setDeviceClient(config){
 
   }
 
 
-  /**
-   * Create 'Multi Commander', 'Manager'
-   * @param {deviceClientFormat} config 
-   * @param {string} idList 
-   * @return {{commanderList: Array.<AbstCommander>, deviceManager: AbstManager}}
-   */
-  addDeviceClientGroup(config, idList){
+  // /**
+  //  * Create 'Multi Commander', 'Manager'
+  //  * @param {deviceClientFormat} config 
+  //  * @param {string} idList 
+  //  * @return {{commanderList: Array.<AbstCommander>, deviceManager: AbstManager}}
+  //  */
+  // addDeviceClientGroup(config, idList){
   
-  }
+  // }
 
   /** @return {AbstMediator} */
   getMediator(){

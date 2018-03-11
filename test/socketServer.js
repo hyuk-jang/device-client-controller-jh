@@ -13,11 +13,14 @@ const net = require('net');
 // grab an arbitrary unused port.
 for(let i = 0; i < 3; i += 1){
   const server = net.createServer((socket) => {
-    console.log('client is Connected');
     // socket.end('goodbye\n');
     let port = Number(`900${i}`);
+    console.log(`client is Connected ${port}`);
 
+    // socket.write('18?');
+    
     socket.on('data', data => {
+      console.log(`P: ${port} --> Received Data: ${data} `);
       return socket.write('this.is.my.socket\r\ngogogogo' + port);
     });
 

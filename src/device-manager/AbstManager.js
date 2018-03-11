@@ -46,7 +46,7 @@ class AbstManager extends EventEmitter {
   disconnect(){}
 
   /** 장치에 메시지를 보내고자 할 경우 */
-  async write(){}
+  async writeCmdToDevice(){}
 
   setMediator() {}
 
@@ -73,11 +73,12 @@ class AbstManager extends EventEmitter {
    * @param {Buffer} data 
    */
   updateDcData(data){
-    // BU.log('AbstManager --> updateDcData', data);
+    // BU.CLI('AbstManager --> updateDcData', data);
     // BU.CLIN(this.getProcessItem());
     if(_.isEmpty(this.getReceiver())){
       // BU.log('Completed Data', data);
     } else {
+      // const copyProcessItem = JSON.parse(JSON.stringify(this.getProcessItem()));
       this.getReceiver().updateDcData(this.getProcessItem(), data, this); 
     }
   }

@@ -84,8 +84,16 @@ class Iterator {
    * 현재 진행중인 명령 초기화
    * @return {undefined}
    */
-  clear (){
+  clearItem (){
     this.aggregate.process = {};
+  }
+
+  /** 모든 명령을 초기화 */
+  clearAllItem() {
+    this.clearItem();
+    _.each(this.aggregate.rankList, item => {
+      item.list = [];
+    });
   }
 
   /**
@@ -116,7 +124,7 @@ class Iterator {
 
   /** @return {*=} */
   getCurrentCmd() {
-    BU.CLIN(this.aggregate.process);
+    // BU.CLIN(this.aggregate.process);
     return this.aggregate.process.cmdList[this.aggregate.process.currCmdIndex];
   }
 

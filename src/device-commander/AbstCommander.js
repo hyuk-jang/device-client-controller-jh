@@ -13,7 +13,7 @@ class AbstCommander {
     /** @type {AbstMediator} */
     this.mediator = null;
     /** @type {AbstDeviceClient} */
-    this.observer = null;
+    this.user = null;
   }
 
   /* Mediator에서 Set 함 */
@@ -24,6 +24,18 @@ class AbstCommander {
    * @return {undefined}
    */
   setMediator(deviceMediator) {}
+
+  /** 장치의 연결이 되어있는지 여부 @return {boolean} */
+  getHasConnectedDevice(){}
+
+  /** 현재 발생되고 있는 시스템 에러 리스트 @return {Array.<{code: string, msg: string, occur_date: Date }>} */
+  getSystemErrorList(){}
+
+  /**
+   * Commander와 연결된 장비에서 진행중인 저장소의 모든 명령을 가지고 옴 
+   * @return {commandStorage}
+   */
+  getCommandStorage() {}
 
 
   /* Client가 요청 */
@@ -64,8 +76,7 @@ class AbstCommander {
    * @param {Buffer} data 명령 수행 결과 데이터
    * @param {AbstManager} manager 장치 관리 매니저
    */
-  updateDcData(processItem, data, manager){
-  }
+  updateDcData(processItem, data, manager){}
 
 
   /** Manager에게 다음 명령을 수행하도록 요청 */

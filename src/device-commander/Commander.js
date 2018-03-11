@@ -21,10 +21,10 @@ class Commander extends AbstCommander {
     let foundInstance = _.findWhere(instanceList, {id: config.target_id});
     if(_.isEmpty(foundInstance)){
       this.id = config.target_id;
+      this.category = config.target_category ? config.target_category : 'etc';
       /** Commander를 명령하는 Client 객체 */
       /** @type {AbstDeviceClient} */
-      BU.CLIN(config.observer);
-      this.observer = config.observer === null ? null : config.observer;
+      this.user = config.user === null ? null : config.user;
       instanceList.push({id: config.target_id, instance: this});
     } else {
       throw new Error(`같은 ID를 가진 장치가 있습니다.${config.target_id}`);
@@ -33,8 +33,10 @@ class Commander extends AbstCommander {
 
     /** @type {AbstManager} */
     this.manager;
-    
-    // this.once = true;
+
+    this.systemErrorList = [];
+
+    this.currCmd = null;
   }
 
   /* Mediator에서 Set 함 */
@@ -47,19 +49,22 @@ class Commander extends AbstCommander {
     this.mediator = deviceMediator;
   }
 
-  // getConnectedDeviceStatus(){
-  //   if(_.isEmpty(this.deviceController.client)){
+  /** 장치의 연결이 되어있는지 여부 @return {boolean} */
+  getHasConnectedDevice(){
+    return _.isEmpty(this.mediator.getDeviceManager().deviceController.client) ? false : true;
+  }
 
-  //   }
-
-  // }
+  /** 현재 발생되고 있는 시스템 에러 리스트 @return {Array.<{code: string, msg: string, occur_date: Date }>} */
+  getSystemErrorList(){
+    return this.systemErrorList;
+  }
 
 
   /* Client가 요청 */
   /**
    * 장치로 명령을 내림
    * 아무런 명령을 내리지 않을 경우 해당 장치와의 연결고리를 끊지 않는다고 판단
-   * 명시적으로 hasOneAndOne을 True로 줄 경우 주어진 첫번째 명령을 발송
+   * 명시적으로 hasOneAndOne을 True로 줄 해당 명령 리스트를 모두 수행하고 다음 CommandFormat으로 이동하지 않음
    * @param {Buffer|string|commandFormat|null} cmdInfo 
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */
@@ -79,11 +84,10 @@ class Commander extends AbstCommander {
     commandInfo.timeoutMs = 1000;
 
     if(Buffer.isBuffer(cmdInfo) || typeof cmdInfo  === 'string' ){
-      BU.CLI('왓더');
       // 아무런 명령을 내리지 않는다면 해당 장치와의 통신을 끊지 않는다고 봄
       if(cmdInfo.length === 0){
-        BU.CLI('왓더');
-        commandInfo.cmdList = [''];
+        // BU.CLI('왓더');
+        // commandInfo.cmdList = [''];
         commandInfo.hasOneAndOne = true;
       } else {
         commandInfo.cmdList = [cmdInfo];
@@ -98,7 +102,7 @@ class Commander extends AbstCommander {
       commandInfo.timeoutMs = commandInfo.timeoutMs <= 0 ? 1000 : commandInfo.timeoutMs;
     }
 
-    BU.CLIN(commandInfo);
+    // BU.CLIN(commandInfo);
 
     return this.mediator.requestAddCommand(commandInfo, this);
   }
@@ -106,11 +110,13 @@ class Commander extends AbstCommander {
 
   /**
    * Commander와 연결된 장비에서 진행중인 저장소의 모든 명령을 가지고 옴 
+   * @return {commandStorage}
    */
-  getCommandStatus() {
+  getCommandStorage() {
     try {
       const commandStorage = this.mediator.getCommandStorage(this);
-      BU.CLIN(commandStorage, 3);
+      return commandStorage;
+      // BU.CLIN(commandStorage, 3);
     } catch (error) {
       throw error;
     }
@@ -127,8 +133,20 @@ class Commander extends AbstCommander {
     // BU.log(`updateDcEvent ${this.id}\t`, eventName);
     this.manager = {};
 
-    if(this.observer){
-      this.observer.updateDcEvent(eventName, eventMsg);
+    switch (eventName) {
+    case 'dcConnect':
+      this.onSystemError('Disconnected', false);
+      break;
+    case 'dcClose':
+      this.onSystemError('Disconnected', true);
+      break;
+    default:
+      this.loggingData(eventName, eventMsg);
+      break;
+    }
+
+    if(this.user){
+      this.user.updateDcEvent(eventName, eventMsg);
     }
   }
 
@@ -136,14 +154,22 @@ class Commander extends AbstCommander {
   /** 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트 */
   /**
    * 장치에서 에러가 발생하였을 경우
-   * @param {commandFormat} processItem 현재 장비에서 실행되고 있는 명령 객체
-   * @param {Error} err 
+   * @param {Error} error 현재 장비에서 실행되고 있는 명령 객체
+   * @param {*} errMessage 
    */
-  updateDcError(processItem, err){
-    // BU.log(`updateDcError ${this.id}\t`, processItem, err);
+  updateDcError(error, errMessage){
+    // BU.log(`updateDcError ${error}\t`, errStack);
     this.manager = {};
-    if(this.observer){
-      this.observer.updateDcError(processItem, err);
+
+    // BU.CLIS(error, errMessage);
+    if(error.message === 'Timeout'){
+      this.onSystemError('Timeout', true, errMessage);
+    } else {
+      this.loggingData(error, errMessage);
+    }
+
+    if(this.user){
+      this.user.updateDcError(error, errMessage);
     }
   }
 
@@ -156,11 +182,17 @@ class Commander extends AbstCommander {
    */
   updateDcData(processItem, data, manager){
     // console.time('gogogo');
-    BU.log(data.toString());
+    // BU.CLI(data.toString());
+
+    this.onSystemError('Timeout', false);
     this.manager = manager;
+
+    // 데이터를 받은 시점에서 DeviceManager가 전송한 명령을 저장. 차후 Manager로 requestNext나 requestTry를 진행할 경우 Manager에서 이 currCmd를 체크함
+    let currCmd = processItem.cmdList[processItem.currCmdIndex];
+    this.currCmd = typeof currCmd === 'object' ? JSON.parse(JSON.stringify(currCmd)) : currCmd;
     
-    if(this.observer){
-      this.observer.updateDcData(processItem, data);
+    if(this.user){
+      this.user.updateDcData(processItem, data);
     }
   }
 
@@ -171,10 +203,14 @@ class Commander extends AbstCommander {
       throw new Error(`Manager의 현재 수행명령이 현재 Commander ${this.id}와 관련이 없습니다.`);
     }
 
-    const manager = this.manager;
-    this.manager = {};
-
-    manager.responseToDataFromCommander(this, 'isOk');
+    try {
+      const manager = this.manager;
+      this.manager = {};
+  
+      manager.responseToDataFromCommander(this, 'isOk');
+    } catch (error) {
+      throw error;
+    }
   }
 
   /** Manager에게 현재 실행중인 명령을 재 전송하도록 요청 */
@@ -185,14 +221,15 @@ class Commander extends AbstCommander {
       throw new Error(`Manager의 현재 수행명령이 현재 Commander ${this.id}와 관련이 없습니다.`);
     }
 
-    const manager = this.manager;
-    this.manager = {};
-
-    manager.responseToDataFromCommander(this, 'retry');
+    try {
+      const manager = this.manager;
+      this.manager = {};
+  
+      manager.responseToDataFromCommander(this, 'retry');
+    } catch (error) {
+      throw error;
+    }
   }
-
-
-
   
   /**
    * 명령 객체 리스트 수행 종료
@@ -200,10 +237,72 @@ class Commander extends AbstCommander {
    */
   updateDcComplete(processItem) {
     // BU.CLI('모든 명령이 수행 되었다고 수신 받음.', this.id);
-    if(this.observer){
-      return this.observer.updateDcComplete(processItem);
+    if(this.user){
+      return this.user.updateDcComplete(processItem);
     }
   }
+
+  /**
+   * 실제 장치에서 보내온 Error 처리. Trouble Case Model List로 공통 처리
+   * @param {string} errName Trouble Code
+   * @param {Object|string} errMessage Error 상세 내용
+   * @return {Object}
+   */
+  loggingData(errName, errMessage) {
+    BU.appendFile(`${process.cwd()}/log/${this.category}/event/${BU.convertDateToText(new Date(), '', 2)}.txt`, `ID: ${this.id}\t Code: ${errName}\tMessage: ${errMessage}`);
+    return true;
+  }
+
+  /**
+   * 실제 장치에서 보내온 Error 처리. Trouble Case Model List로 공통 처리
+   * @param {string} troubleCode Trouble Code
+   * @param {Boolean} hasOccur 발생 or 해결
+   * @param {Object|string} msg Error 상세 내용
+   * @return {Object}
+   */
+  onSystemError(troubleCode, hasOccur, msg) {
+    // BU.CLIS(this.systemErrorList, troubleCode, hasOccur, msg);
+    if (troubleCode === undefined) {
+      this.systemErrorList = [];
+      return this.systemErrorList;
+    }
+    const troubleObj = _.findWhere(troubleList, {
+      code: troubleCode
+    });
+    if (_.isEmpty(troubleObj)) {
+      throw ReferenceError('해당 Trouble Msg는 없습니다' + troubleCode);
+    }
+
+    const findObj = _.findWhere(this.systemErrorList, {
+      code: troubleCode
+    });
+    // 에러가 발생하였고 systemErrorList에 없다면 삽입
+    if (hasOccur && _.isEmpty(findObj)) {
+      troubleObj.occur_date = new Date();
+      this.systemErrorList.push(troubleObj);
+
+      this.loggingData(`이상 발생 code:${troubleCode}`, msg);
+    } else if (!hasOccur && !_.isEmpty(findObj)) {  // 에러 해제하였고 해당 에러가 존재한다면 삭제
+      this.systemErrorList = _.reject(this.systemErrorList, systemError => {
+        if(systemError.code === troubleCode){
+          this.loggingData(`이상 해제 code:${troubleCode}`, msg);
+          return true;
+        }
+      });
+    }
+    return this.systemErrorList;
+  }
+
+
 }
 
 module.exports = Commander;
+
+// 시스템 에러는 2개로 정해둠.
+let troubleList = [{
+  code: 'Disconnected',
+  msg: '장치 연결 해제'
+}, {
+  code: 'Timeout',
+  msg: '통신 이상'
+}, ];

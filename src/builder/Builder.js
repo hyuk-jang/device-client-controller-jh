@@ -28,7 +28,7 @@ class Builder extends AbstBuilder {
    * @param {deviceClientFormat} config 
    * @return {{deviceCommander: AbstCommander, deviceManager: AbstManager}}
    */
-  addDeviceClient(config){
+  setDeviceClient(config){
     try {
       let deviceCommander = this.setDeviceCommnader(config);
       let deviceManager = this.setDeviceManager(config);
@@ -43,32 +43,32 @@ class Builder extends AbstBuilder {
 
 
   
-  /**
-   * Create 'Multi Commander', 'Manager'
-   * @param {deviceClientFormat} config 
-   * @param {string} idList 
-   * @return {{commanderList: Array.<AbstCommander>, deviceManager: AbstManager}}
-   */
-  addDeviceClientGroup(config, idList){
-    try {
-      const commanderList = [];
-      let deviceManager = this.setDeviceManager(config);
+  // /**
+  //  * Create 'Multi Commander', 'Manager'
+  //  * @param {deviceClientFormat} config 
+  //  * @param {string} idList 
+  //  * @return {{commanderList: Array.<AbstCommander>, deviceManager: AbstManager}}
+  //  */
+  // addDeviceClientGroup(config, idList){
+  //   try {
+  //     const commanderList = [];
+  //     let deviceManager = this.setDeviceManager(config);
   
-      idList.forEach(id => {
-        config.target_id = id;
-        let deviceCommander = this.setDeviceCommnader(config);
-        this.mediator.setColleague(deviceCommander, deviceManager);
+  //     idList.forEach(id => {
+  //       config.target_id = id;
+  //       let deviceCommander = this.setDeviceCommnader(config);
+  //       this.mediator.setColleague(deviceCommander, deviceManager);
   
-        commanderList.push(deviceCommander);
-      });
+  //       commanderList.push(deviceCommander);
+  //     });
 
       
   
-      return {commanderList, deviceManager};
-    } catch (error) {
-      throw error;
-    }
-  }
+  //     return {commanderList, deviceManager};
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // }
 
   /** @return {AbstMediator} */
   getMediator(){
