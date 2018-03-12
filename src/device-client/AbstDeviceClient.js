@@ -1,5 +1,7 @@
 'use strict';
 
+const EventEmitter = require('events');
+
 const BU = require('base-util-jh').baseUtil;
 
 const uuidv4 = require('uuid/v4');
@@ -10,8 +12,9 @@ const AbstManager = require('../device-manager/AbstManager');
 
 require('../format/define');
 
-class AbstDeviceClient {
+class AbstDeviceClient extends EventEmitter {
   constructor() {
+    super();
     /** @private @type {AbstCommander}  */
     this.commander = {};
     /** @type {AbstManager} @private */
@@ -140,7 +143,7 @@ class AbstDeviceClient {
    * @param {*=} eventMsg 
    */
   updateDcEvent(eventName, eventMsg) {
-    BU.log('updateDcEvent\t', eventName);
+    BU.log('updateDcEvent\t', eventName, eventMsg);
   }
 
   /**
