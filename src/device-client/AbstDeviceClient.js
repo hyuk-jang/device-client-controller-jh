@@ -4,7 +4,7 @@ const BU = require('base-util-jh').baseUtil;
 
 const uuidv4 = require('uuid/v4');
 
-const Builder = require('../builder/Builder');
+const Builder = require('../device-builder/Builder');
 const AbstCommander = require('../device-commander/AbstCommander');
 const AbstManager = require('../device-manager/AbstManager');
 

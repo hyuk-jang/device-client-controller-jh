@@ -9,7 +9,7 @@ global._ = _;
 global.BU = BU;
 
 // console.log(uuidv4());
-const Builder = require('../src/builder/Builder');
+const Builder = require('../src/device-builder/Builder');
 
 require('../src/format/define');
 

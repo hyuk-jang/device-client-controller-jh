@@ -9,7 +9,7 @@ const controller = new Controller();
 let defaultConfig = controller.getDefaultCreateDeviceConfig();
 BU.CLI(defaultConfig);
 
-let connectType = 'socket';
+let connectType = 'serial';
 if(connectType === 'serial'){
   defaultConfig.connect_type = 'serial';
   defaultConfig.target_id = 'davis_vantagepro2';
@@ -29,7 +29,7 @@ controller.setDeviceClient(defaultConfig);
 
 
 let defaultCommandFormat = controller.getDefaultCommandConfig();
-defaultCommandFormat.cmdList = ['sss'];
+// defaultCommandFormat.cmdList = ['sss'];
 // defaultCommandFormat.hasOneAndOne = true;
 // BU.CLIN(controller.manager.hasConnected());
 

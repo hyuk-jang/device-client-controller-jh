@@ -1,5 +1,5 @@
 
-const AbstDeviceClient = require('../src/client/AbstDeviceClient');
+const AbstDeviceClient = require('../src/device-client/AbstDeviceClient');
 
 class Control extends AbstDeviceClient {
   constructor() {

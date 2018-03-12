@@ -8,7 +8,7 @@ const BU = require('base-util-jh').baseUtil;
 const AbstCommander = require('./AbstCommander');
 const AbstMediator = require('../device-mediator/AbstMediator');
 const AbstManager = require('../device-manager/AbstManager');
-const AbstDeviceClient = require('../client/AbstDeviceClient');
+const AbstDeviceClient = require('../device-client/AbstDeviceClient');
 
 require('../format/define');
 
