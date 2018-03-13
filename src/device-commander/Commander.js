@@ -198,16 +198,8 @@ class Commander extends AbstCommander {
   /** Manager에게 다음 명령을 수행하도록 요청 */
   requestNextCommand(){
     BU.CLI(`requestNextCommand ${this.id}`);
-    // BU.CLIN(this.manager);
-    // if(_.isEmpty(this.manager)){
-    //   throw new Error('Manager의 현재 수행명령이 현재 Commander 와 관련이 없습니다.', this.id);
-    // }
-
     try {
-      // const manager = this.manager;
-      // this.manager = {};
-  
-      this.manager.responseToDataFromCommander(this, 'isOk');
+      this.manager.responseToDataFromCommander(this, 'next');
     } catch (error) {
       throw error;
     }
@@ -216,16 +208,21 @@ class Commander extends AbstCommander {
   /** Manager에게 현재 실행중인 명령을 재 전송하도록 요청 */
   requestRetryCommand(){
     BU.CLI('requestRetryCommand', this.id);
-    // BU.CLIN(this.manager);
-    // if(_.isEmpty(this.manager)){
-    //   throw new Error('Manager의 현재 수행명령이 현재 Commander 와 관련이 없습니다.', this.id);
-    // }
-
     try {
-      // const manager = this.manager;
-      // this.manager = {};
-  
       this.manager.responseToDataFromCommander(this, 'retry');
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Manager에게 Msg를 보내어 명령 진행 의사 결정을 취함
+   * @param {string} key 요청 key
+   */
+  requestTakeAction(key){
+    BU.CLI('requestRetryCommand', this.id);
+    try {
+      this.manager.responseToDataFromCommander(this, key);
     } catch (error) {
       throw error;
     }

@@ -118,6 +118,18 @@ class AbstDeviceClient extends EventEmitter {
     this.commander.requestRetryCommand();
   }
 
+  /**
+  * Manager에게 Msg를 보내어 명령 진행 의사 결정을 취함
+  * @param {string} key 요청 key
+  */
+  requestTakeAction(key){
+    try {
+      this.commander.requestTakeAction(key);
+    } catch (error) {
+      console.error(error);     
+    }
+  }
+
 
   /**
    * 장치로부터 데이터 수신

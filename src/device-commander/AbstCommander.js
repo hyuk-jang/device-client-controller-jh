@@ -79,5 +79,11 @@ class AbstCommander {
 
   /** Manager에게 현재 실행중인 명령을 재 전송하도록 요청 */
   requestRetryCommand(){}
+
+  /**
+  * Manager에게 Msg를 보내어 명령 진행 의사 결정을 취함
+  * @param {string} key 요청 key
+  */
+  requestTakeAction(key){}
 }
 module.exports = AbstCommander;
