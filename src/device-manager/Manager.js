@@ -58,6 +58,8 @@ class Manager extends AbstManager {
      */
     this.commandStorage = {process: {}, rankList: []};
     this.createIterator();
+
+    this.timeoutTimer = null;
   }
 
   /** Iterator 정의 */
@@ -87,14 +89,22 @@ class Manager extends AbstManager {
     // let testId = this.getReceiver().id;
     // BU.CLI('명령 요청', this.getReceiver().id, timeoutMs);
     // console.time(`timeout ${testId}`);
-    this.getProcessItem().timer = setTimeout(() => {
+    this.clearTimeoutTimer();
+    this.timeoutTimer = setTimeout(() => {
       // console.timeEnd(`timeout ${testId}`);
+      // BU.CLIN(this.getProcessItem())
       this.getReceiver().updateDcError(this.getProcessItem(),new Error('Timeout'), cmd);
       this.nextCommand(false);
       // 명전 전송 후 제한시간안에 응답이 안올 경우 에러 
     }, timeoutMs);
 
     return true;
+  }
+
+  clearTimeoutTimer(){
+    if(this.timeoutTimer){
+      clearTimeout(this.timeoutTimer);
+    }
   }
 
   /** 
@@ -146,11 +156,11 @@ class Manager extends AbstManager {
       try {
         switch (msg) {
         case 'isOk':
-          clearTimeout(this.getProcessItem().timer);
+          this.clearTimeoutTimer();
           this.nextCommand(true);          
           break;
         case 'retry':
-          clearTimeout(this.getProcessItem().timer);
+          this.clearTimeoutTimer();
           this.retryWrite(commander);
           break;
         default:
@@ -254,7 +264,7 @@ class Manager extends AbstManager {
     if(hasNext){
       return this.requestWrite();
     } else {
-      BU.CLI('모든 명령을 수행하였습니다.');
+      // BU.CLI('모든 명령을 수행하였습니다.');
     }
   }
 
