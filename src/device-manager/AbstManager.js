@@ -67,7 +67,7 @@ class AbstManager extends EventEmitter {
     // this.emit(eventName, eventMsg);
 
     if(_.isEmpty(this.deviceController.client)){
-      this.clearTimeout(this.getProcessItem().timer);
+      clearTimeout(this.getProcessItem().timer);
       this.iterator.clearAllItem();
     } 
 
