@@ -83,13 +83,15 @@ class AbstDeviceClient extends EventEmitter {
   }
 
   /** 장치의 연결이 되어있는지 여부 @return {boolean} */
-  getHasConnectedDevice(){
-    return this.commander.getHasConnectedDevice;
+  get hasConnectedDevice(){
+    return this.commander.hasConnectedDevice;
   }
 
-  /** 현재 발생되고 있는 시스템 에러 리스트 @return {Array.<{code: string, msg: string, occur_date: Date }>} */
-  getSystemErrorList(){
-    return this.commander.getSystemErrorList;
+  /** 현재 발생되고 있는 시스템 에러 리스트 
+   * @return {Array.<{code: string, msg: string, occur_date: Date }>}
+   */
+  get systemErrorList(){
+    return this.commander.systemErrorList;
   }
 
 

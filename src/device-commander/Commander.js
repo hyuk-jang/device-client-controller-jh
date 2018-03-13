@@ -35,6 +35,10 @@ class Commander extends AbstCommander {
     /** @type {AbstManager} */
     this.manager;
 
+    /** 
+     * 현재 발생되고 있는 시스템 에러 리스트
+     * @type {Array.<{code: string, msg: string, occur_date: Date }>} 
+     * */
     this.systemErrorList = [];
 
     this.currCmd = null;
@@ -51,15 +55,9 @@ class Commander extends AbstCommander {
   }
 
   /** 장치의 연결이 되어있는지 여부 @return {boolean} */
-  getHasConnectedDevice(){
+  get hasConnectedDevice(){
     return _.isEmpty(this.mediator.getDeviceManager().deviceController.client) ? false : true;
   }
-
-  /** 현재 발생되고 있는 시스템 에러 리스트 @return {Array.<{code: string, msg: string, occur_date: Date }>} */
-  getSystemErrorList(){
-    return this.systemErrorList;
-  }
-
 
   /* Client가 요청 */
   /**

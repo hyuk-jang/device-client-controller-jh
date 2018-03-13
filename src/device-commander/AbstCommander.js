@@ -26,10 +26,7 @@ class AbstCommander {
   setMediator(deviceMediator) {}
 
   /** 장치의 연결이 되어있는지 여부 @return {boolean} */
-  getHasConnectedDevice(){}
-
-  /** 현재 발생되고 있는 시스템 에러 리스트 @return {Array.<{code: string, msg: string, occur_date: Date }>} */
-  getSystemErrorList(){}
+  get hasConnectedDevice(){}
 
   /**
    * Commander와 연결된 장비에서 진행중인 저장소의 모든 명령을 가지고 옴 
