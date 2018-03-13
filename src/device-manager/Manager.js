@@ -119,7 +119,7 @@ class Manager extends AbstManager {
     try {
       if(_.isEmpty(this.deviceController.client)){
         BU.log('DeviceController Client Is Empty');
-        this.iterator.clearAllItem();
+        // this.iterator.clearAllItem();
         return false;
       } 
       return this.writeCmdToDevice(cmd, processItem.timeoutMs);
@@ -202,7 +202,7 @@ class Manager extends AbstManager {
     // BU.CLIN(cmdInfo);
     // DeviceController 의 client가 빈 객체라면 연결이 해제된걸로 판단
     if(_.isEmpty(this.deviceController.client)){
-      this.iterator.clearAllItem();
+      // this.iterator.clearAllItem();
       throw new Error('Client is Disconnected.');
     } 
     // BU.log('addCommand');

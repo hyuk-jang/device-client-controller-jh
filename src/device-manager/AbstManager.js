@@ -65,6 +65,12 @@ class AbstManager extends EventEmitter {
   updateDcEvent(eventName, eventMsg){
     // BU.log(`AbstManager --> ${eventName}`);
     // this.emit(eventName, eventMsg);
+
+    if(_.isEmpty(this.deviceController.client)){
+      this.clearTimeout(this.getProcessItem().timer);
+      this.iterator.clearAllItem();
+    } 
+
     this.mediator.updateDcEvent(this, eventName, eventMsg);
   }
 
