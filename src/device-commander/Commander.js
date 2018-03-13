@@ -85,6 +85,8 @@ class Commander extends AbstCommander {
     if(Buffer.isBuffer(cmdInfo) || typeof cmdInfo  === 'string' ){
       // 아무런 명령을 내리지 않는다면 해당 장치와의 통신을 끊지 않는다고 봄
       commandInfo.cmdList = [cmdInfo];
+    } else if (Array.isArray(cmdInfo)) {
+      commandInfo.cmdList = cmdInfo;
     } else {
       _.each(commandInfo, (info, key) => {
         commandInfo[key] = _.has(cmdInfo, key) ? cmdInfo[key] : commandInfo[key];
