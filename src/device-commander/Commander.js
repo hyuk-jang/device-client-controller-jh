@@ -22,6 +22,7 @@ class Commander extends AbstCommander {
     if(_.isEmpty(foundInstance)){
       this.id = config.target_id;
       this.category = config.target_category ? config.target_category : 'etc';
+      this.hasOneAndOne = config.hasOneAndOne ? true : false;
       /** Commander를 명령하는 Client 객체 */
       /** @type {AbstDeviceClient} */
       this.user = config.user === null ? null : config.user;
@@ -75,23 +76,15 @@ class Commander extends AbstCommander {
     commandInfo.rank = 2;
     commandInfo.name = this.id;
     commandInfo.uuid = uuidv4();
-    commandInfo.hasOneAndOne = false;
     commandInfo.commander = this;
     commandInfo.cmdList = [];
     commandInfo.currCmdIndex = 0;
-    commandInfo.hasOneAndOne = false;
     
     commandInfo.timeoutMs = 1000;
 
     if(Buffer.isBuffer(cmdInfo) || typeof cmdInfo  === 'string' ){
       // 아무런 명령을 내리지 않는다면 해당 장치와의 통신을 끊지 않는다고 봄
-      if(cmdInfo.length === 0){
-        // BU.CLI('왓더');
-        // commandInfo.cmdList = [''];
-        commandInfo.hasOneAndOne = true;
-      } else {
-        commandInfo.cmdList = [cmdInfo];
-      }
+      commandInfo.cmdList = [cmdInfo];
     } else {
       _.each(commandInfo, (info, key) => {
         commandInfo[key] = _.has(cmdInfo, key) ? cmdInfo[key] : commandInfo[key];
@@ -131,7 +124,7 @@ class Commander extends AbstCommander {
    */
   updateDcEvent(eventName, eventMsg) {
     // BU.log(`updateDcEvent ${this.id}\t`, eventName);
-    this.manager = {};
+    // this.manager = {};
 
     switch (eventName) {
     case 'dcConnect':
@@ -151,25 +144,30 @@ class Commander extends AbstCommander {
   }
 
 
-  /** 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트 */
   /**
-   * 장치에서 에러가 발생하였을 경우
+   * 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트
+   * @param {commandFormat} processItem 현재 장비에서 실행되고 있는 명령 객체
    * @param {Error} error 현재 장비에서 실행되고 있는 명령 객체
    * @param {*} errMessage 
    */
-  updateDcError(error, errMessage){
+  updateDcError(processItem, error, errMessage){
     // BU.log(`updateDcError ${error}\t`, errStack);
-    this.manager = {};
-
+    // BU.CLI('에러 수신');
+    // 1:1로 장비를 계속 물고 갈 경우 에러 무시
+    // if(this.hasOneAndOne !== true){
+    //   BU.CLI('에러 수신해서 처리');
+    //   this.manager = {};
+  
     // BU.CLIS(error, errMessage);
     if(error.message === 'Timeout'){
       this.onSystemError('Timeout', true, errMessage);
     } else {
       this.loggingData(error, errMessage);
     }
+    // }
 
     if(this.user){
-      this.user.updateDcError(error, errMessage);
+      this.user.updateDcError(processItem, error, errMessage);
     }
   }
 
@@ -184,8 +182,9 @@ class Commander extends AbstCommander {
     // console.time('gogogo');
     // BU.CLI(data.toString());
 
+    // BU.CLIN(this.manager, 2);
     this.onSystemError('Timeout', false);
-    this.manager = manager;
+    // this.manager = manager;
 
     // 데이터를 받은 시점에서 DeviceManager가 전송한 명령을 저장. 차후 Manager로 requestNext나 requestTry를 진행할 경우 Manager에서 이 currCmd를 체크함
     let currCmd = processItem.cmdList[processItem.currCmdIndex];
@@ -199,15 +198,16 @@ class Commander extends AbstCommander {
   /** Manager에게 다음 명령을 수행하도록 요청 */
   requestNextCommand(){
     BU.CLI(`requestNextCommand ${this.id}`);
-    if(_.isEmpty(this.manager)){
-      throw new Error(`Manager의 현재 수행명령이 현재 Commander ${this.id}와 관련이 없습니다.`);
-    }
+    // BU.CLIN(this.manager);
+    // if(_.isEmpty(this.manager)){
+    //   throw new Error('Manager의 현재 수행명령이 현재 Commander 와 관련이 없습니다.', this.id);
+    // }
 
     try {
-      const manager = this.manager;
-      this.manager = {};
+      // const manager = this.manager;
+      // this.manager = {};
   
-      manager.responseToDataFromCommander(this, 'isOk');
+      this.manager.responseToDataFromCommander(this, 'isOk');
     } catch (error) {
       throw error;
     }
@@ -217,15 +217,15 @@ class Commander extends AbstCommander {
   requestRetryCommand(){
     BU.CLI('requestRetryCommand', this.id);
     // BU.CLIN(this.manager);
-    if(_.isEmpty(this.manager)){
-      throw new Error(`Manager의 현재 수행명령이 현재 Commander ${this.id}와 관련이 없습니다.`);
-    }
+    // if(_.isEmpty(this.manager)){
+    //   throw new Error('Manager의 현재 수행명령이 현재 Commander 와 관련이 없습니다.', this.id);
+    // }
 
     try {
-      const manager = this.manager;
-      this.manager = {};
+      // const manager = this.manager;
+      // this.manager = {};
   
-      manager.responseToDataFromCommander(this, 'retry');
+      this.manager.responseToDataFromCommander(this, 'retry');
     } catch (error) {
       throw error;
     }

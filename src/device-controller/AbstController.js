@@ -107,7 +107,7 @@ class AbstController {
    * @param {*} error 
    */
   notifyError(error) {
-    // BU.CLI('notifyError', error);
+    BU.CLI('notifyError', error);
     // 장치에서 이미 에러 내역을 발송한 상태라면 이벤트를 보내지 않음
     if(!this.eventStauts.hasError){
       this.notifyEvent('dcError', error);
@@ -117,7 +117,7 @@ class AbstController {
   }
 
   notifyData(data){
-    // BU.CLI('notifyData', data);
+    // BU.CLI('notifyData', data, data.length);
     this.observers.forEach(currentItem => {
       currentItem.updateDcData(data);
     });

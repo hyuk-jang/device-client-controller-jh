@@ -30,8 +30,9 @@ class Builder extends AbstBuilder {
    */
   setDeviceClient(config){
     try {
-      let deviceCommander = this.setDeviceCommnader(config);
       let deviceManager = this.setDeviceManager(config);
+      let deviceCommander = this.setDeviceCommnader(config);
+      deviceCommander.manager = deviceManager;
   
       this.mediator.setColleague(deviceCommander, deviceManager);
   

@@ -147,12 +147,13 @@ class AbstDeviceClient extends EventEmitter {
   }
 
   /**
-   * 장치에서 에러가 발생하였을 경우
-   * @param {commandFormat} error 현재 장비에서 실행되고 있는 명령 객체
-   * @param {Error} errStack 
+   * 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트
+   * @param {commandFormat} processItem 현재 장비에서 실행되고 있는 명령 객체
+   * @param {Error} error 현재 장비에서 실행되고 있는 명령 객체
+   * @param {*} errMessage 
    */
-  updateDcError(error, errStack){
-    BU.log(`updateDcError ${error}\t`, errStack);
+  updateDcError(processItem, error, errMessage){
+    BU.log(`updateDcError ${error}\t`, errMessage);
   }
 
 

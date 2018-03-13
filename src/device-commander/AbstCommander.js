@@ -59,15 +59,13 @@ class AbstCommander {
   updateDcEvent(eventName, eventMsg) {}
 
 
-  /** 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트 */
   /**
-   * Device Manager에서 명령을 수행하는 과정에서 에러가 발생할 경우
-   * @protected 
+   * 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트
    * @param {commandFormat} processItem 현재 장비에서 실행되고 있는 명령 객체
-   * @param {Error} err 
-   * @return {undefined}
+   * @param {Error} error 현재 장비에서 실행되고 있는 명령 객체
+   * @param {*} errMessage 
    */
-  updateDcError(error){}
+  updateDcError(processItem, error, errMessage){}
 
   /**
    * 장치로부터 데이터 수신

@@ -5,7 +5,6 @@
  * @property {number} rank 우선순위 (0: 현재 진행되고 있는 명령 무시하고 즉시 해당 명령 수행, 1: 1순위 명령, 2: 2순위 명령 ...)
  * @property {string} name 별칭
  * @property {string} uuid uuid
- * @property {boolean} hasOneAndOne 계속하여 연결을 수립할지 여부
  * @property {AbstCommander} commander 명령을 요청한 Commander
  * @property {Array} cmdList 명령을 보낼 배열
  * @property {number} currCmdIndex cmdList Index
@@ -16,6 +15,7 @@
 /**
  * @typedef {Object} deviceClientFormat Device Client 생성 자료 구조
  * @property {Object=} user Device Client 주체. (최종적으로 데이터를 수신할 대상)
+ * @property {boolean} hasOneAndOne 계속하여 연결을 수립할지 여부
  * @property {string} target_id device ID
  * @property {string} target_category inverter, connector 등등 장치 타입
  * @property {string} target_protocol s_hex, dm_v2, ... 장치의 프로토콜

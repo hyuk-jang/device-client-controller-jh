@@ -89,8 +89,8 @@ class Manager extends AbstManager {
     // console.time(`timeout ${testId}`);
     this.getProcessItem().timer = setTimeout(() => {
       // console.timeEnd(`timeout ${testId}`);
-      this.getReceiver().updateDcError(new Error('Timeout'), cmd);
-      this.nextCommand();
+      this.getReceiver().updateDcError(this.getProcessItem(),new Error('Timeout'), cmd);
+      this.nextCommand(false);
       // 명전 전송 후 제한시간안에 응답이 안올 경우 에러 
     }, timeoutMs);
 
@@ -112,7 +112,7 @@ class Manager extends AbstManager {
     // 이상한 명령을 요청한다면 수행 불가
     if (cmd === undefined || cmd === null || cmd === '' || BU.isEmpty(cmd)) {
       BU.CLI('해당 명령은 수행할 수 없는 명령입니다.', cmd);
-      return this.nextCommand();
+      return this.nextCommand(false);
     }
 
     // DeviceController 의 client가 빈 객체라면 연결이 해제된걸로 판단
@@ -125,7 +125,7 @@ class Manager extends AbstManager {
       return this.writeCmdToDevice(cmd, processItem.timeoutMs);
     } catch (error) {
       BU.CLI(error);
-      this.getReceiver().updateDcError(new Error('Timeout'), cmd);
+      this.getReceiver().updateDcError(this.getProcessItem(), new Error('Timeout'), cmd);
     }
   }
 
@@ -147,7 +147,7 @@ class Manager extends AbstManager {
         switch (msg) {
         case 'isOk':
           clearTimeout(this.getProcessItem().timer);
-          this.nextCommand();          
+          this.nextCommand(true);          
           break;
         case 'retry':
           clearTimeout(this.getProcessItem().timer);
@@ -183,12 +183,12 @@ class Manager extends AbstManager {
       } else if(this.retryChance === 0){  // 3번 재도전 실패시 다음 명령 수행
         // 해당 에러 발송
         // BU.CLI('retryWrite Max Error');
-        this.getReceiver().updateDcError(new Error('RetryMaxError'), this.getProcessItem());
+        this.getReceiver().updateDcError(this.getProcessItem(), new Error('RetryMaxError'), this.iterator.getCurrentCmd());
         // 다음 명령 수행
-        this.nextCommand();
+        this.nextCommand(false);
       }
     } else {
-      commander.updateDcError(new Error('PrevCommand'), this.iterator.getCurrentCmd());
+      commander.updateDcError(this.getProcessItem(), new Error('PrevCommand'), this.iterator.getCurrentCmd());
     }
   }
 
@@ -199,6 +199,7 @@ class Manager extends AbstManager {
    * @return {boolean} 명령 추가 성공시 true, 실패 시 throw
    */
   addCommand(cmdInfo) {
+    // BU.CLIN(cmdInfo);
     // DeviceController 의 client가 빈 객체라면 연결이 해제된걸로 판단
     if(_.isEmpty(this.deviceController.client)){
       this.iterator.clearAllItem();
@@ -210,7 +211,7 @@ class Manager extends AbstManager {
     // BU.CLIN(this.commandStorage, 4);
     // 현재 진행 중인 명령이 없다면 즉시 해당 명령 실행
     if(_.isEmpty(this.commandStorage.process)){
-      this.nextCommand();
+      this.nextCommand(false);
     }
     return true;
   }
@@ -227,9 +228,9 @@ class Manager extends AbstManager {
 
   /**
    * 다음 명령을 수행
-   * @param {AbstCommander=} commander 
+   * @param {boolean=} hasForce 강제적으로 진행할 것인지
    */
-  nextCommand(){
+  nextCommand(hasForce){
     // BU.debugConsole(5);
     // BU.CLI('nextCommand');
     // BU.CLIN(this.commandStorage, 2);
@@ -237,8 +238,8 @@ class Manager extends AbstManager {
     if(this.iterator.isDone()){
       // BU.CLI('updateDcComplete');
       // 1:1 통신을 지속하고자 한다면 다음 명령을 수행하지 않음
-      if(this.getProcessItem().hasOneAndOne){
-        // BU.CLI('OneAndOne 진행');
+      if(!hasForce && this.getProcessItem().commander.hasOneAndOne){
+        BU.CLI('OneAndOne 진행');
         // 명령이 존재하다면 
         return true;
       }

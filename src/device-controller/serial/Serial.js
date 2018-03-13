@@ -74,7 +74,7 @@ class Serial extends AbstController{
       // this.notifyEvent('dcClose', err);
     });
 
-    this.client.on('error', error => {
+    client.on('error', error => {
       this.notifyError(error);
       // this.notifyEvent('dcError', error);
     });
