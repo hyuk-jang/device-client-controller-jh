@@ -33,3 +33,21 @@
  * @property {Array.<{rank: number, list: Array.<commandFormat>}>} rankList Commander로부터 요청받은 명령을 담을 그릇
  */
 
+
+/**
+ * @typedef {Object} deviceError 시스템 에러 형식
+ * @property {string} code 오류 ID
+ * @property {string} msg 오류 Msg
+ * @property {Date} occur_date 발생 일자
+ */
+
+/**
+  * AbstDeviceClient를 상속받아 구현하는 getDeviceOperationInfo 메소드 반환 형태.
+  * @typedef {Object} deviceOperationInfo  현재 구동 중인 컨트롤러의 데이터 형식
+  * @property {string} id Controller ID (상속받은 Controller에서 구현)
+  * @property {Object} config Controller Config (상속받은 Controller에서 구현)
+  * @property {Object|Object[]} data Controller에서 관리하는 Data
+  * @property {Array.<deviceError>} systemErrorList 본 라이브러리에서 자동으로 계산하여 제공
+  * @property {Array.<deviceError>} troubleList 상속받은 Controller에서 구현
+  * @property {Date} measureDate getDeviceOperationInfo를 호출한 시간
+  */
