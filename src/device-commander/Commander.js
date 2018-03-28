@@ -37,7 +37,7 @@ class Commander extends AbstCommander {
 
     /** 
      * 현재 발생되고 있는 시스템 에러 리스트
-     * @type {Array.<{code: string, msg: string, occur_date: Date }>} 
+     * @type {Array.<{deviceError}>} 
      * */
     this.systemErrorList = [];
 
