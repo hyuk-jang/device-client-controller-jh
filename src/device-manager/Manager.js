@@ -83,9 +83,9 @@ class Manager extends AbstManager {
    */
   async writeCmdToDevice(cmd, timeoutMs){
     // BU.log('Device write');
-    BU.CLI('장치로 명령 발송 요청', cmd);
+    // BU.CLI('장치로 명령 발송 요청', cmd);
     await this.deviceController.write(cmd);
-    BU.CLI('장치로 명령 발송 완료');
+    // BU.CLI('장치로 명령 발송 완료');
     // let testId = this.getReceiver().id;
     // BU.CLI('명령 요청', this.getReceiver().id, timeoutMs);
     // console.time(`timeout ${testId}`);
@@ -156,7 +156,6 @@ class Manager extends AbstManager {
         switch (msg) {
         case 'next':
           this.clearTimeoutTimer();
-          BU.CLIN(this.timeoutTimer);
           this.nextCommand(true);          
           break;
         case 'retry':
@@ -245,14 +244,14 @@ class Manager extends AbstManager {
    */
   nextCommand(hasForce){
     // BU.debugConsole(5);
-    BU.CLI('nextCommand');
+    // BU.CLI('nextCommand');
     // BU.CLIN(this.commandStorage, 2);
     // 현재 ProcessItem의 CmdList를 전부 수행하였을 경우
     if(this.iterator.isDone()){
-      BU.CLI('updateDcComplete');
+      // BU.CLI('updateDcComplete');
       // 1:1 통신을 지속하고자 한다면 다음 명령을 수행하지 않음
       if(!hasForce && this.getProcessItem().commander.hasOneAndOne){
-        BU.CLI('OneAndOne 진행');
+        // BU.CLI('OneAndOne 진행');
         // 명령이 존재하다면 
         return true;
       }
