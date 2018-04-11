@@ -104,7 +104,7 @@ class AbstDeviceClient extends EventEmitter {
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */
   executeCommand(cmdInfo){
-    BU.CLI('executeCommand');
+    // BU.CLI('executeCommand');
     return this.commander.executeCommand(cmdInfo);
   }
 
@@ -148,7 +148,7 @@ class AbstDeviceClient extends EventEmitter {
    * @param {commandFormat} processItem 현재 장비에서 실행되고 있는 명령 객체
    */
   updateDcComplete(processItem) {
-    BU.CLI('모든 명령이 수행 되었다고 수신 받음.', processItem.commander.id);
+    // BU.CLI('모든 명령이 수행 되었다고 수신 받음.', processItem.commander.id);
   }
 
   /**

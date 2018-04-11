@@ -108,7 +108,7 @@ class Mediator extends AbstMediator {
   getCommandStorage(deviceCommnader) {
     try {
       const deviceManager = this.getDeviceManager(deviceCommnader);
-      BU.CLIN(deviceManager, 3);
+      // BU.CLIN(deviceManager, 3);
       return deviceManager.iterator.getAllItem();
     } catch (error) {
       throw error;

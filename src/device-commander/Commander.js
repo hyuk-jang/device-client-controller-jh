@@ -73,7 +73,6 @@ class Commander extends AbstCommander {
     // commandFormat 형식을 따르지 않을 경우 자동으로 구성
     commandInfo.rank = 2;
     commandInfo.name = this.id;
-    commandInfo.uuid = uuidv4();
     commandInfo.commander = this;
     commandInfo.cmdList = [];
     commandInfo.currCmdIndex = 0;
