@@ -17,14 +17,30 @@
  * @typedef {Object} deviceClientFormat Device Client 생성 자료 구조
  * @property {string} target_id device ID
  * @property {string} connect_type 'socket', 'serial', ...
+ * @property {{type: string, option: *}=} connect_option 각 connect_type 에 관련된 설정 정보
  * @property {number|string} port socket --> number, serial --> string, ...
  * @property {string} host 접속 경로(socket 일 경우 사용)
  * @property {number} baud_rate serial 일 경우 
  * @property {{type: string, option: *}=} parser serial 일 경우 pipe 처리할 parser option
  * @property {string} target_category inverter, connector
  * @property {string} target_protocol s_hex, dm_v2, ...
- * @property {} protocol 프로토콜 변환기 ID
+ * @property {connectInfo} connectInfo
  */
+
+/**
+ * @typedef {Object} connectInfo 장치와의 접속 정보
+ * @property {bollean} hasOneAndOne 
+ * @property {string} category 데이터 분류 항목
+ * @property {string} protocolName Protocol Converter Name
+ * @property {string} type 'socket', 'serial', 'zigbee', ...
+ * @property {number=} baudRate 
+ * @property {string=|number=} port 
+ * @property {string=} host 접속 경로(socket 일 경우 사용)
+ * @property {string=|number=} port 
+ * @property {{type: string, config:Object}=} addConfigInfo 추가 접속 정보
+ */
+
+
 
 /**
  * @typedef {Object} commandStorage 장치를 제어할 명령 저장소

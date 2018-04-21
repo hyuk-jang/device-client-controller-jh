@@ -102,6 +102,9 @@ class AbstController {
     this.eventStauts.hasError = true;
   }
 
+  /**
+   * @param {*} data 각 controller에서 수신된 데이터
+   */
   notifyData(data){
     // console.log('notifyData', data);
     this.observers.forEach(currentItem => {
