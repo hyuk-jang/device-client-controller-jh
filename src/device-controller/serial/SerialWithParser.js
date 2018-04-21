@@ -7,7 +7,7 @@ const BU = require('base-util-jh').baseUtil;
 
 const AbstController = require('../AbstController');
 
-/** @type {Array.<{id: string, instance: SerialDeviceController}>} */
+/** @type {Array.<{id: string, instance: SerialWithParser}>} */
 let instanceList = [];
 class SerialWithParser extends AbstController{
   /**

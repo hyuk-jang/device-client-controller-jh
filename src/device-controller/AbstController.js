@@ -116,6 +116,9 @@ class AbstController {
     this.notifyClose();
   }
 
+  /**
+   * @param {*} data 각 controller에서 수신된 데이터
+   */
   notifyData(data){
     // BU.CLI('notifyData', data, data.length);
     this.observers.forEach(currentItem => {
