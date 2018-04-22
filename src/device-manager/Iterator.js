@@ -18,8 +18,9 @@ class Iterator {
    * @param {commandFormat} cmdInfo 추가할 명령
    */
   addCmd(cmdInfo) {
+    // BU.CLI(cmdInfo);
     let rank = cmdInfo.rank;
-
+    // BU.CLI(this.aggregate);
     // BU.CLIN(cmdInfo);
     // 명령 rank가 등록되어있지 않다면 신규로 등록
     if(!_.includes(_.map(this.aggregate.rankList, 'rank'), rank)){
@@ -40,11 +41,15 @@ class Iterator {
     const processInfo = this.aggregate.process;
     // 현재 진행중인 명령이 비어있다면 다음 순위 명령을 가져옴
     if(_.isEmpty(processInfo)){
-      // 다음 명령이 존재하지 않는다면 false
-      if(this.nextRank() && this.getCurrentCmd() !== undefined){
-        // BU.CLI('next rank 존재');
-        return true;
-      } else {
+      // 다음 명령이 존재할 경우
+      if(this.nextRank()){
+        // 현재 명령에서 명령을 수행할 수 없다면 다음 rank를 찾음
+        if(this.getCurrentCmd() === undefined){
+          return this.nextRank();
+        } else {  // 정상적인 명령을 수행 할 수 있을 경우 --> 다음 명령 수행 가능(true) 반환
+          return true;
+        }
+      } else {  // 다음 명령이 존재하지 않을 경우 --> 모든 명령 수행(false) 및 탐색 종료 
         return false;
       }
     } else {
@@ -55,7 +60,18 @@ class Iterator {
         this.aggregate.process = {};
         return this.nextCmd();
       } else {
-        return true;
+        // 현재 진행중인 명령이 긴급 명령(Rank 0)이 아니라면 명령 교체
+        let rank = this.getCurrentItem().rank;
+        if(rank !== 0){
+          // 해당 Rank를 찾음
+          let foundIt = _.find(this.aggregate.rankList, {rank});
+          // 맨 앞에 등록
+          foundIt.list.unshift(processInfo);
+          this.aggregate.process = {};
+          return this.nextRank();
+        } else {
+          return true;
+        }
       }
     }
   }
@@ -66,15 +82,15 @@ class Iterator {
    */
   nextRank (){
     this.aggregate.rankList = _.sortBy(this.aggregate.rankList, 'rank');
-
+    // 다음 순위의 명령 집합을 찾음
     let foundRankInfo = _.find(this.aggregate.rankList, rankInfo => {
       return rankInfo.list.length;
     });
-
+    // 명령이 존재하지 않을 경우
     if(_.isEmpty(foundRankInfo)){
       this.aggregate.process = {};
       return false;
-    } else {
+    } else {  // 명령 집합에서 첫번째 목록을 process로 가져오고 해당 배열에서 제거
       this.aggregate.process = foundRankInfo.list.shift();
       return true;
     }

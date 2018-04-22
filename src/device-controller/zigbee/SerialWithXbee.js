@@ -14,7 +14,7 @@ let instanceList = [];
 class SerialWithXbee extends AbstController{
   /**
    * Serial Port 객체를 생성하기 위한 설정 정보
-   * @param {constructorXbee} config {port, baud_rate, raget_name}
+   * @param {constructorXbee} config 
    */
   constructor(config) {
     super();

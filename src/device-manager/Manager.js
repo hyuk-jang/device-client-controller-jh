@@ -19,8 +19,12 @@ class Manager extends AbstManager {
   /** @param {deviceClientFormat} config */
   constructor(config) {
     super();
+    this.config = config;
+  }
 
-    /** DeviceController를 불러옴 */
+  /** Manager를 초기화 처리 */
+  setManager(){
+    let config = this.config;
     let deviceController = null;
     let controller = null;
 
@@ -48,7 +52,7 @@ class Manager extends AbstManager {
       controller = require('../device-controller/socket/Socket');
       break;
     default:
-      throw new Error('해당 장치는 없습니다.');
+      break;
     }
 
     if (_.isNull(controller)) {
@@ -80,6 +84,8 @@ class Manager extends AbstManager {
     this.createIterator();
   }
 
+
+
   /** Iterator 정의 */
   createIterator() {
     this.iterator = new Iterator(this);
@@ -98,6 +104,7 @@ class Manager extends AbstManager {
     // BU.log('Device write');
     // BU.CLI(this.sendMsgTimeOutSec);
     const processItem = this.getProcessItem();
+    // BU.CLI(processItem);
     if (_.isEmpty(processItem)) {
       throw new Error(`현재 진행중인 명령이 존재하지 않습니다. ${this.id}`);
     } else {
@@ -120,10 +127,12 @@ class Manager extends AbstManager {
         // console.time(`timeout ${testId}`);
         this.getProcessItem().timer = setTimeout(() => {
           // console.timeEnd(`timeout ${testId}`);
-          this.getReceiver().updateDcError(this.getProcessItem(), new Error('timeout'));
+          // Recevier가 빈 객체라면 Titmeout 메시지 보내지 않음.
+          let receiver = this.getReceiver();
+          receiver == null ? '' : receiver.updateDcError(this.getProcessItem(), new Error('timeout'));
           this.nextCommand();
-          // 명전 전송 후 제한시간안에 응답이 안올 경우 에러 
-        }, processItem.timeoutMs);
+          // 명전 전송 후 제한시간안에 응답이 안올 경우 에러(기본 값 1초) 
+        }, processItem.timeoutMs || 1000);
 
         return true;
       }
@@ -219,14 +228,16 @@ class Manager extends AbstManager {
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */
   addCommand(cmdInfo) {
+    BU.CLI(cmdInfo);
     // DeviceController 의 client가 빈 객체라면 연결이 해제된걸로 판단
+    // BU.CLI(this.deviceController.client);
     if (_.isEmpty(this.deviceController.client)) {
       return false;
     }
     // BU.log('addCommand');
     // BU.CLIN(cmdInfo);
     this.iterator.addCmd(cmdInfo);
-    // BU.CLIN(this.commandStorage, 4);
+    // BU.CLI(this.commandStorage);
     // 현재 진행 중인 명령이 없다면 즉시 해당 명령 실행
     if (_.isEmpty(this.commandStorage.process)) {
       this.nextCommand();
@@ -249,15 +260,15 @@ class Manager extends AbstManager {
    */
   nextCommand() {
     BU.CLI('nextCommand');
-    // BU.CLIN(this.commandStorage, 2);
+    // BU.CLIN(this.commandStorage, 3);
     if (this.iterator.isDone()) {
-      this.getReceiver().updateDcComplete(this.getProcessItem());
+      let receiver = this.getReceiver();
+      receiver == null ? '' : receiver.updateDcComplete(this.getProcessItem());
     }
 
     this.retryChance = 3;
 
     let hasNext = this.iterator.nextCmd();
-
     // BU.CLI(this.iterator.getCurrentCmd());
 
     // 다음 가져올 명령이 존재한다면

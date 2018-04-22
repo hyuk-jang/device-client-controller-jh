@@ -12,6 +12,7 @@ global._ = _;
 global.BU = BU;
 
 
+const AbstDeviceClient = require('../src/device-client/AbstDeviceClient');
 const SerialDeviceController = require('../src/device-controller/serial/Serial');
 const SerialDeviceControllerWithParser = require('../src/device-controller/serial/SerialWithParser');
 const SocketDeviceController = require('../src/device-controller/socket/Socket');
@@ -21,11 +22,25 @@ const DeviceManager = require('../src/device-manager/Manager');
 
 describe('Device Manager Test', () => {
   describe('Manager Test', () => {
-    if(false){
-      it('iterator Test', (done) => {
-        const deviceManager = new DeviceManager();
+    if(true){
+      it('iterator Test', async() => {
+        const deviceManager = new DeviceManager({
+          target_id: 'VantagePro_1',
+          target_name: 'Davis Vantage Pro2',
+          target_category: 'weathercast',
+          target_protocol: 'vantagepro2',
+        });
+        // TEST
+        // 저장소 생성
+        deviceManager.commandStorage = { process: {}, rankList: [] };
+        // 반복기 생성
         deviceManager.createIterator();
-  
+        // 명령을 받을 객체 생성
+        deviceManager.deviceController = {write: cmd => BU.log(cmd)};
+        // 장치 연결자 생성
+        deviceManager.deviceController.client = {alive:true};
+
+ 
         const cmdInfo = {
           rank: 1,
           name: '이름',
@@ -34,94 +49,83 @@ describe('Device Manager Test', () => {
           currCmdIndex: 0
         };
   
-        for(let i = 0; i < 5; i += 1){
-          cmdInfo.rank = _.random(0, 3);
+        let emergencyCmdInfo = {
+          rank: 0,
+          name: '긴급 홍길동',
+          cmdList: ['긴급 명령 1', '긴급 명령 2'],
+          currCmdIndex: 0
+        };
+        for(let i = 0; i < 3; i += 1){
+          cmdInfo.rank = _.random(1, 3);
           cmdInfo.name = '홍길동' + i;
           cmdInfo.observer = '홍길동' + i;
           cmdInfo.cmdList = [];
   
           for(let j = 0; j < _.random(1, 3); j += 1 ){
-            cmdInfo.cmdList.push(uuidv4());
+            // cmdInfo.cmdList.push(uuidv4());
+            cmdInfo.cmdList.push(`i:${i} j:${j}`);
           }
   
-          deviceManager.addCommand(JSON.parse(JSON.stringify(cmdInfo)));
+          // BU.CLI(cmdInfo);
+          deviceManager.addCommand(_.cloneDeep(cmdInfo));
         }
         
         BU.CLI(deviceManager.commandStorage);
+        // 긴급 명령 추가
+        Promise.delay(3300).then(() => {
+          deviceManager.addCommand(emergencyCmdInfo);
+        });
   
-        console.log(deviceManager.nextCommand());
-        console.log(deviceManager.nextCommand());
-        BU.CLI(deviceManager.getReceiver());
-        console.log(deviceManager.nextCommand());
-        console.log(deviceManager.nextCommand());
-        console.log(deviceManager.nextCommand());
-        console.log(deviceManager.nextCommand());
-        BU.CLI(deviceManager.getProcessItem());
-        BU.CLI(deviceManager.getReceiver());
-        console.log(deviceManager.nextCommand());
-        console.log(deviceManager.nextCommand());
-        console.log(deviceManager.nextCommand());
-        console.log(deviceManager.nextCommand());
-        BU.CLI(deviceManager.getReceiver());
-        console.log(deviceManager.nextCommand());
-        console.log(deviceManager.nextCommand());
-        console.log(deviceManager.nextCommand());
-        console.log(deviceManager.nextCommand());
-        BU.CLI(deviceManager.commandStorage);
         expect(true).to.be.ok;
-        done();
       });
     }
 
 
   });
   
-  describe('DeviceController Test', () => {
-    it('AbstractDeviceManager', async() => {
-      const deviceManager = new DeviceManager();
-      deviceManager.createIterator();
-
-      const config = {
-        'target_id': 'testId',
-        'target_name': '인버터 1',
-        'connect_type': 'serial',
-        'ip': 'localhost',
-        'port': 'COM14',
-        'baud_rate': 9600,
-        parser: {
-          type: 'readLineParser',
-          option: Buffer.from('\n')
+  if(false){
+    describe('DeviceController Test', () => {
+      it('AbstractDeviceManager', async() => {
+        const deviceManager = new DeviceManager();
+        deviceManager.createIterator();
+  
+        const config = {
+          target_id: 'VantagePro_1',
+          target_name: 'Davis Vantage Pro2',
+          target_category: 'weathercast',
+          target_protocol: 'vantagepro2',
+          connect_info: {
+            hasOneAndOne: true,
+            type: 'socket',
+            port: 9000
+          },
+        };
+  
+  
+        let deviceController = {};
+        switch (config.connect_type) {
+        case 'serial':
+          BU.CLI('왓더');
+          deviceController = _.has(config, 'parser') ? new SerialDeviceControllerWithParser(config) : new SerialDeviceController(config);
+          break;
+        case 'socket':
+          deviceController = new SocketDeviceController(config);
+          break;
+        default:
+          break;
         }
-        // parser: {
-        //   type: 'delimiterParser',
-        //   option: Buffer.from([0x04])
-        // }
-      };
-
-
-      let deviceController = {};
-      switch (config.connect_type) {
-      case 'serial':
-        BU.CLI('왓더');
-        deviceController = _.has(config, 'parser') ? new SerialDeviceControllerWithParser(config) : new SerialDeviceController(config);
-        break;
-      case 'socket':
-        deviceController = new SocketDeviceController(config);
-        break;
-      default:
-        break;
-      }
-
-      deviceManager.setDeviceController(deviceController);
-      deviceManager.deviceController.attach(deviceManager);
-
-      BU.CLI(deviceManager);
-      await deviceManager.connect();
-
-      expect(true).to.be.ok;
-
+  
+        deviceManager.setDeviceController(deviceController);
+        deviceManager.deviceController.attach(deviceManager);
+  
+        BU.CLI(deviceManager);
+        await deviceManager.connect();
+  
+        expect(true).to.be.ok;
+  
+      });
     });
-  });
+  }
 
 });
 
