@@ -1,23 +1,20 @@
 'use strict';
-
-const BU = require('base-util-jh').baseUtil;
-
-const _ = require('underscore');
+const _ = require('lodash');
 const net = require('net');
 const eventToPromise = require('event-to-promise');
 
 // const BU = require('base-util-jh').baseUtil;
 
 const AbstController = require('../AbstController');
-require('../../format/deviceConfig');
+require('../../format/controllerConstructor');
 
-/** @type {Array.<{id: deviceConfigSocket, instance: Socket}>} */
+/** @type {Array.<{id: constructorSocket, instance: Socket}>} */
 let instanceList = [];
 /** Class Socket 접속 클라이언트 클래스 */
 class Socket extends AbstController {
   /**
    * Socket Client 접속 설정 정보
-   * @param {deviceConfigSocket} config Socket Port
+   * @param {constructorSocket} config Socket Port
    */
   constructor(config) {
     super();
@@ -55,7 +52,7 @@ class Socket extends AbstController {
 
   /** 장치 접속 시도 */
   async connect() {
-    BU.log('Try Connect', this.port);
+    // BU.log('Try Connect', this.port);
     /** 접속 중인 상태라면 접속 시도하지 않음 */
     if(!_.isEmpty(this.client)){
       throw new Error(`이미 접속중입니다. ${this.port}`);
@@ -69,24 +66,18 @@ class Socket extends AbstController {
     client.on('close', err => {
       this.client = {};
       this.notifyClose(err);
-      // this.notifyEvent('dcClose', err);
     });
 
     client.on('end', () => {
-      console.log('Client disconnected');
-      // this.client = {};
-      // this.notifyError(error);
-      // // this.notifyEvent('dcError', error);
+      // console.log('Client disconnected');
     });
 
     client.on('error', error => {
       this.notifyError(error);
-      // this.notifyEvent('dcError', error);
     });
     await eventToPromise.multi(client, ['connect', 'connection', 'open'], ['close, error']);
     this.client = client;
     this.notifyConnect();
-    // this.notifyEvent('dcConnect');
     return this.client;
   }
 }

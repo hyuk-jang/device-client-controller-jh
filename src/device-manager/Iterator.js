@@ -1,5 +1,5 @@
 'use strict';
-const _ = require('underscore');
+const _ = require('lodash');
 
 const BU = require('base-util-jh').baseUtil;
 
@@ -22,11 +22,11 @@ class Iterator {
 
     // BU.CLIN(cmdInfo);
     // 명령 rank가 등록되어있지 않다면 신규로 등록
-    if(!_.contains(_.pluck(this.aggregate.rankList, 'rank'), rank)){
+    if(!_.includes(_.map(this.aggregate.rankList, 'rank'), rank)){
       this.aggregate.rankList.push({rank, list: [cmdInfo] });
       // BU.CLIN(this.aggregate, 4);
     } else { // 저장된 rank 객체 배열에 삽입
-      let foundRank = _.findWhere(this.aggregate.rankList, {rank});
+      let foundRank = _.find(this.aggregate.rankList, {rank});
       foundRank.list.push(cmdInfo);
     }
     // BU.CLIN(this.aggregate, 4);
@@ -65,7 +65,7 @@ class Iterator {
    * @return {boolean} 랭크가 있다면 true, 없다면 false
    */
   nextRank (){
-    this.aggregate.rankList = _.sortBy(this.aggregate.rankList, rankInfo  => rankInfo.rank);
+    this.aggregate.rankList = _.sortBy(this.aggregate.rankList, 'rank');
 
     let foundRankInfo = _.find(this.aggregate.rankList, rankInfo => {
       return rankInfo.list.length;
@@ -91,7 +91,7 @@ class Iterator {
   /** 모든 명령을 초기화 */
   clearAllItem() {
     this.clearItem();
-    _.each(this.aggregate.rankList, item => {
+    _.forEach(this.aggregate.rankList, item => {
       item.list = [];
     });
   }

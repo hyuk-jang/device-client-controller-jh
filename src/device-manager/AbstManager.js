@@ -1,5 +1,5 @@
 'use strict';
-const _ = require('underscore');
+const _ = require('lodash');
 const eventToPromise = require('event-to-promise');
 
 const BU = require('base-util-jh').baseUtil;

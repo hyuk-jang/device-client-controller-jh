@@ -22,10 +22,11 @@ class Manager extends AbstManager {
 
     /** DeviceController를 불러옴 */
     let deviceController = null;
-    var controller = {};
-    switch (config.connect_type) {
+    let controller = null;
+
+    switch (config.connect_info.type) {
     case 'serial':
-      switch (config.connect_option.type) {
+      switch (config.connect_info.subType) {
       case 'parser':
         controller = require('../device-controller/serial/SerialWithParser');
         break;
@@ -35,7 +36,7 @@ class Manager extends AbstManager {
       }
       break;
     case 'zigbee':
-      switch (config.connect_option.type) {
+      switch (config.connect_info.subType) {
       case 'xbee':
         controller = require('../device-controller/zigbee/SerialWithXbee');
         break;
@@ -47,12 +48,13 @@ class Manager extends AbstManager {
       controller = require('../device-controller/socket/Socket');
       break;
     default:
-      throw new Error('해당 장치는 없습니다.', config);
+      throw new Error('해당 장치는 없습니다.');
     }
-    if (_.isEmpty(controller)) {
-      throw new Error('해당 장치는 없습니다.', config);
+
+    if (_.isNull(controller)) {
+      throw new Error('해당 장치는 없습니다.');
     } else {
-      deviceController = new controller(config);
+      deviceController = new controller(config.connect_info);
     }
     // 해당 장치가 이미 존재하는지 체크
     let foundInstance = _.find(instanceList, { id: deviceController.id });

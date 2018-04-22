@@ -1,4 +1,4 @@
-const _ = require('underscore');
+const _ = require('lodash');
 const Promise = require('bluebird');
 // const eventToPromise = require('event-to-promise');
 

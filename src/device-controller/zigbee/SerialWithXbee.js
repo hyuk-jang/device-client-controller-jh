@@ -3,8 +3,6 @@ const _ = require('lodash');
 const serialport = require('serialport');
 const eventToPromise = require('event-to-promise');
 
-const BU = require('base-util-jh').baseUtil;
-
 const AbstController = require('../AbstController');
 
 const xbee_api = require('xbee-api');
@@ -16,13 +14,13 @@ let instanceList = [];
 class SerialWithXbee extends AbstController{
   /**
    * Serial Port 객체를 생성하기 위한 설정 정보
-   * @param {{port: string, baud_rate: number, xbeeConfig: xbeeConstrucorInfo}} config {port, baud_rate, raget_name}
+   * @param {constructorXbee} config {port, baud_rate, raget_name}
    */
   constructor(config) {
     super();
     this.port = config.port;
-    this.baud_rate = config.baud_rate;
-    this.xbeeConfig = config.xbeeConfig;
+    this.baud_rate = config.baudRate;
+    this.xbeeConfig = config.addConfigInfo;
     this.xbeeAPI = null;
 
     let foundInstance = _.find(instanceList, {id: this.port});
@@ -64,7 +62,6 @@ class SerialWithXbee extends AbstController{
   }
 
   async connect() {
-    // BU.CLI('connect');
     /** 접속 중인 상태라면 접속 시도하지 않음 */
     if(!_.isEmpty(this.client)){
       throw new Error(`이미 접속중입니다. ${this.port}`);
@@ -78,18 +75,15 @@ class SerialWithXbee extends AbstController{
     client.on('close', err => {
       this.client = {};
       this.notifyClose(err);
-      // this.notifyEvent('dcClose', err);
     });
 
     client.on('error', error => {
       this.notifyError(error);
-      // this.notifyEvent('dcError', error);
     });
 
     await eventToPromise.multi(client, ['open'], ['error', 'close']);
     this.client = client;
     this.notifyConnect();
-    // this.notifyEvent('dcConnect');
     return this.client;
   }
 }

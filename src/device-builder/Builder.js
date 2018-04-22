@@ -1,6 +1,5 @@
 'use strict';
 
-const _ = require('underscore');
 const AbstCommander = require('../device-commander/AbstCommander');
 const Commander = require('../device-commander/Commander');
 

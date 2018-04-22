@@ -1,7 +1,6 @@
 'use strict';
 
-const _ = require('underscore');
-const BU = require('base-util-jh').baseUtil;
+const _ = require('lodash');
 
 const AbstMediator = require('./AbstMediator');
 const AbstCommander = require('../device-commander/AbstCommander');
@@ -48,7 +47,7 @@ class Mediator extends AbstMediator {
    * @param {AbstCommander} deviceCommander 
    */
   setCommander(deviceCommander) {
-    let foundCommander = _.findWhere(this.deviceCommanderList, {id: deviceCommander.id });
+    let foundCommander = _.find(this.deviceCommanderList, {id: deviceCommander.id });
     if(_.isEmpty(foundCommander)){
       deviceCommander.setMediator(this);
       this.deviceCommanderList.push(deviceCommander);
@@ -60,7 +59,7 @@ class Mediator extends AbstMediator {
    * @param {AbstManager} deviceManager 
    */
   setManager(deviceManager) {
-    let foundManager = _.findWhere(this.deviceManagerList, {id: deviceManager.id });
+    let foundManager = _.find(this.deviceManagerList, {id: deviceManager.id });
     if(_.isEmpty(foundManager)){
       deviceManager.setMediator(this);
       this.deviceManagerList.push(deviceManager);
@@ -93,7 +92,7 @@ class Mediator extends AbstMediator {
    */
   getDeviceManager(deviceCommander){
     // BU.CLIN(deviceCommander)
-    let foundIt = _.findWhere(this.relationList, {commander: deviceCommander});
+    let foundIt = _.find(this.relationList, {commander: deviceCommander});
     if(_.isEmpty(foundIt)){
       throw new Error(`해당 Commander(${deviceCommander.id})는 장치를 가지고 있지 않습니다.`);
     }
@@ -122,7 +121,7 @@ class Mediator extends AbstMediator {
   getAllCommandStorage() {
     const commandStorageList = [];
     /** @type {Array.<AbstManager>} */
-    const managerList = _.union( _.pluck(this.relationList, 'manager')) ;
+    const managerList = _.union( _.map(this.relationList, 'manager')) ;
 
     managerList.forEach(manager => {
       const commandStorage = manager.iterator.getAllItem();
@@ -154,11 +153,11 @@ class Mediator extends AbstMediator {
    * @return {Array.<AbstCommander>}
    */
   getDeviceCommander(deviceManager){
-    const foundIt = _.where(this.relationList, {manager: deviceManager});
+    const foundIt = _.filter(this.relationList, {manager: deviceManager});
     if(_.isEmpty(foundIt)){
       throw new Error(`해당 Manager(${deviceManager.deviceController})는 Commander를 가지고 있지 않습니다.`);
     }
-    const commanderList = _.pluck(foundIt, 'commander');
+    const commanderList = _.map(foundIt, 'commander');
     return commanderList;
 
   }

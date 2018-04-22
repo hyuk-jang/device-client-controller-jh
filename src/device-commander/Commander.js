@@ -1,6 +1,6 @@
 'use strict';
 
-const _ = require('underscore');
+const _ = require('lodash');
 const uuidv4 = require('uuid/v4');
 
 const BU = require('base-util-jh').baseUtil;
@@ -18,7 +18,7 @@ class Commander extends AbstCommander {
   /** @param {deviceClientFormat} config */
   constructor(config) {
     super();
-    let foundInstance = _.findWhere(instanceList, {id: config.target_id});
+    let foundInstance = _.find(instanceList, {id: config.target_id});
     if(_.isEmpty(foundInstance)){
       this.id = config.target_id;
       this.category = config.target_category ? config.target_category : 'etc';
@@ -85,7 +85,7 @@ class Commander extends AbstCommander {
     } else if (Array.isArray(cmdInfo)) {
       commandInfo.cmdList = cmdInfo;
     } else {
-      _.each(commandInfo, (info, key) => {
+      _.forEach(commandInfo, (info, key) => {
         commandInfo[key] = _.has(cmdInfo, key) ? cmdInfo[key] : commandInfo[key];
       });
       // 이상한 옵션을 걸 경우 정상적인 데이터로 초기화
@@ -262,14 +262,12 @@ class Commander extends AbstCommander {
       this.systemErrorList = [];
       return this.systemErrorList;
     }
-    const troubleObj = _.findWhere(troubleList, {
-      code: troubleCode
-    });
+    const troubleObj = _.find(troubleList, {code: troubleCode});
     if (_.isEmpty(troubleObj)) {
       throw ReferenceError('해당 Trouble Msg는 없습니다' + troubleCode);
     }
 
-    const findObj = _.findWhere(this.systemErrorList, {
+    const findObj = _.find(this.systemErrorList, {
       code: troubleCode
     });
     // 에러가 발생하였고 systemErrorList에 없다면 삽입

@@ -48,12 +48,10 @@ class AbstDeviceClient extends EventEmitter {
       target_id: '',
       target_category: '',
       target_protocol: '',
-      connect_type: '',
-      port: null,
-      host: '',
-      baud_rate: null,
-      parser: {},
-      
+      connect_info: {
+        hasOneAndOne: false,
+        type: '',
+      }
     };
  
     return generationConfigInfo;
