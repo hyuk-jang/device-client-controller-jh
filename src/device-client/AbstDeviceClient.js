@@ -4,8 +4,6 @@ const EventEmitter = require('events');
 
 const BU = require('base-util-jh').baseUtil;
 
-const uuidv4 = require('uuid/v4');
-
 const Builder = require('../device-builder/Builder');
 const AbstCommander = require('../device-commander/AbstCommander');
 const AbstManager = require('../device-manager/AbstManager');
@@ -48,8 +46,8 @@ class AbstDeviceClient extends EventEmitter {
       target_id: '',
       target_category: '',
       target_protocol: '',
+      hasOneAndOne: false,
       connect_info: {
-        hasOneAndOne: false,
         type: '',
       }
     };
@@ -59,14 +57,12 @@ class AbstDeviceClient extends EventEmitter {
   
   /**
    * Commander로 명령을 내릴 기본 형태를 가져옴 
-   * @return {commandFormat} */
+   * @return {requestCommandFormat} */
   getDefaultCommandConfig(){
-    /** @type {commandFormat} */
+    /** @type {requestCommandFormat} */
     const commandFormatInfo = {
       rank: 2,
       commandId: '',
-      uuid: uuidv4(),
-      hasOneAndOne: false,
       cmdList: [],
       currCmdIndex: 0,
       timeoutMs: 1000,
@@ -95,10 +91,8 @@ class AbstDeviceClient extends EventEmitter {
 
   // Commander
   /**
-   * 장치로 명령을 내림
-   * 아무런 명령을 내리지 않을 경우 해당 장치와의 연결고리를 끊지 않는다고 판단
-   * 명시적으로 hasOneAndOne을 True로 줄 경우 주어진 첫번째 명령을 발송
-   * @param {Buffer|string|commandFormat|null} cmdInfo 
+   * 장치로 명령을 내릴 명령 전송
+   * @param {Buffer|string|requestCommandFormat|null} cmdInfo 
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */
   executeCommand(cmdInfo){

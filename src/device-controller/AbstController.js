@@ -2,9 +2,7 @@
 
 const Promise = require('bluebird');
 
-const uuidv4 = require('uuid/v4');
-const BU = require('base-util-jh').baseUtil;
-
+const {BU} = require('base-util-jh');
 const AbstManager = require('../device-manager/AbstManager');
 
 
@@ -12,7 +10,6 @@ class AbstController {
   constructor() {
     /** @type {Array.<AbstManager>}  */
     this.observers = [];
-    this.id = uuidv4();
     this.configInfo = null;
     this.client = {};
 
@@ -24,8 +21,7 @@ class AbstController {
     };
 
     // 생성자와 동시에 접속하면 Test 연동된 Server의 EADDRNOTAVAIL 발생하여 딜래이 줌.
-    Promise.delay(10)
-      .then(() => this.connect().catch(() => {}));
+    Promise.delay(10).then(() => this.connect().catch(() => {}));
   }
 
   setInit(){}

@@ -1,9 +1,18 @@
 
 /**
- * @typedef {Object} commandFormat 명령 자료 구조
- * @property {number} rank 우선순위 (0: 현재 진행되고 있는 명령 무시하고 즉시 해당 명령 수행, 1: 1순위 명령, 2: 2순위 명령 ...)
+ * @typedef {Object} requestCommandFormat 요청 명령 자료 구조
+ * @property {number} rank 우선순위 (0: 긴급 명령으로 현재 진행되고 있는 명령 무시하고 즉시 해당 명령 수행, 1: 1순위 명령, 2: 2순위 명령 ...) 기본 값 2
  * @property {string} commandId 해당 명령 통합 ID
- * @property {string} uuid uuid
+ * @property {Array} cmdList 명령을 보낼 배열
+ * @property {number=} currCmdIndex cmdList Index => Default: 0
+ * @property {number=} timeoutMs 명령을 보내고 응답 시간안에 성공을 받지 못할때까지의 대기시간(ms) => Default: 1 sec
+ */
+
+
+/**
+ * @typedef {Object} commandFormat 명령 수행 자료 구조
+ * @property {number} rank 우선순위 (0: 긴급 명령으로 현재 진행되고 있는 명령 무시하고 즉시 해당 명령 수행, 1: 1순위 명령, 2: 2순위 명령 ...) 기본 값 2
+ * @property {string} commandId 해당 명령 통합 ID
  * @property {boolean} hasOneAndOne 계속하여 연결을 수립할지 여부
  * @property {Object} observer Commander에게 명령을 지시한 객체
  * @property {AbstCommander} commander 명령을 요청한 Commander

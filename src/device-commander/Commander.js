@@ -1,8 +1,6 @@
 'use strict';
 
 const _ = require('lodash');
-const uuidv4 = require('uuid/v4');
-
 const BU = require('base-util-jh').baseUtil;
 
 const AbstCommander = require('./AbstCommander');
