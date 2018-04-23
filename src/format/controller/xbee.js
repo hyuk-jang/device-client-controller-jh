@@ -1,6 +1,6 @@
 
 /**
- * @typedef {Object} xbeeConstrucorInfo
+ * @typedef {Object} generationCmdFormat
  * @property {number} api_mode: 1,              // [1, 2]; 1 is default, 2 is with escaping (set ATAP=2)
  * @property {number} module: "Any",            // ["802.15.4", "ZNet", "ZigBee", "Any"]; This does nothing, yet!
  * @property {number} raw_frames: false,        // [true, false]; If set to true, only raw byte frames are

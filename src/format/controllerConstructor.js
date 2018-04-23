@@ -27,7 +27,7 @@
 
 /**
  * @typedef {Object} constructorXbee Serial Config
- * @property {string} port 접속 Port
+ * @property {string} port 접속 PortxbeeConstrucorInfo
  * @property {number} baudRate 보 레이트
  * @property {xbeeConstrucorInfo} addConfigInfo SerialPort에 Binding 할 Parser 객체
  */ 
