@@ -27,6 +27,8 @@ class Commander extends AbstCommander {
       /** @type {AbstDeviceClient} */
       this.user = config.user === null ? null : config.user;
       instanceList.push({id: config.target_id, instance: this});
+
+      // BU.CLI(this);
     } else {
       throw new Error(`같은 ID를 가진 장치가 있습니다.${config.target_id}`);
       // return foundInstance.instance;
@@ -72,11 +74,10 @@ class Commander extends AbstCommander {
     let commandInfo = {};
     // commandFormat 형식을 따르지 않을 경우 자동으로 구성
     commandInfo.rank = 2;
-    commandInfo.name = this.id;
+    commandInfo.commandId = null;
     commandInfo.commander = this;
     commandInfo.cmdList = [];
     commandInfo.currCmdIndex = 0;
-    
     commandInfo.timeoutMs = 1000;
 
     if(Buffer.isBuffer(cmdInfo) || typeof cmdInfo  === 'string' ){
@@ -89,11 +90,11 @@ class Commander extends AbstCommander {
         commandInfo[key] = _.has(cmdInfo, key) ? cmdInfo[key] : commandInfo[key];
       });
       // 이상한 옵션을 걸 경우 정상적인 데이터로 초기화
-      commandInfo.commander = this;
       commandInfo.currCmdIndex = commandInfo.currCmdIndex < 0 ? 0 : commandInfo.currCmdIndex;
       commandInfo.timeoutMs = commandInfo.timeoutMs <= 0 ? 1000 : commandInfo.timeoutMs;
     }
-
+    // 해당 Commander 생성 객체의 옵션을 가져옴
+    commandInfo.hasOneAndOne = this.hasOneAndOne; 
     // BU.CLIN(commandInfo);
 
     return this.mediator.requestAddCommand(commandInfo, this);

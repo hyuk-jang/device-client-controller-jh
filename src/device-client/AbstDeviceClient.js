@@ -64,7 +64,7 @@ class AbstDeviceClient extends EventEmitter {
     /** @type {commandFormat} */
     const commandFormatInfo = {
       rank: 2,
-      name: '',
+      commandId: '',
       uuid: uuidv4(),
       hasOneAndOne: false,
       cmdList: [],

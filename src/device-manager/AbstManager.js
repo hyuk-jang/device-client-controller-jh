@@ -1,8 +1,7 @@
 'use strict';
 const _ = require('lodash');
+const {BU} = require('base-util-jh');
 const eventToPromise = require('event-to-promise');
-
-const BU = require('base-util-jh').baseUtil;
 
 const AbstCommander = require('../device-commander/AbstCommander');
 const AbstMediator = require('../device-mediator/AbstMediator');
@@ -56,6 +55,14 @@ class AbstManager extends EventEmitter {
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */
   addCommand(cmdInfo) {}
+
+
+  /**
+   * 수행 명령 리스트에 등록된 명령을 취소
+   * @param {string} commandId 명령을 취소 할 command Id
+   * @return {commandStorage}
+   */
+  deleteCommand(commandId){}
 
   /**
    * Device Controller에서 새로운 이벤트가 발생되었을 경우 알림

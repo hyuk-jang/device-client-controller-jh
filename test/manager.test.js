@@ -40,24 +40,26 @@ describe('Device Manager Test', () => {
         // 장치 연결자 생성
         deviceManager.deviceController.client = {alive:true};
 
- 
+        /** @type {commandFormat} */
         const cmdInfo = {
           rank: 1,
-          name: '이름',
+          commandId: '',
           observer: this,
           cmdList: [],
-          currCmdIndex: 0
+          currCmdIndex: 0,
+          timeoutMs: 1000 * 1
         };
   
         let emergencyCmdInfo = {
           rank: 0,
-          name: '긴급 홍길동',
+          commandId: '긴급 홍길동',
           cmdList: ['긴급 명령 1', '긴급 명령 2'],
           currCmdIndex: 0
         };
-        for(let i = 0; i < 3; i += 1){
-          cmdInfo.rank = _.random(1, 3);
-          cmdInfo.name = '홍길동' + i;
+        for(let i = 0; i < 4; i += 1){
+          // cmdInfo.rank = _.random(1, 3);
+          cmdInfo.rank = i + 2;
+          cmdInfo.commandId = '홍길동' + i;
           cmdInfo.observer = '홍길동' + i;
           cmdInfo.cmdList = [];
   
@@ -70,11 +72,15 @@ describe('Device Manager Test', () => {
           deviceManager.addCommand(_.cloneDeep(cmdInfo));
         }
         
-        BU.CLI(deviceManager.commandStorage);
+        BU.CLIN(deviceManager.commandStorage, 5);
         // 긴급 명령 추가
-        Promise.delay(3300).then(() => {
+        await Promise.delay(1500).then(() => {
           deviceManager.addCommand(emergencyCmdInfo);
         });
+
+        // 명령 취소 테스트
+        let resutlDelete = deviceManager.deleteCommand('홍길동1');
+        BU.CLIN(resutlDelete);
   
         expect(true).to.be.ok;
       });
