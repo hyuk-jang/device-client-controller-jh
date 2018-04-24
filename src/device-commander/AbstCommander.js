@@ -37,13 +37,16 @@ class AbstCommander {
 
   /* Client가 요청 */
   /**
-   * 장치로 명령을 내림
-   * @param {commandFormat|Buffer|string} cmd 
-   * @param {*=} observer 명령 처리 후 결과를 전달받을 객체
-   * @return {undefined}
+   * 장치를 제어하는 실제 명령만을 가지고 요청할 경우
+   * @param {Buffer|string|undefined} cmdInfo 자동완성 기능을 사용할 경우
    */
-  executeCommand(cmd, observer){
-  }
+  executeAutoCommand(cmdInfo) {}
+
+  /**
+   * 명령 제어에 필요한 항목을 작성할 경우 사용
+   * @param {requestCommandFormat} cmdInfo 자동완성 기능을 사용할 경우
+   */
+  executeManualCommand(cmdInfo) {}
 
   /* 장치에서 일괄 이벤트 발생 */
   /**

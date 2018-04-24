@@ -77,9 +77,9 @@ class Manager extends AbstManager {
 
     this.retryChance = 3; // 데이터 유효성 검사가 실패, 데이터 수신 에러가 있을 경우 3회까지 ProcessCmd 재전송
     /**
-     * @type {{process:commandFormat, rankList: Array.<{rank: number, list: Array.<commandFormat>} }>]  }
+     * @type {commandStorage}
      */
-    this.commandStorage = { process: {}, rankList: [] };
+    this.commandStorage = { process: {}, rankList: [], reservedList: []};
 
     this.createIterator();
   }
@@ -109,17 +109,8 @@ class Manager extends AbstManager {
       throw new Error(`현재 진행중인 명령이 존재하지 않습니다. ${this.id}`);
     } else {
       let currCmd = this.iterator.getCurrentCmd();
-      // BU.CLI('명령 발송 테스트 시작', currCmd);
-      // 장치와의 연결을 계속 수립하겠다면
-      // if (processItem.hasOneAndOne) {
-      //   BU.CLI('OneAndOne 진행');
-      //   // 명령이 존재하다면 
-      //   if (currCmd.length) {
-      //     await this.deviceController.write(currCmd);
-      //     return true;
-      //   }
-      //   return true;
-      // } else {
+
+      // 명령 전송을 기다림
       await this.writeCommandController(currCmd);
 
       // BU.CLI('명령 요청', this.getReceiver().id, processItem.timeoutMs);
@@ -131,7 +122,7 @@ class Manager extends AbstManager {
         receiver == null ? '' : receiver.updateDcError(processItem, new Error('timeout'));
         this.nextCommand();
         // 명전 전송 후 제한시간안에 응답이 안올 경우 에러(기본 값 1초) 
-      }, processItem.timeoutMs || 1000);
+      }, currCmd.timeoutMs || 1000);
 
       return true;
       // }
@@ -140,31 +131,37 @@ class Manager extends AbstManager {
 
   /**
    * 장치로 명령 발송 --> 명령 수행 후 응답 결과 timeout 처리를 위함
-   * @param {*} cmd 
-   * @param {Promise} 정상 처리라면 true, 아닐 경우 throw error
+   * @param {commandInfo} cmdInfo 
+   * @return {Promise} 정상 처리라면 true, 아닐 경우 throw error
    */
-  async writeCommandController(cmd) {
+  async writeCommandController(cmdInfo) {
     // BU.CLI('msgSendController');
-    if (cmd === '' || BU.isEmpty(cmd)) {
+    if (cmdInfo === '' || cmdInfo === undefined || cmdInfo === null|| BU.isEmpty(cmdInfo)) {
       // return new Error('수행할 명령이 없습니다.');
       return this.nextCommand();
     }
     // 장치로 명령 전송
-    await this.deviceController.write(cmd);
+    await this.deviceController.write(cmdInfo.data);
     return true;
   }
 
 
   /** write의 후속 결과 처리를 담당하는 컨트롤러 */
   requestWrite() {
+    let currCmd = this.iterator.getCurrentCmd();
     // DeviceController 의 client가 빈 객체라면 연결이 해제된걸로 판단
     if (_.isEmpty(this.deviceController.client)) {
       BU.log('DeviceController Client Is Empty');
       return false;
-    } else if (this.iterator.getCurrentCmd() === undefined) { // 현재 진행 할 명령이 없다면 다음 명령 요청
+    } else if (currCmd === undefined) { // 현재 진행 할 명령이 없다면 다음 명령 요청
       return this.nextCommand();
     } else {
-      return this.write();
+      // 명령 수행에 대기 시간이 존재한다면 해당 시간만큼 setTimer 가동 시킨 후 대기열로 이동
+      if(currCmd.delayMs){
+        return this.iterator.moveToReservedCmdList();
+      } else {
+        return this.write();
+      }
     }
   }
 

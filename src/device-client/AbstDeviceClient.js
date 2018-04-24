@@ -46,7 +46,6 @@ class AbstDeviceClient extends EventEmitter {
       target_id: '',
       target_category: '',
       target_protocol: '',
-      hasOneAndOne: false,
       connect_info: {
         type: '',
       }
@@ -88,17 +87,24 @@ class AbstDeviceClient extends EventEmitter {
     return this.commander.systemErrorList === undefined ? [] : this.commander.systemErrorList;
   }
 
-
-  // Commander
+  /* Client가 요청 */
   /**
-   * 장치로 명령을 내릴 명령 전송
-   * @param {Buffer|string|requestCommandFormat|null} cmdInfo 
-   * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
+   * 장치를 제어하는 실제 명령만을 가지고 요청할 경우
+   * @param {Buffer|string|undefined} cmdInfo 자동완성 기능을 사용할 경우
    */
-  executeCommand(cmdInfo){
-    // BU.CLI('executeCommand');
-    return this.commander.executeCommand(cmdInfo);
+  executeAutoCommand(cmdInfo) {
+    return this.commander.executeAutoCommand(cmdInfo);
   }
+
+  /**
+   * 명령 제어에 필요한 항목을 작성할 경우 사용
+   * @param {requestCommandFormat} cmdInfo 자동완성 기능을 사용할 경우
+   */
+  executeManualCommand(cmdInfo) {
+    return this.commander.executeManualCommand(cmdInfo);
+  }
+
+
 
   /** Manager에게 다음 명령을 수행하도록 요청 */
   requestNextCommand(){
