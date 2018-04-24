@@ -16,15 +16,20 @@ class Commander extends AbstCommander {
   /** @param {deviceClientFormat} config */
   constructor(config) {
     super();
-    let foundInstance = _.find(instanceList, {id: config.target_id});
-    if(_.isEmpty(foundInstance)){
+    let foundInstance = _.find(instanceList, {
+      id: config.target_id
+    });
+    if (_.isEmpty(foundInstance)) {
       this.id = config.target_id;
       this.category = config.target_category ? config.target_category : 'etc';
       this.hasOneAndOne = config.hasOneAndOne ? true : false;
       /** Commander를 명령하는 Client 객체 */
       /** @type {AbstDeviceClient} */
       this.user = config.user === null ? null : config.user;
-      instanceList.push({id: config.target_id, instance: this});
+      instanceList.push({
+        id: config.target_id,
+        instance: this
+      });
 
       // BU.CLI(this);
     } else {
@@ -55,7 +60,7 @@ class Commander extends AbstCommander {
   }
 
   /** 장치의 연결이 되어있는지 여부 @return {boolean} */
-  get hasConnectedDevice(){
+  get hasConnectedDevice() {
     return _.isEmpty(this.mediator.getDeviceManager().deviceController.client) ? false : true;
   }
 
@@ -67,18 +72,17 @@ class Commander extends AbstCommander {
    * @param {Buffer|string|commandFormat|null} cmdInfo 
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */
-  executeCommand(cmdInfo){
+  executeCommand(cmdInfo) {
     /** @type {commandFormat} */
     let commandInfo = {};
     // commandFormat 형식을 따르지 않을 경우 자동으로 구성
     commandInfo.rank = 2;
     commandInfo.commandId = null;
     commandInfo.commander = this;
-    commandInfo.cmdList = [];
     commandInfo.currCmdIndex = 0;
-    commandInfo.timeoutMs = 1000;
+    commandInfo.cmdList = [];
 
-    if(Buffer.isBuffer(cmdInfo) || typeof cmdInfo  === 'string' ){
+    if (Buffer.isBuffer(cmdInfo) || typeof cmdInfo === 'string') {
       // 아무런 명령을 내리지 않는다면 해당 장치와의 통신을 끊지 않는다고 봄
       commandInfo.cmdList = [cmdInfo];
     } else if (Array.isArray(cmdInfo)) {
@@ -92,12 +96,66 @@ class Commander extends AbstCommander {
       commandInfo.timeoutMs = commandInfo.timeoutMs <= 0 ? 1000 : commandInfo.timeoutMs;
     }
     // 해당 Commander 생성 객체의 옵션을 가져옴
-    commandInfo.hasOneAndOne = this.hasOneAndOne; 
+    commandInfo.hasOneAndOne = this.hasOneAndOne;
     // BU.CLIN(commandInfo);
 
     return this.mediator.requestAddCommand(commandInfo, this);
   }
 
+  /**
+   * 장치를 제어하는 실제 명령만을 가지고 요청할 경우
+   * @param {Buffer|string|undefined} cmdInfo 자동완성 기능을 사용할 경우
+   */
+  executeAutoCommand(cmdInfo) {
+    /** @type {commandFormat} */
+    let commandInfo = {};
+    // commandFormat 형식을 따르지 않을 경우 자동으로 구성
+    commandInfo.rank = 2;
+    commandInfo.commandId = null;
+    commandInfo.currCmdIndex = 0;
+    commandInfo.cmdList = [];
+    // 자동 생성
+    commandInfo.commander = this;
+    commandInfo.hasOneAndOne = this.hasOneAndOne;
+
+    // 배열일 경우
+    if (Array.isArray(cmdInfo)) {
+      cmdInfo.forEach(cmd => {
+        commandInfo.cmdList.push({
+          data: cmd,
+          timoutMs: 1000
+        });
+      });
+    } else if (cmdInfo === undefined || cmdInfo === null || cmdInfo === '') {
+      // 아무런 명령도 내리지 않음.
+      commandInfo.cmdList = [];
+    } else {
+      commandInfo.cmdList.push({
+        data: cmdInfo,
+        timoutMs: 1000
+      });
+    }
+
+    return this.mediator.requestAddCommand(commandInfo, this);
+  }
+
+  /**
+   * 명령 제어에 필요한 항목을 작성할 경우 사용
+   * @param {requestCommandFormat} cmdInfo 자동완성 기능을 사용할 경우
+   */
+  executeManualCommand(cmdInfo) {
+    /** @type {commandFormat} */
+    let commandInfo = this.executeAutoCommand();
+
+    _.forEach(cmdInfo, (cmd, key) => {
+      commandInfo[key] = cmd;
+    });
+
+    // 자동 생성
+    commandInfo.commander = this;
+    commandInfo.hasOneAndOne = this.hasOneAndOne;
+    return this.mediator.requestAddCommand(commandInfo, this);
+  }
 
   /**
    * Commander와 연결된 장비에서 진행중인 저장소의 모든 명령을 가지고 옴 
@@ -136,7 +194,7 @@ class Commander extends AbstCommander {
       break;
     }
 
-    if(this.user){
+    if (this.user) {
       this.user.updateDcEvent(eventName, eventMsg);
     }
   }
@@ -148,23 +206,23 @@ class Commander extends AbstCommander {
    * @param {Error} error 현재 장비에서 실행되고 있는 명령 객체
    * @param {*} errMessage 
    */
-  updateDcError(processItem, error, errMessage){
+  updateDcError(processItem, error, errMessage) {
     // BU.log(`updateDcError ${error}\t`, errStack);
     // BU.CLI('에러 수신');
     // 1:1로 장비를 계속 물고 갈 경우 에러 무시
     // if(this.hasOneAndOne !== true){
     //   BU.CLI('에러 수신해서 처리');
     //   this.manager = {};
-  
+
     // BU.CLIS(error, errMessage);
-    if(error.message === 'Timeout'){
+    if (error.message === 'Timeout') {
       this.onSystemError('Timeout', true, errMessage);
     } else {
       this.loggingData(error, errMessage);
     }
     // }
 
-    if(this.user){
+    if (this.user) {
       this.user.updateDcError(processItem, error, errMessage);
     }
   }
@@ -176,7 +234,7 @@ class Commander extends AbstCommander {
    * @param {Buffer} data 명령 수행 결과 데이터
    * @param {AbstManager} manager 장치 관리 매니저
    */
-  updateDcData(processItem, data, manager){
+  updateDcData(processItem, data, manager) {
     // console.time('gogogo');
     // BU.CLI(data.toString());
 
@@ -187,14 +245,14 @@ class Commander extends AbstCommander {
     // 데이터를 받은 시점에서 DeviceManager가 전송한 명령을 저장. 차후 Manager로 requestNext나 requestTry를 진행할 경우 Manager에서 이 currCmd를 체크함
     let currCmd = processItem.cmdList[processItem.currCmdIndex];
     this.currCmd = typeof currCmd === 'object' ? JSON.parse(JSON.stringify(currCmd)) : currCmd;
-    
-    if(this.user){
+
+    if (this.user) {
       this.user.updateDcData(processItem, data);
     }
   }
 
   /** Manager에게 다음 명령을 수행하도록 요청 */
-  requestNextCommand(){
+  requestNextCommand() {
     BU.CLI(`requestNextCommand ${this.id}`);
     try {
       this.manager.responseToDataFromCommander(this, 'next');
@@ -204,7 +262,7 @@ class Commander extends AbstCommander {
   }
 
   /** Manager에게 현재 실행중인 명령을 재 전송하도록 요청 */
-  requestRetryCommand(){
+  requestRetryCommand() {
     BU.CLI('requestRetryCommand', this.id);
     try {
       this.manager.responseToDataFromCommander(this, 'retry');
@@ -217,7 +275,7 @@ class Commander extends AbstCommander {
    * Manager에게 Msg를 보내어 명령 진행 의사 결정을 취함
    * @param {string} key 요청 key
    */
-  requestTakeAction(key){
+  requestTakeAction(key) {
     BU.CLI('requestRetryCommand', this.id);
     try {
       this.manager.responseToDataFromCommander(this, key);
@@ -225,14 +283,14 @@ class Commander extends AbstCommander {
       throw error;
     }
   }
-  
+
   /**
    * 명령 객체 리스트 수행 종료
    * @param {commandFormat} processItem 현재 장비에서 실행되고 있는 명령 객체
    */
   updateDcComplete(processItem) {
     // BU.CLI('모든 명령이 수행 되었다고 수신 받음.', this.id);
-    if(this.user){
+    if (this.user) {
       return this.user.updateDcComplete(processItem);
     }
   }
@@ -261,7 +319,9 @@ class Commander extends AbstCommander {
       this.systemErrorList = [];
       return this.systemErrorList;
     }
-    const troubleObj = _.find(troubleList, {code: troubleCode});
+    const troubleObj = _.find(troubleList, {
+      code: troubleCode
+    });
     if (_.isEmpty(troubleObj)) {
       throw ReferenceError('해당 Trouble Msg는 없습니다' + troubleCode);
     }
@@ -275,9 +335,9 @@ class Commander extends AbstCommander {
       this.systemErrorList.push(troubleObj);
 
       this.loggingData(`이상 발생 code:${troubleCode}`, msg);
-    } else if (!hasOccur && !_.isEmpty(findObj)) {  // 에러 해제하였고 해당 에러가 존재한다면 삭제
+    } else if (!hasOccur && !_.isEmpty(findObj)) { // 에러 해제하였고 해당 에러가 존재한다면 삭제
       this.systemErrorList = _.reject(this.systemErrorList, systemError => {
-        if(systemError.code === troubleCode){
+        if (systemError.code === troubleCode) {
           this.loggingData(`이상 해제 code:${troubleCode}`, msg);
           return true;
         }

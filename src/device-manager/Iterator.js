@@ -20,7 +20,6 @@ class Iterator {
   addCmd(cmdInfo) {
     // BU.CLI(cmdInfo);
     let rank = cmdInfo.rank;
-    // BU.CLI(this.aggregate);
     // BU.CLIN(cmdInfo);
     // 명령 rank가 등록되어있지 않다면 신규로 등록
     if(!_.includes(_.map(this.aggregate.rankList, 'rank'), rank)){
@@ -43,8 +42,19 @@ class Iterator {
    */
   deleteCmd(commandId){
     BU.log('deleteCmd 수행', commandId);
+    // 명령 대기 리스트 삭제
     this.aggregate.rankList.forEach(rank => {
-      rank.list = _.reject(rank.list, {commandId});
+      _.remove(rank.list, {commandId});
+    });
+
+    // 명령 예약 리스트 삭제
+    this.aggregate.reservedList = _.reject(this.aggregate.reservedList, cmdInfo => {
+      if(cmdInfo.commandId === commandId){
+        clearTimeout(cmdInfo.delayTimeout);
+        return true;
+      } else {
+        return false;
+      }
     });
 
     if(this.aggregate.process.commandId === commandId){
@@ -55,6 +65,47 @@ class Iterator {
     }
   }
 
+  /** 
+   * Current Process Item의 delayMs 유무를 확인,
+   * ReservedCmdList로 이동 및 Current Process Item 삭제
+   * delayMs 시간 후 Process Rank List에 shift() 처리하는 함수 바인딩 처리
+   */
+  moveToReservedCmdList() {
+    const cmdInfo = this.getCurrentItem();
+    const currCmd = this.getCurrentCmd();
+
+    // delayMs 가 존재 할 경우만 수행
+    if(_.isNumber(currCmd.delayMs)){
+      cmdInfo.delayTimeout = setTimeout(() => {
+        // Delay Time 해제
+        currCmd.delayMs = null;
+        let foundIt = _.remove(this.aggregate.reservedList, reservedCmdInfo => _.isEqual(reservedCmdInfo, cmdInfo));
+        if(_.isEmpty(foundIt)){
+          BU.CLI('해당 명령은 삭제되었습니다.', cmdInfo.commandId);
+        } else {
+          // delay 가 종료되었으로 해당 Rank의 맨 선두에 배치
+          let foundRank = _.find(this.aggregate.rankList, {rank:cmdInfo.rank});
+          foundRank.list.unshift(foundIt);
+          let currItem = this.getCurrentItem();
+          // 현재 수행할 명령이 존재하지 않는다면 Manager의 nextCommand()를 호출
+          if(currItem === null || currItem === undefined || _.isEmpty(currItem)){
+            return this.nextCommand();
+          }
+        }
+      }, currCmd.delayMs);
+    } else {
+      throw new Error(cmdInfo.commandId + '는 delayMs를 가지고 있지 않습니다.');
+    }
+
+
+    // // 지정 시간만큼 Delay를 저장
+    // const delayMs = this.getCurrentCmd().delayMs;
+
+    // // Delay Time 해제
+    // this.getCurrentCmd().delayMs = null;
+
+    
+  }
 
   /**
    * 현재 진행 중인 명령 객체를 기준으로 다음 수행 명령이 존재하는지 체크
@@ -69,7 +120,7 @@ class Iterator {
 
   /**
    * 현재 진행 중인 명령 객체에 진행 할 명령이 존재하는 지
-   * @return {*} 다음 명령 존재시 : true, 없을 시: false
+   * @return {commandInfo} 다음 명령 존재시 : true, 없을 시: false
    */
   getCurrentCmd() {
     const processInfo = this.aggregate.process;
@@ -79,7 +130,7 @@ class Iterator {
   /**
    * 다음 명령 수행 집합 존재 체크
    * @param {number} rank 찾고자 하는 rank
-   * @return {*} 
+   * @return {commandStorage} 
    */
   getNextRank(rank) {
     // Rank를 지정했다면
@@ -96,8 +147,6 @@ class Iterator {
 
     return _.isEmpty(foundRankInfo) ? undefined : foundRankInfo;
   }
-
-
 
   /**
    * @description 다음 진행 할 명령을 Process에 할당. 

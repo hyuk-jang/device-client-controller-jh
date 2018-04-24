@@ -44,7 +44,13 @@ class SerialWithXbee extends AbstController{
     // All frames parsed by the XBee will be emitted here
     this.xbeeAPI.parser.on('data', frame => {
       console.log('>>', frame);
-      this.notifyData(frame);
+
+      // Trasmit Status는 write에서 참조하므로 제외. 나머지 메시지는 데이터 수신 이벤트를 발생시킴
+      /** @type {xbeeApi_0x88|xbeeApi_0x8B|xbeeApi_0x90} */
+      const frameObj = frame;
+      if(frameObj.type !== 0x8B){
+        return this.notifyData(frame);
+      }
     });
   }
 
@@ -53,12 +59,18 @@ class SerialWithXbee extends AbstController{
    * @param {xbeeApi_0x10} frame_obj 전송 데이터
    * @return {Promise} Promise 반환 객체
    */
-  write(frame_obj) {
+  async write(frame_obj) {
     if(_.isEmpty(this.client)){
       throw new Error(`장치와 접속이 수행되지 않았습니다.. ${this.port}`);
     }
 
-    return Promise.resolve(this.xbeeAPI.builder.write(frame_obj));
+    this.xbeeAPI.builder.write(frame_obj);
+
+
+    /** @type {xbeeApi_0x8B} */
+    let frameData = await eventToPromise(this.client, 'data');
+
+    return frameData.deliveryStatus === 0 ? true : false;
   }
 
   async connect() {
