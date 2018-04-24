@@ -79,7 +79,7 @@ class Manager extends AbstManager {
     /**
      * @type {commandStorage}
      */
-    this.commandStorage = { process: {}, rankList: [], reservedList: []};
+    this.commandStorage = { processWork: {}, rankList: [], reservedList: []};
 
     this.createIterator();
   }
@@ -99,26 +99,25 @@ class Manager extends AbstManager {
     this.mediator = deviceMediator;
   }
 
-
   async write() {
     // BU.log('Device write');
     // BU.CLI(this.sendMsgTimeOutSec);
-    const processItem = this.getProcessItem();
+    const processItem = this.iterator.currentItem;
     // BU.CLI(processItem);
     if (_.isEmpty(processItem)) {
       throw new Error(`현재 진행중인 명령이 존재하지 않습니다. ${this.id}`);
     } else {
-      let currCmd = this.iterator.getCurrentCmd();
+      let currCmd = this.iterator.currentCmd;
 
       // 명령 전송을 기다림
       await this.writeCommandController(currCmd);
 
-      // BU.CLI('명령 요청', this.getReceiver().id, processItem.timeoutMs);
+      // BU.CLI('명령 요청', this.iterator.currentReceiver.id, processItem.timeoutMs);
       // console.time(`timeout ${testId}`);
       processItem.timer = setTimeout(() => {
         // console.timeEnd(`timeout ${testId}`);
         // Recevier가 빈 객체라면 Titmeout 메시지 보내지 않음.
-        let receiver = this.getReceiver();
+        let receiver = this.iterator.currentReceiver;
         receiver == null ? '' : receiver.updateDcError(processItem, new Error('timeout'));
         this.nextCommand();
         // 명전 전송 후 제한시간안에 응답이 안올 경우 에러(기본 값 1초) 
@@ -148,7 +147,9 @@ class Manager extends AbstManager {
 
   /** write의 후속 결과 처리를 담당하는 컨트롤러 */
   requestWrite() {
-    let currCmd = this.iterator.getCurrentCmd();
+    // BU.CLI(this.iterator.currentItem);
+    let currCmd = this.iterator.currentCmd;
+    BU.CLI('requestWrite', currCmd);
     // DeviceController 의 client가 빈 객체라면 연결이 해제된걸로 판단
     if (_.isEmpty(this.deviceController.client)) {
       BU.log('DeviceController Client Is Empty');
@@ -165,7 +166,6 @@ class Manager extends AbstManager {
     }
   }
 
-
   /**
    * updateData를 통해 전달받은 데이터에 대한 Commander의 응답을 받을 메소드
    * 응답받은 데이터에 문제가 있거나 다른 사유로 명령을 재 전송하고자 할 경우(3회까지 가능)
@@ -174,7 +174,7 @@ class Manager extends AbstManager {
    */
   responseToDataFromCommander(commander, msg) {
     // BU.CLI('responseToDataFromCommander');
-    let processItem = this.getProcessItem();
+    let processItem = this.iterator.currentItem;
 
     if (_.isEmpty(processItem)) {
       throw new Error('현재 진행중인 명령은 없습니다.');
@@ -184,15 +184,15 @@ class Manager extends AbstManager {
     if (_.isEqual(processItem.commander, commander)) {
       switch (msg) {
       case 'isOk':
-        BU.CLI('isOk', this.getReceiver().id);
-        // BU.CLIN(this.getProcessItem().timer);
-        clearTimeout(this.getProcessItem().timer);
-        // BU.CLIN(this.getProcessItem().timer);
+        BU.CLI('isOk', this.iterator.currentReceiver.id);
+        // BU.CLIN(this.iterator.currentItem.timer);
+        clearTimeout(this.iterator.currentItem.timer);
+        // BU.CLIN(this.iterator.currentItem.timer);
         // console.timeEnd('gogogo');
         this.nextCommand();
         break;
       case 'retry':
-        clearTimeout(this.getProcessItem().timer);
+        clearTimeout(this.iterator.currentItem.timer);
         this.retryWrite();
         break;
       default:
@@ -215,12 +215,11 @@ class Manager extends AbstManager {
     } else if (this.retryChance === 0) {  // 3번 재도전 실패시 다음 명령 수행
       // 해당 에러 발송
       BU.CLI('retryWrite Max Error');
-      this.getReceiver().updateDcError(this.getProcessItem(), new Error('retryMaxError'));
+      this.iterator.currentReceiver.updateDcError(this.iterator.currentItem, new Error('retryMaxError'));
       // 다음 명령 수행
       this.nextCommand();
     }
   }
-
 
   /**
    * @param {commandFormat} cmdInfo 
@@ -238,7 +237,7 @@ class Manager extends AbstManager {
     this.iterator.addCmd(cmdInfo);
     // BU.CLI(this.commandStorage);
     // 현재 진행 중인 명령이 없다면 즉시 해당 명령 실행
-    if (_.isEmpty(this.commandStorage.process)) {
+    if (_.isEmpty(this.commandStorage.processWork)) {
       this.nextCommand();
     }
     return true;
@@ -251,10 +250,11 @@ class Manager extends AbstManager {
    */
   deleteCommand(commandId){
     let hasDeleteCurrCmd = this.iterator.deleteCmd(commandId);
+    BU.CLI('hasDeleteCurrCmd', hasDeleteCurrCmd);
     if(hasDeleteCurrCmd){
       this.nextCommand();
     }
-    return this.iterator.getAllItem();
+    return this.iterator.allItem;
   }
 
 
@@ -272,40 +272,42 @@ class Manager extends AbstManager {
    */
   nextCommand() {
     BU.CLI('nextCommand');
+    // BU.CLI(this.commandStorage);
     
-    let currProcessCmdInfo = this.getProcessItem();
-    let nextRank = this.iterator.getNextRank();
-    let currCmd = this.iterator.getCurrentCmd();
-
+    let currProcessCmdInfo = this.iterator.currentItem;
+    // BU.CLIN(currProcessCmdInfo);
+    let nextRank = this.iterator.nextRank;
+    // BU.CLI(nextRank);
+    let currCmd = this.iterator.currentCmd;
+    // BU.CLI(currCmd);
     // 현재 아무런 명령이 존재하지 않을 경우
     if(_.isEmpty(currProcessCmdInfo)){
       // 다음 명령 집합이 있다면 
       if(nextRank !== undefined){
         // 명령 집합 이동 
-        this.iterator.nextRank(nextRank);
+        this.iterator.changeNextRank(nextRank);
         // 현재 수행할 명령 요청
         return this.requestWrite();
       } 
     } else if(currCmd === undefined || this.iterator.isDone()) { // 현재 진행한 명령, 다음 명령이 존재하지 않는다면 해당 명령의 수행을 완료한 것으로 처리
-      
-      let receiver = this.getReceiver();
+      let receiver = this.iterator.currentReceiver;
       // 1:1로 명령을 물고 가는 경우에는 Next 진행하지 않음
       if(currProcessCmdInfo.hasOneAndOne){
-        return receiver == null ? '' : receiver.updateDcEvent('oneAndOne Comunication Done', this.getProcessItem());
+        return receiver == null ? '' : receiver.updateDcEvent('oneAndOne Comunication Done', this.iterator.currentItem);
       } else {  // 명령 객체 수행 완료 보고
         receiver == null ? '' : receiver.updateDcComplete(currProcessCmdInfo);
         // 다음 명령 집합이 있다면 
         if(nextRank !== undefined){
-        // 명령 집합 이동 
-          this.iterator.nextRank(nextRank);
-          // BU.CLI(this.getProcessItem().rank);
+          // 명령 집합 이동 
+          this.iterator.changeNextRank(nextRank);
+          // BU.CLI(this.iterator.currentItem.rank);
           // 현재 수행할 명령 요청
           return this.requestWrite();
         }
       }
     } else {  // 다음 명령이 존재할 경우
       this.retryChance = 3;
-      let hasNext = this.iterator.nextCmd();
+      let hasNext = this.iterator.changeNextCmd();
   
       // 다음 가져올 명령이 존재한다면
       if (hasNext) {
@@ -317,22 +319,6 @@ class Manager extends AbstManager {
     // BU.CLIN(this.commandStorage, 5);
     BU.CLI('모든 명령을 수행하였습니다.');
   }
-
-  /** @return {commandFormat} */
-  getProcessItem() {
-    return this.iterator.getCurrentItem();
-  }
-
-  /** @return {AbstCommander} */
-  getReceiver() {
-    return this.iterator.getCurrentReceiver();
-  }
-
-  // getReceiver(): iterator.currItem().observer
-  // getStatusCommand(): iterator.currItem()
-  // addCommand(commandFormat): iterator.addCommand()
-  // clearProcessCmd(): iterator.clear()
-
 }
 
 module.exports = Manager;

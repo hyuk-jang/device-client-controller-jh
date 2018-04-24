@@ -74,7 +74,7 @@ class AbstManager extends EventEmitter {
     // this.emit(eventName, eventMsg);
 
     if(_.isEmpty(this.deviceController.client)){
-      clearTimeout(this.getProcessItem().timer);
+      clearTimeout(this.iterator.currentItem.timer);
       this.iterator.clearAllItem();
     } 
 
@@ -87,22 +87,23 @@ class AbstManager extends EventEmitter {
    */
   updateDcData(data){
     // BU.CLI('AbstManager --> updateDcData', data);
-    // BU.CLIN(this.getProcessItem());
-    if(_.isEmpty(this.getReceiver())){
+    // BU.CLIN(this.iterator.currentItem);
+    let receiver = this.iterator.currentReceiver;
+    if(receiver === undefined){
       // BU.log('Completed Data', data);
     } else {
-      // const copyProcessItem = JSON.parse(JSON.stringify(this.getProcessItem()));
-      this.getReceiver().updateDcData(this.getProcessItem(), data, this); 
+      // const copyProcessItem = JSON.parse(JSON.stringify(this.iterator.currentItem));
+      receiver.updateDcData(this.iterator.currentItem, data, this); 
     }
   }
 
   /** 명령을 보냈으나 일정시간(1초) 응답이 없을 경우 해당 명령을 내린 Commander에게 알려줌 */
   // updateDcTimeout(){
   //   // BU.log('AbstManager --> updateDcTimeout');
-  //   if(_.isEmpty(this.getReceiver())){
+  //   if(_.isEmpty(this.iterator.currentReceiver)){
   //     BU.log('Clear command', this.id);
   //   } else {
-  //     this.getReceiver().updateDcError(this.getProcessItem(), new Error('timeOut'));
+  //     this.iterator.currentReceiver.updateDcError(this.iterator.currentItem, new Error('timeOut'));
   //   }
   // }
 }

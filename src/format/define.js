@@ -51,7 +51,7 @@
 
 /**
  * @typedef {Object} commandStorage 장치를 제어할 명령 저장소
- * @property {commandFormat} process 현재 진행중인 명령
+ * @property {commandFormat} processWork 현재 진행중인 명령
  * @property {Array.<{rank: number, list: Array.<commandFormat>}>} rankList Commander로부터 요청받은 명령을 담을 그릇
  * @property {Array.<commandFormat>} reservedList Delay가 존재하는 명령이 대기하는 목록
  */

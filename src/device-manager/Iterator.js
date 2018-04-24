@@ -14,6 +14,59 @@ class Iterator {
     this.aggregate = deviceManager.commandStorage;
   }
 
+  /**
+   * 현재 진행 중인 명령 객체에 진행 할 명령이 존재하는 지
+   * @return {commandInfo} 다음 명령 존재시 : true, 없을 시: false
+   */
+  get currentCmd() {
+    const processInfo = this.aggregate.processWork;
+    if(_.isEmpty(processInfo)){
+      return undefined;
+    } else {
+      return _.has(processInfo, 'currCmdIndex') && _.has(processInfo, 'cmdList') ? processInfo.cmdList[processInfo.currCmdIndex] : undefined;
+    }
+  }
+
+  /** @return {AbstCommander} */
+  get currentReceiver() {
+    let currItem = this.currentItem;
+    return _.isEmpty(currItem) || _.isEmpty(currItem.commander) ? undefined : currItem.commander;
+  }
+
+  /** @return {commandFormat} */
+  get currentItem (){
+    return this.aggregate.processWork;
+  }
+  
+  /** @return {commandStorage} */
+  get allItem() {
+    return this.aggregate;
+  }
+  
+  /**
+   * 현재 진행 중인 명령 객체를 기준으로 다음 수행 명령이 존재하는지 체크
+   * @return {boolean} 다음 명령 존재시 : true, 없을 시: false
+   */
+  get nextCmd() {
+    const processInfo = this.aggregate.processWork;
+  
+    const nextIndex = processInfo.currCmdIndex + 1;
+    return _.isEmpty(processInfo) ? undefined : processInfo.cmdList[nextIndex];
+  }
+
+  /**
+   * 다음 명령 수행 집합 존재 체크
+   * @return {commandStorage} 
+   */
+  get nextRank() {
+    // Rank를 지정했다면
+    // BU.CLI(this.aggregate);
+    let foundRankInfo = _.find(this.aggregate.rankList, rankInfo => {
+      return rankInfo.list.length;
+    });
+    return _.isEmpty(foundRankInfo) ? undefined : foundRankInfo;
+  }
+
   /** 
    * @param {commandFormat} cmdInfo 추가할 명령
    */
@@ -41,7 +94,7 @@ class Iterator {
    * @return {boolean} 현재 진행 중인 명령까지 삭제했다면 true, 예약 리스트만 삭제했다면 false
    */
   deleteCmd(commandId){
-    BU.log('deleteCmd 수행', commandId);
+    // BU.log('deleteCmd 수행', commandId);
     // 명령 대기 리스트 삭제
     this.aggregate.rankList.forEach(rank => {
       _.remove(rank.list, {commandId});
@@ -57,8 +110,9 @@ class Iterator {
       }
     });
 
-    if(this.aggregate.process.commandId === commandId){
-      this.aggregate.process = {};
+    if(this.aggregate.processWork.commandId === commandId){
+      clearTimeout(this.currentItem.timer);
+      this.aggregate.processWork = {};
       return true;
     } else {
       return false;
@@ -71,8 +125,8 @@ class Iterator {
    * delayMs 시간 후 Process Rank List에 shift() 처리하는 함수 바인딩 처리
    */
   moveToReservedCmdList() {
-    const cmdInfo = this.getCurrentItem();
-    const currCmd = this.getCurrentCmd();
+    const cmdInfo = this.currentItem;
+    const currCmd = this.currentCmd;
 
     // delayMs 가 존재 할 경우만 수행
     if(_.isNumber(currCmd.delayMs)){
@@ -86,7 +140,7 @@ class Iterator {
           // delay 가 종료되었으로 해당 Rank의 맨 선두에 배치
           let foundRank = _.find(this.aggregate.rankList, {rank:cmdInfo.rank});
           foundRank.list.unshift(foundIt);
-          let currItem = this.getCurrentItem();
+          let currItem = this.currentItem;
           // 현재 수행할 명령이 존재하지 않는다면 Manager의 nextCommand()를 호출
           if(currItem === null || currItem === undefined || _.isEmpty(currItem)){
             return this.nextCommand();
@@ -107,47 +161,37 @@ class Iterator {
     
   }
 
-  /**
-   * 현재 진행 중인 명령 객체를 기준으로 다음 수행 명령이 존재하는지 체크
-   * @return {boolean} 다음 명령 존재시 : true, 없을 시: false
-   */
-  getNextCmd() {
-    const processInfo = this.aggregate.process;
 
-    const nextIndex = processInfo.currCmdIndex + 1;
-    return _.isEmpty(processInfo) ? undefined : processInfo.cmdList[nextIndex];
-  }
 
   /**
-   * 현재 진행 중인 명령 객체에 진행 할 명령이 존재하는 지
-   * @return {commandInfo} 다음 명령 존재시 : true, 없을 시: false
+   * RankList에서 검색 조건에 맞는 commandFormat 를 돌려줌
+   * @param {{rank: number, commandId: string}} searchInfo or 검색
+   * @return {Array.<commandFormat>}
    */
-  getCurrentCmd() {
-    const processInfo = this.aggregate.process;
-    return _.isEmpty(processInfo) ? undefined : processInfo.cmdList[processInfo.currCmdIndex];
-  }
+  findRankList(searchInfo) {
+    let returnValue = [];
 
-  /**
-   * 다음 명령 수행 집합 존재 체크
-   * @param {number} rank 찾고자 하는 rank
-   * @return {commandStorage} 
-   */
-  getNextRank(rank) {
-    // Rank를 지정했다면
-    let foundRankInfo;
-    if(_.isNumber(rank)){
-      foundRankInfo = _.find(this.aggregate.rankList, rankInfo => {
-        return rankInfo.list.length && _.isEqual(rankInfo.rank, rank);
-      });
-    } else {
-      foundRankInfo = _.find(this.aggregate.rankList, rankInfo => {
-        return rankInfo.list.length;
-      });
+    if(_.isNumber(searchInfo.rank)){
+      returnValue = _.concat(returnValue, _.find(this.aggregate.rankList, {rank:searchInfo.rank}).list); 
     }
 
-    return _.isEmpty(foundRankInfo) ? undefined : foundRankInfo;
+    if(_.isString(searchInfo.commandId) && searchInfo.commandId){
+      _.forEach(this.aggregate.rankList, rankInfo => {
+        let foundIt = _.filter(rankInfo.list, {commandId: searchInfo.commandId});
+        returnValue = _.concat(returnValue, foundIt);
+      });
+    }
+    return _.union(returnValue);
   }
 
+  /**
+   * Reserved List에서 commandId가 동일한 commandFormat 을 돌려줌
+   * @param {string} commandId 명령 Id
+   */
+  findReservedList(commandId){
+    return _.find(this.aggregate.reservedList, {commandId});
+  }
+  
   /**
    * @description 다음 진행 할 명령을 Process에 할당. 
    * 다음 명령이 존재할 경우 processIndex 1 증가
@@ -158,46 +202,47 @@ class Iterator {
    * 현재 진행 중인 명령 리스트 Index 1 증가하고 다음 진행해야할 명령 반환 
    * @return {boolean} 다음 진행해야할 명령이 존재한다면 true, 없다면 false
    */
-  nextCmd (){
-    const processInfo = this.aggregate.process;
+  changeNextCmd (){
+    const processInfo = this.aggregate.processWork;
     // 현재 진행중인 명령이 비어있다면 다음 순위 명령을 가져옴
     if(_.isEmpty(processInfo)){
       // 다음 명령이 존재할 경우
-      let nextRank = this.getNextRank();
+      let nextRank = this.nextRank;
       // 다음 수행할 Rank가 없다면 false 반환
       if(nextRank === undefined){
         return false;
       } else {
-        return this.nextRank(nextRank);
+        return this.changeNextRank(nextRank);
       }
     } else {
       // 명령 인덱스 증가
       processInfo.currCmdIndex += 1;
       // 현재 진행중인 명령을 모두 실행하였다면 다음 순위 명령 검색 및 수행
       if(processInfo.cmdList[processInfo.currCmdIndex] === undefined){
-        let nextRank = this.getNextRank();
+        let nextRank = this.nextRank;
         // 다음 수행할 Rank가 없다면 false 반환
         if(nextRank === undefined){
           return false;
         } else {
-          return this.nextRank(nextRank);
+          return this.changeNextRank(nextRank);
         }
       } else {
         // 현재 진행중인 명령의 우선 순위를 체크
-        let rank = this.getCurrentItem().rank;
+        let rank = this.currentItem.rank;
         
         // 현재 진행중인 명령이 긴급 명령(Rank 0)이 아니라면 긴급 명령이 존재하는지 체크
         if(rank !== 0){
-          let foundIt = this.getNextRank(0);
+          let foundList = _.isNumber(rank) ? this.findRankList({rank: 0}) : [];
+          BU.CLI(foundList);
 
           // 만약 긴급 명령이 존재하지 않는다면
-          if(foundIt === undefined){
+          if(foundList.length === 0){
             return true;
           } else {
             // 진행 중인 자료를 이동
             let currProcessStorage = _.find(this.aggregate.rankList, {rank} );
             currProcessStorage.list.unshift(processInfo);
-            return this.nextRank();
+            return this.changeNextRank();
           }
         } else {
           return true;
@@ -210,7 +255,8 @@ class Iterator {
    * @param {{rank:number, list: Array.<commandFormat>}} rankList
    * @return {boolean} 랭크가 있다면 true, 없다면 false
    */
-  nextRank (rankList){
+  changeNextRank (rankList){
+    BU.CLI('changeNextRank', rankList);
     if(rankList === undefined){
       rankList = _.find(this.aggregate.rankList, rankInfo => {
         return rankInfo.list.length;
@@ -218,10 +264,10 @@ class Iterator {
     }
     // 명령이 존재하지 않을 경우
     if(_.isEmpty(rankList)){
-      this.aggregate.process = {};
+      this.aggregate.processWork = {};
       return false;
     } else {  // 명령 집합에서 첫번째 목록을 process로 가져오고 해당 배열에서 제거
-      this.aggregate.process = rankList.list.shift();
+      this.aggregate.processWork = rankList.list.shift();
       return true;
     }
   }
@@ -231,7 +277,7 @@ class Iterator {
    * @return {undefined}
    */
   clearProcessItem (){
-    this.aggregate.process = {};
+    this.aggregate.processWork = {};
   }
 
   /** 모든 명령을 초기화 */
@@ -247,27 +293,15 @@ class Iterator {
    * @return {boolean} 
    */
   isDone (){
-    return this.getNextCmd() === undefined ? true : false;
+    return this.nextCmd === undefined ? true : false;
   }
 
 
-  /** @return {commandFormat} */
-  getCurrentItem (){
-    return this.aggregate.process;
-  }
-
-  /** @return {commandStorage} */
-  getAllItem() {
-    return this.aggregate;
-  }
+  
 
 
 
-  /** @return {AbstCommander} */
-  getCurrentReceiver() {
-    let currItem = this.getCurrentItem();
-    return _.isEmpty(currItem) ? null : currItem.commander;
-  }
+
 
   
 }

@@ -12,7 +12,7 @@ class AbstIterator {
    * 현재 진행 중인 명령 리스트 Index 1 증가하고 다음 진행해야할 명령 반환 
    * @return {boolean} 다음 진행해야할 명령이 존재한다면 true, 없다면 false
    */
-  nextCmd (){
+  changeNextCmd (){
   }
   /** 
    * 다음 진행해야할 랭크 가져옴
