@@ -89,11 +89,11 @@ class AbstManager extends EventEmitter {
     // BU.CLI('AbstManager --> updateDcData', data);
     // BU.CLIN(this.iterator.currentItem);
     let receiver = this.iterator.currentReceiver;
+    // BU.CLI(receiver);
     if(receiver === null){
       // BU.log('Completed Data', data);
     } else {
-      // const copyProcessItem = JSON.parse(JSON.stringify(this.iterator.currentItem));
-      receiver.updateDcData(this.iterator.currentItem, data, this); 
+      receiver.updateDcData(this.iterator.currentCommandSet, data, this); 
     }
   }
 

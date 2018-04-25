@@ -5,7 +5,7 @@ const BU = require('base-util-jh').baseUtil;
 
 const AbstCommander = require('../device-commander/AbstCommander');
 
-const {definedOperationStatus} = require('../format/moduleDefine');
+const {definedOperationStatus, definedCommandSetRank} = require('../format/moduleDefine');
 require('../format/define');
 
 class Iterator {
@@ -52,13 +52,17 @@ class Iterator {
    * @return {boolean} 다음 명령 존재시 : true, 없을 시: false
    */
   get nextCommand() {
-    const currentCommandSet = this.currentCommandSet;
-    if(_.isEmpty(currentCommandSet)){
-      return null;
-    } else {
-      const nextIndex = currentCommandSet.currCmdIndex + 1;
-      const cmd = currentCommandSet.cmdList[nextIndex];
-      return cmd === undefined || cmd === '' || _.isEmpty(cmd) ? null : cmd;
+    try {
+      const currentCommandSet = this.currentCommandSet;
+      if(_.isEmpty(currentCommandSet)){
+        return null;
+      } else {
+        const nextIndex = currentCommandSet.currCmdIndex + 1;
+        const cmd = currentCommandSet.cmdList[nextIndex];
+        return cmd === undefined || cmd === '' || _.isEmpty(cmd) ? null : cmd;
+      }
+    } catch (error) {
+      return null;     
     }
   }
 
@@ -102,7 +106,7 @@ class Iterator {
    * @return {void}
    */
   deleteCmd(commandId){
-    // BU.log('deleteCmd 수행', commandId);
+    // BU.CLI('deleteCmd 수행', commandId);
     // 명령 대기 리스트 삭제
     this.aggregate.standbyCommandSetList.forEach(rank => {
       _.remove(rank.list, {commandId});
@@ -116,7 +120,7 @@ class Iterator {
     });
 
     // 현재 명령을 삭제 요청 할 경우 시스템에 해당 명령 삭제 상태로 교체
-    if(this.aggregate.currentCommandSet.commandId === commandId){
+    if(this.currentCommandSet.commandId === commandId){
       this.aggregate.currentCommandSet.operationStatus = definedOperationStatus.REQUEST_DELETE;
     }
   }
@@ -155,7 +159,6 @@ class Iterator {
     }
   }
 
-
   /**
    * standbyCommandSetList에서 검색 조건에 맞는 commandFormat 를 돌려줌
    * @param {{rank: number, commandId: string}} searchInfo or 검색
@@ -164,7 +167,8 @@ class Iterator {
   findStandbyCommandSetList(searchInfo) {
     let returnValue = [];
 
-    if(_.isNumber(searchInfo.rank)){
+    // searchInfo.rank가 숫자고 해당 Rank가 등록되어 있다면 검색 수행
+    if(_.isNumber(searchInfo.rank) && _.map(this.aggregate.standbyCommandSetList, commandFormat => commandFormat.rank === searchInfo.rank).length){
       returnValue = _.concat(returnValue, _.find(this.aggregate.standbyCommandSetList, {rank:searchInfo.rank}).list); 
     }
 
@@ -194,34 +198,35 @@ class Iterator {
    * 현재 진행 중인 명령 리스트 Index 1 증가하고 다음 진행해야할 명령 반환 
    * @return {void} 다음 진행해야할 명령이 존재한다면 true, 없다면 false
    */
-  changeNextCmd (){
+  changeNextCommand (){
+    BU.CLI('changeNextCommand');
     try {
       const currentCommandSet = this.currentCommandSet;
       // 현재 진행중인 명령이 비어있다면 다음 순위 명령을 가져옴
       if(_.isEmpty(currentCommandSet) || this.nextCommand === null){
+        // BU.CLI('다음 명령이 존재하지 않죠?', this.nextCommand);
         // 다음 명령이 존재할 경우
         let nextCommandSet = this.nextCommandSet;
         // 다음 수행할 Rank가 없다면 false 반환
         if(_.isEmpty(nextCommandSet)){
           throw new ReferenceError('다음 명령이 존재하지 않습니다.');
         } else {
-          return this.changeNextRank(nextCommandSet);
+          return this.changeNextCommandSet(nextCommandSet);
         }
       } else {
         // 명령 인덱스 증가
         currentCommandSet.currCmdIndex += 1;
         // 현재 진행중인 명령의 우선 순위를 체크
-        let rank = this.currentCommandSet.rank;
+        let currentSetRank = this.currentCommandSet.rank;
         // 현재 진행중인 명령이 긴급 명령(Rank 0)이 아니라면 긴급 명령이 존재하는지 체크
-        if(rank !== 0 && _.isNumber(rank)){
-          let foundList = this.findStandbyCommandSetList({rank: 0});
-  
+        if(currentSetRank !== definedCommandSetRank.EMERGENCY && _.isNumber(currentSetRank)){
+          let foundList = this.findStandbyCommandSetList({rank: definedCommandSetRank.EMERGENCY});
           // 만약 긴급 명령이 존재한다면
           if(foundList.length){
             // 진행 중인 자료를 이동
-            let currProcessStorage = _.find(this.aggregate.standbyCommandSetList, {rank} );
+            let currProcessStorage = _.find(this.aggregate.standbyCommandSetList, {rank:currentSetRank} );
             currProcessStorage.list.unshift(currentCommandSet);
-            return this.changeNextRank();
+            return this.changeNextCommandSet();
           }
         } 
       }
@@ -234,8 +239,8 @@ class Iterator {
    * @param {{rank:number, list: Array.<commandFormat>}} standbyCommandSetList
    * @return {void} 
    */
-  changeNextRank (standbyCommandSetList){
-    BU.CLI('changeNextRank', standbyCommandSetList);
+  changeNextCommandSet (standbyCommandSetList){
+    BU.CLI('changeNextCommandSet');
     if(standbyCommandSetList === undefined){
       standbyCommandSetList = _.find(this.aggregate.standbyCommandSetList, rankInfo => {
         return rankInfo.list.length;
@@ -269,6 +274,11 @@ class Iterator {
     this.clearCurrentCommandSet();
     _.forEach(this.aggregate.standbyCommandSetList, item => {
       item.list = [];
+    });
+
+    _.dropWhile(this.aggregate.delayCommandSetList, item => {
+      clearTimeout(item.delayTimeout);
+      return true;
     });
   }
 
