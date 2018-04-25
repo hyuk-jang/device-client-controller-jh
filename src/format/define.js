@@ -14,9 +14,24 @@
  * @property {string} commandId 해당 명령 통합 ID
  * @property {Array.<commandInfo>} cmdList 명령을 보낼 배열
  * @property {number} currCmdIndex cmdList Index
+ * @property {operationStatus} operationStatus 
  * @property {AbstCommander} commander [Auto Made] 명령을 요청한 Commander
  * @property {boolean} hasOneAndOne [Auto Made] 계속하여 연결을 수립할지 여부
+ * @property {Timeout=} timer [Running Time Made] 명령 발송 후 응답까지 기다리는 SetTimeout
+ * @property {Timeout=} delayTimeout [Running Time Made] 진행할 명령의 지연시간이 존재할 경우 standbyCommandSetList 대기열로 돌아오기까지의 SetTimeout
  */
+
+/**
+ * @typedef {number} operationStatus
+ * @example
+ * 0: Wait(Default)
+ * 1: Request Cmd
+ * 2: Success Cmd
+ * 3: Request Delete Cmd(명령 삭제시)
+ * 4: Error: TimeOut
+ * 5: Error: Retry Count Full Error
+ * 6: Error: Non Cmd
+ */  
 
 /**
  * @typedef {Object} commandInfo 실제 장치로 명령을 수행할 데이터
@@ -51,8 +66,8 @@
 
 /**
  * @typedef {Object} commandStorage 장치를 제어할 명령 저장소
- * @property {commandFormat} processWork 현재 진행중인 명령
- * @property {Array.<{rank: number, list: Array.<commandFormat>}>} rankList Commander로부터 요청받은 명령을 담을 그릇
- * @property {Array.<commandFormat>} reservedList Delay가 존재하는 명령이 대기하는 목록
+ * @property {commandFormat} currentCommandSet 현재 진행중인 명령
+ * @property {Array.<{rank: number, list: Array.<commandFormat>}>} standbyCommandSetList Commander로부터 요청받은 명령을 담을 그릇
+ * @property {Array.<commandFormat>} delayCommandSetList Delay가 존재하는 명령이 대기하는 목록
  */
 

@@ -31,7 +31,7 @@ describe('Device Manager Test', () => {
       });
       // TEST
       // 저장소 생성
-      deviceManager.commandStorage = { processWork: {}, rankList: [] };
+      deviceManager.commandStorage = { currentCommandSet: {}, standbyCommandSetList: [] };
       // 반복기 생성
       deviceManager.createIterator();
       // 명령을 받을 객체 생성
@@ -41,7 +41,7 @@ describe('Device Manager Test', () => {
 
       before(()=> {
         // 자동 명령 수행을 하지 않기위하여 temp 명령 집어넣음
-        deviceManager.commandStorage.processWork = {test:'test'};
+        deviceManager.commandStorage.currentCommandSet = {test:'test'};
 
       }); 
 
@@ -72,14 +72,14 @@ describe('Device Manager Test', () => {
           deviceManager.addCommand(_.cloneDeep(cmdInfo));
         }
 
-        let rankList = deviceManager.commandStorage.rankList;
+        let standbyCommandSetList = deviceManager.commandStorage.standbyCommandSetList;
 
         // 명령 추가 결과 테스트 // [Add] Rank{2} * 3, Rank{3} * 2
-        let rank2 = _.find(rankList, {rank:2});
+        let rank2 = _.find(standbyCommandSetList, {rank:2});
         expect(rank2.list.length).to.be.eq(3);
         expect(_.head(rank2.list).cmdList.length).to.be.eq(0);
         expect(_.nth(rank2.list, 1).cmdList.length).to.be.eq(2);
-        let rank3 = _.find(rankList, {rank:3});
+        let rank3 = _.find(standbyCommandSetList, {rank:3});
         expect(rank3.list.length).to.be.eq(2);
         expect(_.head(rank3.list).cmdList.length).to.be.eq(1);
 
@@ -113,8 +113,8 @@ describe('Device Manager Test', () => {
         deviceManager.addCommand(emergencyCmdInfo);
 
 
-        let rankList = deviceManager.commandStorage.rankList;
-        let rank0 = _.find(rankList, {rank:0});
+        let standbyCommandSetList = deviceManager.commandStorage.standbyCommandSetList;
+        let rank0 = _.find(standbyCommandSetList, {rank:0});
         // 정상적인 명령 추가 확인
         expect(rank0.list.length).to.be.eq(1);
         expect(_.head(rank0.list).cmdList.length).to.be.eq(2);
@@ -124,27 +124,27 @@ describe('Device Manager Test', () => {
         BU.CLI(deviceManager.commandStorage);
 
         // rank로 검색
-        let foundRankList = deviceManager.iterator.findRankList({rank:2});
-        expect(foundRankList.length).to.be.eq(2);
+        let foundstandbyCommandSetList = deviceManager.iterator.findStandbyCommandSetList({rank:2});
+        expect(foundstandbyCommandSetList.length).to.be.eq(2);
         // id로 검색
-        foundRankList = deviceManager.iterator.findRankList({commandId:'홍길동3'});
-        expect(foundRankList.length).to.be.eq(1);
+        foundstandbyCommandSetList = deviceManager.iterator.findStandbyCommandSetList({commandId:'홍길동3'});
+        expect(foundstandbyCommandSetList.length).to.be.eq(1);
         // 중복 검색, 검색 결과 중복 제거되는지 테스트
-        foundRankList = deviceManager.iterator.findRankList({rank:2, commandId:'홍길동2'});
-        expect(foundRankList.length).to.be.eq(2);
+        foundstandbyCommandSetList = deviceManager.iterator.findStandbyCommandSetList({rank:2, commandId:'홍길동2'});
+        expect(foundstandbyCommandSetList.length).to.be.eq(2);
 
 
         
         
         // 명령 재개 후 홍길동2(Rank 2, cmdList Length:2) 수행 테스트
-        deviceManager.nextCommand();
-        let currRank2Hong = deviceManager.iterator.currentItem;
+        // deviceManager.nextCommand();
+        let currRank2Hong = deviceManager.iterator.currentCommandSet;
         expect(currRank2Hong.commandId).to.be.eq('홍길동2');
         expect(currRank2Hong.currCmdIndex).to.be.eq(0);
         // [Delete] Rank{0} * 0,  Rank{2} * 1, Rank{3} * 0
         deviceManager.deleteCommand('홍길동2');
         // deviceManager.deleteCommand('홍길동3');
-        BU.CLIN(deviceManager.iterator.currentItem, 2);
+        BU.CLIN(deviceManager.iterator.currentCommandSet, 2);
 
         // await Promise.delay(500).then(() => {
         //   BU.log('긴급 홍길동0 추가');
@@ -152,7 +152,7 @@ describe('Device Manager Test', () => {
         // });
         
         // 1초가 아직 지나지 않았으므로 0
-        let currItem = deviceManager.iterator.currentItem;
+        let currItem = deviceManager.iterator.currentCommandSet;
         BU.CLIN(currItem, 2);
         expect(currItem.currCmdIndex).to.be.eq(0);
         expect(currItem.commandId).to.be.eq('홍길동4');
@@ -160,7 +160,7 @@ describe('Device Manager Test', () => {
         // 500 + 600 => 1.1초가 지났으므로 Timeout 발생. 긴급 명령 발생에 의한 명령 교체 테스트
         await Promise.delay(600);
 
-        currItem = deviceManager.iterator.currentItem;
+        currItem = deviceManager.iterator.currentCommandSet;
         BU.CLIN(currItem, 2);
         expect(currItem.currCmdIndex).to.be.eq(0);
         expect(currItem.commandId).to.be.eq('긴급 홍길동');

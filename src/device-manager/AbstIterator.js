@@ -18,7 +18,7 @@ class AbstIterator {
    * 다음 진행해야할 랭크 가져옴
    * @return {boolean} 랭크가 있다면 true, 없다면 false
    */
-  nextRank (){
+  nextCommandSet (){
   }
 
   /** 

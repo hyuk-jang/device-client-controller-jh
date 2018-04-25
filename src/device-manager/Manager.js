@@ -11,20 +11,21 @@ const AbstManager = require('./AbstManager');
 
 const Iterator = require('./Iterator');
 
+const {definedOperationStatus} = require('../format/moduleDefine');
+
 require('../format/define');
 // DeviceManager는 DeviceController와 1:1 매칭.
 const instanceList = [];
 /** @class DeviceManager */
 class Manager extends AbstManager {
-  /** @param {deviceClientFormat} config */
-  constructor(config) {
+  constructor() {
     super();
-    this.config = config;
+    
   }
 
   /** Manager를 초기화 처리 */
-  setManager(){
-    let config = this.config;
+  /** @param {deviceClientFormat} config */
+  setManager(config){
     let deviceController = null;
     let controller = null;
 
@@ -66,6 +67,8 @@ class Manager extends AbstManager {
     if (_.isEmpty(foundInstance)) {
       // observer 등록
       deviceController.attach(this);
+      this.config = config;
+      this.hasPerformCommand = false;
       // Manager에 Device 등록
       this.deviceController = deviceController;
       this.id = deviceController.id;
@@ -79,7 +82,7 @@ class Manager extends AbstManager {
     /**
      * @type {commandStorage}
      */
-    this.commandStorage = { processWork: {}, rankList: [], reservedList: []};
+    this.commandStorage = { currentCommandSet: {}, standbyCommandSetList: [], delayCommandSetList: []};
 
     this.createIterator();
   }
@@ -102,26 +105,28 @@ class Manager extends AbstManager {
   async write() {
     // BU.log('Device write');
     // BU.CLI(this.sendMsgTimeOutSec);
-    const processItem = this.iterator.currentItem;
+    const currentCommandSet = this.iterator.currentCommandSet;
     // BU.CLI(processItem);
-    if (_.isEmpty(processItem)) {
+    if (_.isEmpty(currentCommandSet)) {
       throw new Error(`현재 진행중인 명령이 존재하지 않습니다. ${this.id}`);
     } else {
-      let currCmd = this.iterator.currentCmd;
+      let currentCommand = this.iterator.currentCommand;
 
       // 명령 전송을 기다림
-      await this.writeCommandController(currCmd);
+      await this.writeCommandController(currentCommand);
 
       // BU.CLI('명령 요청', this.iterator.currentReceiver.id, processItem.timeoutMs);
       // console.time(`timeout ${testId}`);
-      processItem.timer = setTimeout(() => {
+      currentCommandSet.timer = setTimeout(() => {
         // console.timeEnd(`timeout ${testId}`);
         // Recevier가 빈 객체라면 Titmeout 메시지 보내지 않음.
-        let receiver = this.iterator.currentReceiver;
-        receiver == null ? '' : receiver.updateDcError(processItem, new Error('timeout'));
-        this.nextCommand();
+        // let receiver = this.iterator.currentReceiver;
+        // receiver && receiver.updateDcError(currentCommandSet, new Error('timeout'));
+        this.updateOperationStatus(definedOperationStatus.E_TIMEOUT);
+        return this.processingCommandAtCenter();
+        // this.nextCommand();
         // 명전 전송 후 제한시간안에 응답이 안올 경우 에러(기본 값 1초) 
-      }, currCmd.timeoutMs || 1000);
+      }, currentCommand.timeoutMs || 1000);
 
       return true;
       // }
@@ -137,7 +142,8 @@ class Manager extends AbstManager {
     // BU.CLI('msgSendController');
     if (cmdInfo === '' || cmdInfo === undefined || cmdInfo === null|| BU.isEmpty(cmdInfo)) {
       // return new Error('수행할 명령이 없습니다.');
-      return this.nextCommand();
+      return this.processingCommandAtCenter();
+      // return this.nextCommand();
     }
     // 장치로 명령 전송
     await this.deviceController.write(cmdInfo.data);
@@ -148,19 +154,23 @@ class Manager extends AbstManager {
   /** write의 후속 결과 처리를 담당하는 컨트롤러 */
   requestWrite() {
     // BU.CLI(this.iterator.currentItem);
-    let currCmd = this.iterator.currentCmd;
-    BU.CLI('requestWrite', currCmd);
+    const currentCommandSet = this.iterator.currentCommandSet;
+    let currentCommand = this.iterator.currentCommand;
     // DeviceController 의 client가 빈 객체라면 연결이 해제된걸로 판단
     if (_.isEmpty(this.deviceController.client)) {
       BU.log('DeviceController Client Is Empty');
       return false;
-    } else if (currCmd === undefined) { // 현재 진행 할 명령이 없다면 다음 명령 요청
-      return this.nextCommand();
+    } else if (currentCommand === null) { // 현재 진행 할 명령이 없다면 중앙 명령 처리에 보고
+      this.updateOperationStatus(definedOperationStatus.E_NON_CMD);
+      return this.processingCommandAtCenter();
+      // return this.nextCommand();
     } else {
       // 명령 수행에 대기 시간이 존재한다면 해당 시간만큼 setTimer 가동 시킨 후 대기열로 이동
-      if(currCmd.delayMs){
-        return this.iterator.moveToReservedCmdList();
+      if(currentCommand.delayMs){
+        this.updateOperationStatus(definedOperationStatus.REQUEST_DELETE);
+        return this.processingCommandAtCenter();
       } else {
+        currentCommandSet.operationStatus = definedOperationStatus.REQUEST;
         return this.write();
       }
     }
@@ -174,25 +184,28 @@ class Manager extends AbstManager {
    */
   responseToDataFromCommander(commander, msg) {
     // BU.CLI('responseToDataFromCommander');
-    let processItem = this.iterator.currentItem;
+    let currentCommandSet = this.iterator.currentCommandSet;
 
-    if (_.isEmpty(processItem)) {
+    if (_.isEmpty(currentCommandSet)) {
       throw new Error('현재 진행중인 명령은 없습니다.');
     }
 
     // 현재 진행중인 명령 객체와 일치해야지만 가능
-    if (_.isEqual(processItem.commander, commander)) {
+    if (_.isEqual(currentCommandSet.commander, commander)) {
       switch (msg) {
       case 'isOk':
         BU.CLI('isOk', this.iterator.currentReceiver.id);
         // BU.CLIN(this.iterator.currentItem.timer);
-        clearTimeout(this.iterator.currentItem.timer);
+        clearTimeout(this.iterator.currentCommandSet.timer);
+        // 명령 처리 성공
+        this.updateOperationStatus(definedOperationStatus.RESPONE_SUCCESS);
+        this.processingCommandAtCenter();
         // BU.CLIN(this.iterator.currentItem.timer);
         // console.timeEnd('gogogo');
-        this.nextCommand();
+        // this.nextCommand();
         break;
       case 'retry':
-        clearTimeout(this.iterator.currentItem.timer);
+        clearTimeout(this.iterator.currentCommandSet.timer);
         this.retryWrite();
         break;
       default:
@@ -213,11 +226,21 @@ class Manager extends AbstManager {
         this.requestWrite();
       });
     } else if (this.retryChance === 0) {  // 3번 재도전 실패시 다음 명령 수행
-      // 해당 에러 발송
-      BU.CLI('retryWrite Max Error');
-      this.iterator.currentReceiver.updateDcError(this.iterator.currentItem, new Error('retryMaxError'));
+      this.updateOperationStatus(definedOperationStatus.E_RETRY_MAX);
+      return this.processingCommandAtCenter();
       // 다음 명령 수행
-      this.nextCommand();
+      // this.nextCommand();
+    }
+  }
+
+  /**
+   * @param {operationStatus} operationStatus 
+   */
+  updateOperationStatus(operationStatus){
+    let currentCommandSet = this.iterator.currentCommandSet;
+    // 명령 삭제 일 경우에는 업데이트 제외
+    if(currentCommandSet.operationStatus !== definedOperationStatus.REQUEST_DELETE){
+      currentCommandSet.operationStatus = operationStatus;
     }
   }
 
@@ -232,14 +255,14 @@ class Manager extends AbstManager {
     if (_.isEmpty(this.deviceController.client)) {
       return false;
     }
-    // BU.log('addCommand');
     // BU.CLIN(cmdInfo);
     this.iterator.addCmd(cmdInfo);
     // BU.CLI(this.commandStorage);
     // 현재 진행 중인 명령이 없다면 즉시 해당 명령 실행
-    if (_.isEmpty(this.commandStorage.processWork)) {
-      this.nextCommand();
-    }
+    // if ( _.isEmpty(this.commandStorage.currentCommandSet)) {
+    //   this.nextCommand();
+    // }
+    this.processingCommandAtCenter();
     return true;
   }
 
@@ -249,75 +272,115 @@ class Manager extends AbstManager {
    * @return {commandStorage}
    */
   deleteCommand(commandId){
-    let hasDeleteCurrCmd = this.iterator.deleteCmd(commandId);
-    BU.CLI('hasDeleteCurrCmd', hasDeleteCurrCmd);
-    if(hasDeleteCurrCmd){
-      this.nextCommand();
-    }
-    return this.iterator.allItem;
+    this.iterator.deleteCmd(commandId);
+    return this.iterator.commandSetStorage;
   }
-
 
   /**
-   * 현재 랭크 데이터 가져옴
-   * @param {number} rank 
    */
-  getCommandStorageByRank(rank) {
-    return _.find(this.commandStorage.rankList, { rank });
+  processingCommandAtCenter(){
+    const currentCommandSet = this.iterator.currentCommandSet;
+    const nextCommandSet = this.iterator.nextCommandSet;
+    const currentReceiver = this.iterator.currentReceiver;
+    const operationStatus = currentCommandSet.operationStatus;
+    const receiver = this.iterator.currentReceiver;
+
+    // 현재 명령이 수행 중일 경우 (currentCommandSet이 설정 되어 있음)
+    if(this.hasPerformCommand){
+      // 1:1 통신이라면 해당 사항 없음
+      // 명령 집합의 Operation Status에 따른 분기
+      switch (operationStatus) {
+      case definedOperationStatus.WAIT: // Wait
+        break;
+      case definedOperationStatus.REQUEST: // Request : 명령을 요청중이라면 진행 X
+        return false;
+      case definedOperationStatus.E_TIMEOUT: 
+        receiver && receiver.updateDcError(currentCommandSet, new Error('timeout'));    
+        break;
+      case definedOperationStatus.E_RETRY_MAX: 
+        BU.CLI('retryWrite Max Error');
+        receiver && receiver.updateDcError(currentCommandSet, new Error('retryMaxError'));    
+        break;
+      case definedOperationStatus.E_NON_CMD:
+        break;
+      case definedOperationStatus.REQUEST_DELETE: // Delete
+        receiver && receiver.updateDcEvent('Delete CommandSet', currentCommandSet.commandId);
+        this.iterator.moveToReservedCmdList();
+        break;
+      default:
+        break;
+      }
+      
+      // && currentCommandSet.hasOneAndOne
+      // 진행 중인 명령이 모두 수행되었을 경우
+      if(this.iterator.isDone()){
+        // 명령 요청 상태가 아니고 현재 명령 집합의 모든 명령을 수행했다면 발송
+        if(operationStatus !== definedOperationStatus.WAIT){
+          // Operation Status 초기화
+          currentCommandSet.operationStatus = definedOperationStatus.WAIT;
+          currentReceiver && currentReceiver.updateDcComplete(currentCommandSet);
+        }
+
+        // 1:1 통신이라면 진행 X
+        if(currentCommandSet.hasOneAndOne){
+          currentReceiver && currentReceiver.updateDcEvent('oneAndOne Comunication Done', this.iterator.currentCommandSet);
+          return;
+        }
+
+        // 모든 명령 수행 완료
+        if(_.isEmpty(nextCommandSet)){
+          BU.CLI('모든 명령을 수행하였습니다.');
+          this.iterator.clearCurrentCommandSet();
+          this.hasPerformCommand = false;
+          return;
+        } else {
+          // 수행할 NextCommandSet이 존재할 경우
+          return this.nextCommand();
+        }
+      } else {  // CurrentCommandSet의 nextCommand가 존재 할 경우
+        // 명령 수행
+        return this.nextCommand();
+      }
+    } else {  // 현재 명령이 진행중이 아니라면
+      // 현재 진행중인 명령이 없고, OneAndOne이 아니고, NextRank가 존재한다면
+      if(_.isEmpty(currentCommandSet) 
+        && currentCommandSet.hasOneAndOne !== true
+        && !_.isEmpty(nextCommandSet)){
+        // 명령 수행 중으로 교체
+        this.hasPerformCommand = true;
+        return this.nextCommand();
+      }
+    }
   }
+  
 
   /**
    * 다음 명령을 수행
-   * @param {AbstCommander=} commander 
    */
   nextCommand() {
     BU.CLI('nextCommand');
     // BU.CLI(this.commandStorage);
-    
-    let currProcessCmdInfo = this.iterator.currentItem;
-    // BU.CLIN(currProcessCmdInfo);
-    let nextRank = this.iterator.nextRank;
-    // BU.CLI(nextRank);
-    let currCmd = this.iterator.currentCmd;
-    // BU.CLI(currCmd);
-    // 현재 아무런 명령이 존재하지 않을 경우
-    if(_.isEmpty(currProcessCmdInfo)){
-      // 다음 명령 집합이 있다면 
-      if(nextRank !== undefined){
-        // 명령 집합 이동 
-        this.iterator.changeNextRank(nextRank);
+    try {
+      let currentCommandSet = this.iterator.currentCommandSet;
+      // BU.CLIN(currProcessCmdInfo);
+      let nextCommandSet = this.iterator.nextCommandSet;
+      // BU.CLI(currCmd);
+      // 현재 아무런 명령이 존재하지 않을 경우
+      if(_.isEmpty(currentCommandSet)){
+      // 명령 집합 이동 
+        this.iterator.changeNextRank(nextCommandSet);
         // 현재 수행할 명령 요청
         return this.requestWrite();
-      } 
-    } else if(currCmd === undefined || this.iterator.isDone()) { // 현재 진행한 명령, 다음 명령이 존재하지 않는다면 해당 명령의 수행을 완료한 것으로 처리
-      let receiver = this.iterator.currentReceiver;
-      // 1:1로 명령을 물고 가는 경우에는 Next 진행하지 않음
-      if(currProcessCmdInfo.hasOneAndOne){
-        return receiver == null ? '' : receiver.updateDcEvent('oneAndOne Comunication Done', this.iterator.currentItem);
-      } else {  // 명령 객체 수행 완료 보고
-        receiver == null ? '' : receiver.updateDcComplete(currProcessCmdInfo);
-        // 다음 명령 집합이 있다면 
-        if(nextRank !== undefined){
-          // 명령 집합 이동 
-          this.iterator.changeNextRank(nextRank);
-          // BU.CLI(this.iterator.currentItem.rank);
-          // 현재 수행할 명령 요청
-          return this.requestWrite();
-        }
-      }
-    } else {  // 다음 명령이 존재할 경우
-      this.retryChance = 3;
-      let hasNext = this.iterator.changeNextCmd();
-  
-      // 다음 가져올 명령이 존재한다면
-      if (hasNext) {
+      } else {  // 다음 명령이 존재할 경우
+        this.retryChance = 3;
+        this.iterator.changeNextCmd();
         return this.requestWrite();
-      } 
+      }
+    } catch (error) { // 다음 명령이 존재하지 않을 경우
+      BU.CLI(error);
+      this.iterator.clearCurrentCommandSet();
+      this.hasPerformCommand = false;
     }
-    // 
-    this.iterator.clearProcessItem();
-    // BU.CLIN(this.commandStorage, 5);
-    BU.CLI('모든 명령을 수행하였습니다.');
   }
 }
 

@@ -78,6 +78,7 @@ class Commander extends AbstCommander {
     // commandFormat 형식을 따르지 않을 경우 자동으로 구성
     commandInfo.rank = 2;
     commandInfo.commandId = null;
+    
     commandInfo.commander = this;
     commandInfo.currCmdIndex = 0;
     commandInfo.cmdList = [];
@@ -115,6 +116,7 @@ class Commander extends AbstCommander {
     commandInfo.currCmdIndex = 0;
     commandInfo.cmdList = [];
     // 자동 생성
+    commandInfo.operationStatus = 0;
     commandInfo.commander = this;
     commandInfo.hasOneAndOne = this.hasOneAndOne;
 
@@ -152,6 +154,7 @@ class Commander extends AbstCommander {
     });
 
     // 자동 생성
+    commandInfo.operationStatus = 0;
     commandInfo.commander = this;
     commandInfo.hasOneAndOne = this.hasOneAndOne;
     return this.mediator.requestAddCommand(commandInfo, this);

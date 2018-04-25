@@ -97,8 +97,8 @@ class Builder extends AbstBuilder {
    * @return {AbstManager}
    */
   setDeviceManager(config) {
-    let deviceManager = new Manager(config);
-    deviceManager.setManager();
+    let deviceManager = new Manager();
+    deviceManager.setManager(config);
     return deviceManager;
   }
 
