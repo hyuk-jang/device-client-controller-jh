@@ -22,10 +22,10 @@
     "mocha": "^5.0.4"
   },
   "dependencies": {
-    "base-util-jh": "^1.1.2",
+    "base-util-jh": "^1.1.3",
     "bluebird": "^3.5.1",
     "event-to-promise": "^0.8.0",
-    "lodash": "^4.17.5",
+    "lodash": "^4.17.10",
     "serialport": "^6.1.1",
     "uuid": "^3.2.1",
     "xbee-api": "^0.6.0"

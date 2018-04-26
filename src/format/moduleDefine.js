@@ -35,10 +35,20 @@ exports.definedOperationStatus = {
    */
   E_RETRY_MAX: 6,
   /**
+   * @type {number} Error Device Disconnected
+   * @desc 장치와의 접속이 끊어짐
+   */
+  E_DISCONNECTED_DEVICE: 7,
+  /**
+   * @type {number} Error Unexptected Error
+   * @desc 예상치 못한 에러
+   */
+  E_UNEXPECTED: 8,
+  /**
    * @type {number} Error Non Cmd
    * @desc 유효한 명령 아님
    */
-  E_NON_CMD: 7,
+  E_NON_CMD: 9,
 };
 
 

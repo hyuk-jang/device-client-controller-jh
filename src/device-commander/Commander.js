@@ -94,13 +94,13 @@ class Commander extends AbstCommander {
       });
       // 이상한 옵션을 걸 경우 정상적인 데이터로 초기화
       commandInfo.currCmdIndex = commandInfo.currCmdIndex < 0 ? 0 : commandInfo.currCmdIndex;
-      commandInfo.timeoutMs = commandInfo.timeoutMs <= 0 ? 1000 : commandInfo.timeoutMs;
+      commandInfo.commandExecutionTimeoutMs = commandInfo.commandExecutionTimeoutMs <= 0 ? 1000 : commandInfo.commandExecutionTimeoutMs;
     }
     // 해당 Commander 생성 객체의 옵션을 가져옴
     commandInfo.hasOneAndOne = this.hasOneAndOne;
     // BU.CLIN(commandInfo);
 
-    return this.mediator.requestAddCommand(commandInfo, this);
+    return this.mediator.requestAddCommandSet(commandInfo, this);
   }
 
   /**
@@ -138,7 +138,7 @@ class Commander extends AbstCommander {
       });
     }
 
-    return this.mediator.requestAddCommand(commandInfo, this);
+    return this.mediator.requestAddCommandSet(commandInfo, this);
   }
 
   /**
@@ -157,7 +157,7 @@ class Commander extends AbstCommander {
     commandInfo.operationStatus = 0;
     commandInfo.commander = this;
     commandInfo.hasOneAndOne = this.hasOneAndOne;
-    return this.mediator.requestAddCommand(commandInfo, this);
+    return this.mediator.requestAddCommandSet(commandInfo, this);
   }
 
   /**

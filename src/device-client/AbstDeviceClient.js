@@ -64,7 +64,7 @@ class AbstDeviceClient extends EventEmitter {
       commandId: '',
       cmdList: [],
       currCmdIndex: 0,
-      timeoutMs: 1000,
+      commandExecutionTimeoutMs: 1000,
     };
  
     return commandFormatInfo;

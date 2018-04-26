@@ -75,11 +75,11 @@ class Mediator extends AbstMediator {
    * @param {commandFormat} cmdInfo 
    * @return {boolean} 성공 or 실패
    */
-  requestAddCommand(cmdInfo){
+  requestAddCommandSet(cmdInfo){
     try {
       const deviceManager = this.getDeviceManager(cmdInfo.commander);
       // BU.CLIN(deviceManager);
-      return deviceManager.addCommand(cmdInfo);
+      return deviceManager.addCommandSet(cmdInfo);
     } catch (error) {
       throw error;
     }

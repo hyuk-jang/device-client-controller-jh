@@ -25,7 +25,7 @@ class AbstMediator {
    * @param {commandFormat} commandFormat 
    * @return {boolean} 성공 or 실패
    */
-  requestAddCommand(commandFormat){}
+  requestAddCommandSet(commandFormat){}
 
   /**
    * @param {AbstCommander} deviceCommander

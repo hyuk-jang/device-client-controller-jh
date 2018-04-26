@@ -2,9 +2,10 @@
 
 const Promise = require('bluebird');
 
-const {BU} = require('base-util-jh');
+const {BU, CU} = require('base-util-jh');
 const AbstManager = require('../device-manager/AbstManager');
 
+require('../format/define');
 
 class AbstController {
   constructor() {
@@ -13,7 +14,8 @@ class AbstController {
     this.configInfo = null;
     this.client = {};
 
-    this.eventStauts = {
+    /** @type {deviceControllerStauts} */
+    this.deviceControllerStauts = {
       hasConnect: null,
       hasError: false,
       connectTimer: null
@@ -61,39 +63,33 @@ class AbstController {
   notifyConnect() {
     BU.CLI('notifyConnect', this.configInfo);
     // 이미 연결된 상태였다면 이벤트를 보내지 않음
-    if(!this.eventStauts.hasConnect){
+    if(!this.deviceControllerStauts.hasConnect){
       this.notifyEvent('dcConnect');
     }
 
-    // 만약 재접속 타이머가 돌아가고 있다면 해제
-    clearTimeout(this.eventStauts.connectTimer);
-    this.eventStauts.connectTimer = null;
-
-    this.eventStauts.hasConnect = true;
-    this.eventStauts.hasError = false;
+    // 타이머 해제, 접속 상태 변경, 에러 상태 변경
+    this.deviceControllerStauts.connectTimer && this.deviceControllerStauts.connectTimer.pause();
+    this.deviceControllerStauts.connectTimer = null;
+    this.deviceControllerStauts.hasConnect = true;
+    this.deviceControllerStauts.hasError = false;
   }
 
   /** 장치와의 연결이 해제되었을 경우 */
   notifyClose() {
     BU.CLI('notifyClose', this.configInfo);
     // 장치와의 연결이 계속해제된 상태였다면 이벤트를 보내지 않음
-    if(this.eventStauts.hasConnect){
+    if(this.deviceControllerStauts.hasConnect){
       this.notifyEvent('dcClose');
     }
         
-    this.eventStauts.hasConnect = false;
+    this.deviceControllerStauts.hasConnect = false;
 
-    if(this.eventStauts.connectTimer === null){
+    if(this.deviceControllerStauts.connectTimer === null){
       // 일정 시간에 한번씩 장치에 접속 시도
-      // BU.CLI('재접속 요청');
-      // console.time('what');
-      this.eventStauts.connectTimer =  setTimeout(() => {
-        // console.timeEnd('what');
-        this.eventStauts.connectTimer = null;
-        BU.CLI('재접속 수행');
+      this.deviceControllerStauts.connectTimer = new CU.Timer(() => {
+        this.deviceControllerStauts.connectTimer = null;
         this.connect().catch(() => {});
       }, 1000 * 20);
-
     }
     
   }
@@ -105,10 +101,10 @@ class AbstController {
   notifyError(error) {
     BU.CLI('notifyError', error);
     // 장치에서 이미 에러 내역을 발송한 상태라면 이벤트를 보내지 않음
-    if(!this.eventStauts.hasError){
+    if(!this.deviceControllerStauts.hasError){
       this.notifyEvent('dcError', error);
     }
-    this.eventStauts.hasError = true;
+    this.deviceControllerStauts.hasError = true;
     this.notifyClose();
   }
 

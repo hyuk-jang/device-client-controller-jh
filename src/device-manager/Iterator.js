@@ -1,18 +1,23 @@
 'use strict';
 const _ = require('lodash');
 
-const BU = require('base-util-jh').baseUtil;
+const {BU, CU} = require('base-util-jh');
 
+const Manager = require('./Manager');
 const AbstCommander = require('../device-commander/AbstCommander');
 
 const {definedOperationStatus, definedCommandSetRank} = require('../format/moduleDefine');
 require('../format/define');
 
 class Iterator {
-  /** @param {DeviceManager} deviceManager */
+  /** @param {Manager} deviceManager */
   constructor(deviceManager) {
+    this.manager = deviceManager;
     /** @type {commandStorage}*/
     this.aggregate = deviceManager.commandStorage;
+    this.aggregate.currentCommandSet = {};
+    this.aggregate.standbyCommandSetList = [];
+    this.aggregate.delayCommandSetList = [];
   }
 
   /**
@@ -115,7 +120,7 @@ class Iterator {
     // 명령 예약 리스트 삭제
     this.aggregate.delayCommandSetList = _.reject(this.aggregate.delayCommandSetList, cmdInfo => {
       if(cmdInfo.commandId === commandId){
-        clearTimeout(cmdInfo.delayTimeout);
+        cmdInfo.commandQueueReturnTimer && cmdInfo.commandQueueReturnTimer.pause();
       }
     });
 
@@ -126,30 +131,34 @@ class Iterator {
   }
 
   /** 
-   * Current Process Item의 delayMs 유무를 확인,
+   * Current Process Item의 delayExecutionTimeoutMs 유무를 확인,
    * ReservedCmdList로 이동 및 Current Process Item 삭제
-   * delayMs 시간 후 Process Rank List에 shift() 처리하는 함수 바인딩 처리
+   * delayExecutionTimeoutMs 시간 후 Process Rank List에 shift() 처리하는 함수 바인딩 처리
    */
   moveToReservedCmdList() {
     const currentCommandSet = this.currentCommandSet;
     const currentCommand = this.currentCommand;
 
-    // delayMs 가 존재 할 경우만 수행
-    if(_.isNumber(currentCommand.delayMs)){
+    // delayExecutionTimeoutMs 가 존재 할 경우만 수행
+    if(_.isNumber(currentCommand.delayExecutionTimeoutMs)){
       // 지연 복귀 타이머 설정
-      currentCommandSet.delayTimeout = setTimeout(() => {
+      currentCommandSet.commandQueueReturnTimer = new CU.Timer(() => {
         // Delay Time 해제
-        currentCommand.delayMs = null;
+        delete(currentCommand.delayExecutionTimeoutMs);
+        // currentCommand.delayExecutionTimeoutMs = null;
         let foundIt = _.remove(this.aggregate.delayCommandSetList, reservedCmdInfo => _.isEqual(reservedCmdInfo, currentCommandSet));
-        if(_.isEmpty(foundIt)){
-          BU.CLI('해당 명령은 삭제되었습니다.', currentCommandSet.commandId);
-        } else {
+        if(foundIt.length){
           // delay 가 종료되었으로 해당 Rank의 맨 선두에 배치
           let foundRank = _.find(this.aggregate.standbyCommandSetList, {rank:currentCommandSet.rank});
-          foundRank.list.unshift(foundIt);
-          this.processingCommandAtCenter();
+          if(_.isObject(foundRank)){
+            foundRank.list.unshift(_.first(foundIt));
+            // 명령 제어 실행 체크 요청
+            this.manager.manageProcessingCommand();
+          }
+        } else {
+          BU.CLI('해당 명령은 삭제되었습니다.', currentCommandSet.commandId);
         }
-      }, currentCommand.delayMs);
+      }, currentCommand.delayExecutionTimeoutMs);
       // 지연 복귀 명령 집합으로 이동
       this.aggregate.delayCommandSetList.push(currentCommandSet);
       // 진행 중인 명령 집합 초기화
@@ -165,11 +174,17 @@ class Iterator {
    * @return {Array.<commandFormat>}
    */
   findStandbyCommandSetList(searchInfo) {
+    // BU.CLI('findStandbyCommandSetList', searchInfo);
     let returnValue = [];
 
     // searchInfo.rank가 숫자고 해당 Rank가 등록되어 있다면 검색 수행
-    if(_.isNumber(searchInfo.rank) && _.map(this.aggregate.standbyCommandSetList, commandFormat => commandFormat.rank === searchInfo.rank).length){
-      returnValue = _.concat(returnValue, _.find(this.aggregate.standbyCommandSetList, {rank:searchInfo.rank}).list); 
+    if(_.isNumber(searchInfo.rank)){
+      let fountIt =_.chain(this.aggregate.standbyCommandSetList)
+        .find({rank: searchInfo.rank})
+        .get('list')
+        .value();
+
+      returnValue = _.isArray(fountIt) ? _.concat(returnValue, fountIt) : returnValue;
     }
 
     if(_.isString(searchInfo.commandId) && searchInfo.commandId){
@@ -257,27 +272,45 @@ class Iterator {
 
   /** 
    * 현재 진행중인 명령 초기화
+   * @param {{eventName: string, eventMsg: Error}} event
    * @return {void}
    */
-  clearCurrentCommandSet (){
+  clearCurrentCommandSet (event){
     let currentCommandSet = this.currentCommandSet;
 
     if(!_.isEmpty(currentCommandSet)){
-      clearTimeout(currentCommandSet.timer);
+      // 이벤트가 존재하고 받을 대상이 있다면 전송
+      event.eventName.length && this.currentReceiver && this.currentReceiver.updateDcEvent(event);
+      currentCommandSet.commandExecutionTimer.
+        currentCommandSet.commandExecutionTimer && currentCommandSet.commandExecutionTimer.pause();
     }
 
     this.aggregate.currentCommandSet = {};
   }
 
   /** 모든 명령을 초기화 */
-  clearCommandSetStorage() {
-    this.clearCurrentCommandSet();
+
+  /**
+   * 모든 명령을 초기화
+   * param 값에 따라 Commander에게 초기화 하는 이유를 보냄.
+   * @param {{hasEvent:boolean, eventName: string, eventMsg: Error}} option
+   */
+  clearAllCommandSetStorage(event) {
+    // 현재 수행중인 명령 삭제
+    this.clearCurrentCommandSet(event);
+
+    // 명령 대기열에 존재하는 명령 삭제
     _.forEach(this.aggregate.standbyCommandSetList, item => {
-      item.list = [];
+      _.dropWhile(item.list, commandInfo => {
+        event.eventName.length && commandInfo.commander && commandInfo.commander.updateDcEvent(event);
+        return true;
+      });
     });
 
-    _.dropWhile(this.aggregate.delayCommandSetList, item => {
-      clearTimeout(item.delayTimeout);
+    // 지연 명령 대기열에 존재하는 명령 삭제
+    _.dropWhile(this.aggregate.delayCommandSetList, commandInfo => {
+      commandInfo.commandQueueReturnTimer && commandInfo.commandQueueReturnTimer.pause();
+      event.eventName.length && commandInfo.commander && commandInfo.commander.updateDcEvent(event);
       return true;
     });
   }

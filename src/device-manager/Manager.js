@@ -3,7 +3,7 @@
 const _ = require('lodash');
 const Promise = require('bluebird');
 
-const BU = require('base-util-jh').baseUtil;
+const {BU, CU} = require('base-util-jh');
 
 const AbstCommander = require('../device-commander/AbstCommander');
 const AbstMediator = require('../device-mediator/AbstMediator');
@@ -25,6 +25,8 @@ class Manager extends AbstManager {
 
   /** Manager를 초기화 처리 */
   /** @param {deviceClientFormat} config */
+
+  /** Builder에서 요청 메소드 */
   setManager(config) {
     let deviceController = null;
     let controller = null;
@@ -82,12 +84,10 @@ class Manager extends AbstManager {
     /**
      * @type {commandStorage}
      */
-    this.commandStorage = { currentCommandSet: {}, standbyCommandSetList: [], delayCommandSetList: [] };
+    this.commandStorage = {};
 
     this.createIterator();
   }
-
-
 
   /** Iterator 정의 */
   createIterator() {
@@ -102,81 +102,10 @@ class Manager extends AbstManager {
     this.mediator = deviceMediator;
   }
 
-  async write() {
-    // BU.log('Device write');
-    // BU.CLI(this.sendMsgTimeOutSec);
-    const currentCommandSet = this.iterator.currentCommandSet;
-    // BU.CLI(processItem);
-    if (_.isEmpty(currentCommandSet)) {
-      throw new Error(`현재 진행중인 명령이 존재하지 않습니다. ${this.id}`);
-    } else {
-      let currentCommand = this.iterator.currentCommand;
 
-      // 명령 전송을 기다림
-      await this.writeCommandController(currentCommand);
+  
 
-      // BU.CLI('명령 요청', this.iterator.currentReceiver.id, processItem.timeoutMs);
-      // console.time(`timeout ${testId}`);
-      currentCommandSet.timer = setTimeout(() => {
-        // console.timeEnd(`timeout ${testId}`);
-        // Recevier가 빈 객체라면 Titmeout 메시지 보내지 않음.
-        // let receiver = this.iterator.currentReceiver;
-        // receiver && receiver.updateDcError(currentCommandSet, new Error('timeout'));
-        this.updateOperationStatus(definedOperationStatus.E_TIMEOUT);
-        return this.processingCommandAtCenter();
-        // this.nextCommand();
-        // 명전 전송 후 제한시간안에 응답이 안올 경우 에러(기본 값 1초) 
-      }, currentCommand.timeoutMs || 1000);
-
-      return true;
-      // }
-    }
-  }
-
-  /**
-   * 장치로 명령 발송 --> 명령 수행 후 응답 결과 timeout 처리를 위함
-   * @param {commandInfo} cmdInfo 
-   * @return {Promise} 정상 처리라면 true, 아닐 경우 throw error
-   */
-  async writeCommandController(cmdInfo) {
-    // BU.CLI('msgSendController');
-    if (cmdInfo === '' || cmdInfo === undefined || cmdInfo === null || BU.isEmpty(cmdInfo)) {
-      // return new Error('수행할 명령이 없습니다.');
-      return this.processingCommandAtCenter();
-      // return this.nextCommand();
-    }
-    // 장치로 명령 전송
-    await this.deviceController.write(cmdInfo.data);
-    return true;
-  }
-
-
-  /** write의 후속 결과 처리를 담당하는 컨트롤러 */
-  requestWrite() {
-    const currentCommandSet = this.iterator.currentCommandSet;
-    let currentCommand = this.iterator.currentCommand;
-    // BU.CLI('currentCommand', currentCommand);
-    // DeviceController 의 client가 빈 객체라면 연결이 해제된걸로 판단
-    // TODO
-    if (_.isEmpty(this.deviceController.client)) {
-      BU.log('DeviceController Client Is Empty');
-      return false;
-    } else if (currentCommand === null) { // 현재 진행 할 명령이 없다면 중앙 명령 처리에 보고
-      this.updateOperationStatus(definedOperationStatus.E_NON_CMD);
-      return this.processingCommandAtCenter();
-      // return this.nextCommand();
-    } else {
-      // 명령 수행에 대기 시간이 존재한다면 해당 시간만큼 setTimer 가동 시킨 후 대기열로 이동
-      if (currentCommand.delayMs) {
-        this.updateOperationStatus(definedOperationStatus.REQUEST_DELAY);
-        return this.processingCommandAtCenter();
-      } else {
-        currentCommandSet.operationStatus = definedOperationStatus.REQUEST_CMD;
-        return this.write();
-      }
-    }
-  }
-
+  /** Commander로부터 요청 */
   /**
    * updateData를 통해 전달받은 데이터에 대한 Commander의 응답을 받을 메소드
    * 응답받은 데이터에 문제가 있거나 다른 사유로 명령을 재 전송하고자 할 경우(3회까지 가능)
@@ -196,18 +125,17 @@ class Manager extends AbstManager {
       switch (msg) {
       case 'isOk':
         BU.CLI('isOk', this.iterator.currentReceiver.id);
-        // BU.CLIN(this.iterator.currentItem.timer);
-        clearTimeout(this.iterator.currentCommandSet.timer);
-        // 명령 처리 성공
+        // 타이머가 붙어있다면 타이머 해제
+        currentCommandSet.commandExecutionTimer && currentCommandSet.commandExecutionTimer.pause();
         this.updateOperationStatus(definedOperationStatus.RESPONE_SUCCESS);
-        this.processingCommandAtCenter();
-        // BU.CLIN(this.iterator.currentItem.timer);
-        // console.timeEnd('gogogo');
-        // this.nextCommand();
+        this.manageProcessingCommand();
         break;
+        // 명령을 재요청할 경우 진행중인 timeout 처리는 해제
       case 'retry':
-        clearTimeout(this.iterator.currentCommandSet.timer);
-        this.retryWrite();
+        BU.CLI('retry', this.iterator.currentReceiver.id);
+        // 타이머가 붙어있다면 타이머 해제
+        currentCommandSet.commandExecutionTimer && currentCommandSet.commandExecutionTimer.pause();
+        this.retryRequestProcessingCommand();
         break;
       default:
         break;
@@ -217,40 +145,11 @@ class Manager extends AbstManager {
     }
   }
 
-  retryWrite() {
-    BU.CLI('retryWrite');
-    this.retryChance -= 1;
-    // 명령을 재요청할 경우 진행중인 timeout 처리는 해제
-
-    if (this.retryChance > 0) {
-      return Promise.delay(30).then(() => {
-        this.requestWrite();
-      });
-    } else if (this.retryChance === 0) {  // 3번 재도전 실패시 다음 명령 수행
-      this.updateOperationStatus(definedOperationStatus.E_RETRY_MAX);
-      return this.processingCommandAtCenter();
-      // 다음 명령 수행
-      // this.nextCommand();
-    }
-  }
-
-  /**
-   * @param {operationStatus} operationStatus 
-   */
-  updateOperationStatus(operationStatus) {
-    // BU.CLI('updateOperationStatus', operationStatus);
-    let currentCommandSet = this.iterator.currentCommandSet;
-    // 명령 삭제 일 경우에는 업데이트 제외
-    if (currentCommandSet.operationStatus !== definedOperationStatus.REQUEST_DELETE) {
-      currentCommandSet.operationStatus = operationStatus;
-    }
-  }
-
   /**
    * @param {commandFormat} cmdInfo 
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */
-  addCommand(cmdInfo) {
+  addCommandSet(cmdInfo) {
     // BU.CLIN(cmdInfo);
     // DeviceController 의 client가 빈 객체라면 연결이 해제된걸로 판단
     // BU.CLI(this.deviceController.client);
@@ -264,7 +163,7 @@ class Manager extends AbstManager {
     // if ( _.isEmpty(this.commandStorage.currentCommandSet)) {
     //   this.nextCommand();
     // }
-    this.processingCommandAtCenter();
+    this.manageProcessingCommand();
     return true;
   }
 
@@ -273,17 +172,110 @@ class Manager extends AbstManager {
    * @param {string} commandId 명령을 취소 할 command Id
    * @return {commandStorage}
    */
-  deleteCommand(commandId) {
+  deleteCommandSet(commandId) {
     this.iterator.deleteCmd(commandId);
     return this.iterator.commandSetStorage;
   }
 
+
+
+
+  /** 명령 관리 제어 메소드 */
   /**
+   * @private
+   * 실제로 연결된 장치에 명령을 요청하는 메소드
+   * 명령의 전송 가능 여부 체크는 requestProcessingCommand() 메소드에서 수행하므로 별도로 체크하지 않음
+   * 명령 전송 실패 에러가 발생할 경우 requestProcessingCommand()로 이동
+   */
+  async transferCommandToDevice() {
+    // BU.log('Device write');
+    // BU.CLI(this.sendMsgTimeOutSec);
+    const currentCommandSet = this.iterator.currentCommandSet;
+    // BU.CLI(processItem);
+    let currentCommand = this.iterator.currentCommand;
+
+    // 명령 전송을 기다림
+    await this.deviceController.write(currentCommand.data);
+
+    // BU.CLI('명령 요청', this.iterator.currentReceiver.id, processItem.commandExecutionTimeoutMs);
+    // console.time(`timeout ${testId}`);
+    currentCommandSet.commandExecutionTimer = new CU.Timer(() => {
+      this.updateOperationStatus(definedOperationStatus.E_TIMEOUT);
+      return this.manageProcessingCommand();
+    }, currentCommand.commandExecutionTimeoutMs || 1000);
+  }
+
+  /**
+   * @private 현재 명령의 상태에 따라 명령 처리
+   * 1. Disconnected Device
+   * 2. Non Command
+   * 3. Transfer Command To Device
+   * 4. Unexpected Exception
+   */
+  requestProcessingCommand() {
+    try {
+      let currentCommand = this.iterator.currentCommand;
+      // DeviceController 의 client가 빈 객체라면 연결이 해제된걸로 판단
+      // TODO
+      if (_.isEmpty(this.deviceController.client)) {
+        this.updateOperationStatus(definedOperationStatus.E_DISCONNECTED_DEVICE);
+        return this.manageProcessingCommand();
+      } else if (currentCommand === null) { // 현재 진행 할 명령이 없다면 중앙 명령 처리에 보고
+        this.updateOperationStatus(definedOperationStatus.E_NON_CMD);
+        return this.manageProcessingCommand();
+      } else {
+        // 명령 수행에 대기 시간이 존재한다면 해당 시간만큼 setTimer 가동 시킨 후 대기열로 이동
+        if (currentCommand.delayExecutionTimeoutMs) {
+          this.updateOperationStatus(definedOperationStatus.REQUEST_DELAY);
+          return this.manageProcessingCommand();
+        } else {
+          this.iterator.currentCommandSet.operationStatus = definedOperationStatus.REQUEST_CMD;
+          return this.transferCommandToDevice();
+        }
+      }
+    } catch (error) {
+      // 장치로 명령을 요청하는 중에 예기치 못한 에러가 발생하였을 경우
+      this.updateOperationStatus(definedOperationStatus.E_UNEXPECTED);
+      return this.manageProcessingCommand(error);
+    }
+  }
+
+  /** @private 명령 재전송 처리 */
+  retryRequestProcessingCommand() {
+    BU.CLI('retryWrite');
+    this.retryChance -= 1;
+    if (this.retryChance > 0) {
+      // 0.01 초 지연 시간을 둠
+      return Promise.delay(10).then(() => {
+        this.requestProcessingCommand();
+      });
+    } else if (this.retryChance === 0) {  // 3번 재도전 실패시 다음 명령 수행
+      this.updateOperationStatus(definedOperationStatus.E_RETRY_MAX);
+      return this.manageProcessingCommand();
+    }
+  }
+
+  /**
+   * @private 현재 명령을 수행하는 과정에서 생기는 제어 상태 변경 처리
+   * @param {operationStatus} operationStatus 
+   */
+  updateOperationStatus(operationStatus) {
+    // BU.CLI('updateOperationStatus', operationStatus);
+    let currentCommandSet = this.iterator.currentCommandSet;
+    // 명령 삭제 일 경우에는 업데이트 제외
+    if (currentCommandSet.operationStatus !== definedOperationStatus.REQUEST_DELETE) {
+      currentCommandSet.operationStatus = operationStatus;
+    }
+  }
+
+  /**
+   * @protected 
    * 명령 집합을 총 관리 감독하는 메소드.
    * 명령을 수행하는 과정에서 발생하는 이벤트 처리 담당.
    * 명령 처리 순서 관리 감독.
+   * @param {Error} error 에러
    */
-  processingCommandAtCenter() {
+  manageProcessingCommand(error) {
     // BU.CLIN(this.commandStorage, 4);
     // BU.CLI('this.hasPerformCommand', this.hasPerformCommand);
     const currentCommandSet = this.iterator.currentCommandSet;
@@ -311,11 +303,21 @@ class Manager extends AbstManager {
         BU.CLI('retryWrite Max Error');
         receiver && receiver.updateDcError(currentCommandSet, new Error('retryMaxError'));
         break;
+      case definedOperationStatus.E_DISCONNECTED_DEVICE:
+        BU.CLI('Error Device Disconnected');
+        receiver && receiver.updateDcError(currentCommandSet, new Error('disconnectedDeviceError'));
+        this.iterator.clearAllCommandSetStorage();
+        break;
+      case definedOperationStatus.E_UNEXPECTED:
+        BU.CLI('Error Unexpected Exception');
+        receiver && receiver.updateDcError(currentCommandSet, error);
+        this.iterator.clearCurrentCommandSet();
+        break;
       case definedOperationStatus.E_NON_CMD:
         break;
       case definedOperationStatus.REQUEST_DELETE: // Delete
         receiver && receiver.updateDcEvent('Delete CommandSet', currentCommandSet.commandId);
-        this.iterator.clearCommandSetStorage();
+        this.iterator.clearCurrentCommandSet();
         break;
       default:
         break;
@@ -369,11 +371,10 @@ class Manager extends AbstManager {
       } else {
         // 수행할 명령이 있다고 판단하고 명령 수행 요청
         this.hasPerformCommand = true;
-        return this.requestWrite();
+        return this.requestProcessingCommand();
       }
     }
   }
-
 
   /**
    * 다음 명령을 수행
@@ -390,12 +391,13 @@ class Manager extends AbstManager {
       if (_.isEmpty(currentCommandSet)) {
         // 명령 집합 이동 
         this.iterator.changeNextCommandSet(nextCommandSet);
+        // BU.CLI(this.commandStorage);
         // 현재 수행할 명령 요청
-        return this.requestWrite();
+        return this.requestProcessingCommand();
       } else {  // 다음 명령이 존재할 경우
         this.retryChance = 3;
         this.iterator.changeNextCommand();
-        return this.requestWrite();
+        return this.requestProcessingCommand();
       }
     } catch (error) { // 다음 명령이 존재하지 않을 경우
       BU.CLI(error);

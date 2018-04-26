@@ -44,17 +44,18 @@ class AbstManager extends EventEmitter {
   /** 장치와 연결을 해제하고자 할 경우 */
   disconnect(){}
 
-  /** 장치에 메시지를 보내고자 할 경우 */
-  async writeCmdToDevice(){}
-
   setMediator() {}
+  
+  /** 장치에 메시지를 보내고자 할 경우 */
+  async transferCommandToDevice(){}
+
 
   /**
    * 명령 추가
    * @param {commandFormat} cmdInfo 
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */
-  addCommand(cmdInfo) {}
+  addCommandSet(cmdInfo) {}
 
 
   /**
@@ -62,7 +63,7 @@ class AbstManager extends EventEmitter {
    * @param {string} commandId 명령을 취소 할 command Id
    * @return {commandStorage}
    */
-  deleteCommand(commandId){}
+  deleteCommandSet(commandId){}
 
   /**
    * Device Controller에서 새로운 이벤트가 발생되었을 경우 알림
@@ -74,8 +75,7 @@ class AbstManager extends EventEmitter {
     // this.emit(eventName, eventMsg);
 
     if(_.isEmpty(this.deviceController.client)){
-      clearTimeout(this.iterator.currentItem.timer);
-      this.iterator.clearAllItem();
+      this.iterator.clearAllCommandSetStorage();
     } 
 
     this.mediator.updateDcEvent(this, eventName, eventMsg);
@@ -83,7 +83,7 @@ class AbstManager extends EventEmitter {
 
   /**
    * 장치에서 데이터가 수신되었을 경우 해당 장치의 데이터를 수신할 Commander에게 전송
-   * @param {Buffer} data 
+   * @param {*} data 
    */
   updateDcData(data){
     // BU.CLI('AbstManager --> updateDcData', data);
@@ -91,7 +91,7 @@ class AbstManager extends EventEmitter {
     let receiver = this.iterator.currentReceiver;
     // BU.CLI(receiver);
     if(receiver === null){
-      // BU.log('Completed Data', data);
+      BU.log('Not set Responder --> Completed Data', data);
     } else {
       receiver.updateDcData(this.iterator.currentCommandSet, data, this); 
     }
