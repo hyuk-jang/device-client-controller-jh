@@ -13,7 +13,7 @@ require('../format/define');
 const instanceList = [];
 
 class Commander extends AbstCommander {
-  /** @param {deviceClientFormat} config */
+  /** @param {deviceClientConstructionInfo} config */
   constructor(config) {
     super();
     let foundInstance = _.find(instanceList, {
@@ -45,8 +45,6 @@ class Commander extends AbstCommander {
      * @type {Array.<{deviceError}>} 
      * */
     this.systemErrorList = [];
-
-    this.currCmd = null;
   }
 
   /* Mediator에서 Set 함 */
@@ -69,13 +67,13 @@ class Commander extends AbstCommander {
    * 장치로 명령을 내림
    * 아무런 명령을 내리지 않을 경우 해당 장치와의 연결고리를 끊지 않는다고 판단
    * 명시적으로 hasOneAndOne을 True로 줄 해당 명령 리스트를 모두 수행하고 다음 CommandFormat으로 이동하지 않음
-   * @param {Buffer|string|commandFormat|null} cmdInfo 
+   * @param {Buffer|string|commandSet|null} cmdInfo 
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */
   executeCommand(cmdInfo) {
-    /** @type {commandFormat} */
+    /** @type {commandSet} */
     let commandInfo = {};
-    // commandFormat 형식을 따르지 않을 경우 자동으로 구성
+    // commandSet 형식을 따르지 않을 경우 자동으로 구성
     commandInfo.rank = 2;
     commandInfo.commandId = null;
     
@@ -108,9 +106,9 @@ class Commander extends AbstCommander {
    * @param {Buffer|string|undefined} cmdInfo 자동완성 기능을 사용할 경우
    */
   executeAutoCommand(cmdInfo) {
-    /** @type {commandFormat} */
+    /** @type {commandSet} */
     let commandInfo = {};
-    // commandFormat 형식을 따르지 않을 경우 자동으로 구성
+    // commandSet 형식을 따르지 않을 경우 자동으로 구성
     commandInfo.rank = 2;
     commandInfo.commandId = null;
     commandInfo.currCmdIndex = 0;
@@ -143,10 +141,10 @@ class Commander extends AbstCommander {
 
   /**
    * 명령 제어에 필요한 항목을 작성할 경우 사용
-   * @param {requestCommandFormat} cmdInfo 자동완성 기능을 사용할 경우
+   * @param {requestCommandSet} cmdInfo 자동완성 기능을 사용할 경우
    */
   executeManualCommand(cmdInfo) {
-    /** @type {commandFormat} */
+    /** @type {commandSet} */
     let commandInfo = this.executeAutoCommand();
 
     _.forEach(cmdInfo, (cmd, key) => {
@@ -177,15 +175,13 @@ class Commander extends AbstCommander {
   /* 장치에서 일괄 이벤트 발생 */
   /**
    * Device Controller 변화가 생겨 관련된 전체 Commander에게 뿌리는 Event
-   * @param {string} eventName 'dcConnect', 'dcClose', 'dcError'
-   * @param {*=} eventMsg 
-   * @return {undefined}
+   * @param {dcEvent} dcEvent 'dcConnect', 'dcClose', 'dcError'
    */
-  updateDcEvent(eventName, eventMsg) {
-    // BU.log(`updateDcEvent ${this.id}\t`, eventName);
+  updatedDcEventOnDevice(dcEvent) {
+    // BU.log(`updatedDcEventOnDevice ${this.id}\t`, eventName);
     // this.manager = {};
 
-    switch (eventName) {
+    switch (dcEvent.eventName) {
     case 'dcConnect':
       this.onSystemError('Disconnected', false);
       break;
@@ -193,64 +189,45 @@ class Commander extends AbstCommander {
       this.onSystemError('Disconnected', true);
       break;
     default:
-      this.loggingData(eventName, eventMsg);
+      this.loggingData(dcEvent.eventName, dcEvent.eventMsg);
       break;
     }
 
     if (this.user) {
-      this.user.updateDcEvent(eventName, eventMsg);
+      this.user.updatedDcEventOnDevice(dcEvent);
     }
   }
 
 
   /**
    * 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트
-   * @param {commandFormat} processItem 현재 장비에서 실행되고 있는 명령 객체
-   * @param {Error} error 현재 장비에서 실행되고 있는 명령 객체
-   * @param {*} errMessage 
+   * @param {dcError} dcError 현재 장비에서 실행되고 있는 명령 객체
    */
-  updateDcError(processItem, error, errMessage) {
-    // BU.log(`updateDcError ${error}\t`, errStack);
-    // BU.CLI('에러 수신');
-    // 1:1로 장비를 계속 물고 갈 경우 에러 무시
-    // if(this.hasOneAndOne !== true){
-    //   BU.CLI('에러 수신해서 처리');
-    //   this.manager = {};
-
-    // BU.CLIS(error, errMessage);
-    if (error.message === 'Timeout') {
-      this.onSystemError('Timeout', true, errMessage);
+  onDcError(dcError){
+    // BU.log(`onDcError ${error}\t`, errStack);
+    if (dcError.errorInfo.message === 'Timeout') {
+      this.onSystemError('Timeout', true, dcError.errorInfo);
     } else {
-      this.loggingData(error, errMessage);
+      this.loggingData(dcError.errorName, dcError.errorInfo);
     }
-    // }
 
     if (this.user) {
-      this.user.updateDcError(processItem, error, errMessage);
+      this.user.onDcError(dcError);
     }
   }
 
   // TODO Converter 붙이거나 세분화 작업, 예외 처리 필요
   /**
    * 장치로부터 데이터 수신
-   * @param {commandFormat} processItem 현재 장비에서 실행되고 있는 명령 객체
-   * @param {Buffer} data 명령 수행 결과 데이터
-   * @param {AbstManager} manager 장치 관리 매니저
+   * @param {dcData} dcData 현재 장비에서 실행되고 있는 명령 객체
    */
-  updateDcData(processItem, data, manager) {
+  onDcData(dcData){
     // console.time('gogogo');
-    // BU.CLI(data.toString());
-
-    // BU.CLIN(this.manager, 2);
     this.onSystemError('Timeout', false);
     // this.manager = manager;
 
-    // 데이터를 받은 시점에서 DeviceManager가 전송한 명령을 저장. 차후 Manager로 requestNext나 requestTry를 진행할 경우 Manager에서 이 currCmd를 체크함
-    let currCmd = processItem.cmdList[processItem.currCmdIndex];
-    this.currCmd = typeof currCmd === 'object' ? JSON.parse(JSON.stringify(currCmd)) : currCmd;
-
     if (this.user) {
-      this.user.updateDcData(processItem, data);
+      this.user.onDcData(dcData);
     }
   }
 
@@ -289,12 +266,12 @@ class Commander extends AbstCommander {
 
   /**
    * 명령 객체 리스트 수행 종료
-   * @param {commandFormat} processItem 현재 장비에서 실행되고 있는 명령 객체
+   * @param {commandSet} processItem 현재 장비에서 실행되고 있는 명령 객체
    */
-  updateDcComplete(processItem) {
+  updatedDcCompleteCommandExecution(processItem) {
     // BU.CLI('모든 명령이 수행 되었다고 수신 받음.', this.id);
     if (this.user) {
-      return this.user.updateDcComplete(processItem);
+      return this.user.updatedDcCompleteCommandExecution(processItem);
     }
   }
 

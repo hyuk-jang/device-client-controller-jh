@@ -44,7 +44,7 @@ class AbstCommander {
 
   /**
    * 명령 제어에 필요한 항목을 작성할 경우 사용
-   * @param {requestCommandFormat} cmdInfo 자동완성 기능을 사용할 경우
+   * @param {requestCommandSet} cmdInfo 자동완성 기능을 사용할 경우
    */
   executeManualCommand(cmdInfo) {}
 
@@ -52,29 +52,29 @@ class AbstCommander {
   /**
    * Device Controller 변화가 생겨 관련된 전체 Commander에게 뿌리는 Event
    * @protected 
-   * @param {string} eventName 'dcConnect', 'dcClose', 'dcError'
-   * @param {*=} eventMsg 
-   * @return {undefined}
+   * @param {dcEvent} dcEvent 'dcConnect', 'dcClose', 'dcError'
    */
-  updateDcEvent(eventName, eventMsg) {}
+  updatedDcEventOnDevice(dcEvent) {}
 
 
   /**
    * 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트
-   * @param {commandFormat} processItem 현재 장비에서 실행되고 있는 명령 객체
-   * @param {Error} error 현재 장비에서 실행되고 있는 명령 객체
-   * @param {*} errMessage 
+   * @param {dcMessage} dcMessage 현재 장비에서 실행되고 있는 명령 객체
    */
-  updateDcError(processItem, error, errMessage){}
+  onDcMessage(dcMessage){}
+
+  /**
+   * 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트
+   * @param {dcError} dcError 현재 장비에서 실행되고 있는 명령 객체
+   */
+  onDcError(dcError){}
 
   /**
    * 장치로부터 데이터 수신
    * @protected 
-   * @param {commandFormat} processItem 현재 장비에서 실행되고 있는 명령 객체
-   * @param {Buffer} data 명령 수행 결과 데이터
-   * @param {AbstManager} manager 장치 관리 매니저
+   * @param {dcData} dcData 현재 장비에서 실행되고 있는 명령 객체
    */
-  updateDcData(processItem, data, manager){}
+  onDcData(dcData){}
 
 
   /** Manager에게 다음 명령을 수행하도록 요청 */

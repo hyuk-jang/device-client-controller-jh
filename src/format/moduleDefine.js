@@ -74,3 +74,33 @@ exports.definedCommandSetRank = {
    */
   THIRD: 3,   
 };
+
+
+exports.definedCommandSetMessage = {
+  /**
+   * @type {number} 명령 집합의 모든 명령 수행 완료
+   */
+  COMMANDSET_EXECUTION_TERMINATE: 0, 
+  /**
+   * @type {number} 명령 집합 추가 성공
+   */
+  COMMANDSET_ADD_SUCCESS: 1,   
+  /**
+   * @type {number} 명령 집합 추가 실패
+   */
+  COMMANDSET_ADD_FAIL: 2,   
+  /**
+   * @type {number} 명령 집합 삭제 성공
+   */
+  COMMANDSET_DELETE_SUCCESS: 3,   
+  /**
+   * @type {number} 명령 집합 삭제 실패
+   */
+  COMMANDSET_DELETE_FAIL: 4,   
+  /**
+   * @type {number} 장치와 1:1 통신이 설정 되었을 경우
+   * @desc 1:1 통신으로 다음 명령 집합이 있더라도 수행하지 않음
+   */
+  ONE_AND_ONE_COMUNICATION: 5,   
+
+};

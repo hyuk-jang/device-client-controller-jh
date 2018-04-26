@@ -22,10 +22,10 @@ class AbstMediator {
   /* Commander에서 요청하는 부분 */
   /**
    * 명령 추가
-   * @param {commandFormat} commandFormat 
+   * @param {commandSet} commandSet 
    * @return {boolean} 성공 or 실패
    */
-  requestAddCommandSet(commandFormat){}
+  requestAddCommandSet(commandSet){}
 
   /**
    * @param {AbstCommander} deviceCommander
@@ -51,11 +51,9 @@ class AbstMediator {
   /* Device Manager에서 요청하는 부분  */
   /**
    * Device Manager에서 새로운 이벤트가 발생되었을 경우 알림
-   * @param {AbstManager} deviceManager 
-   * @param {string} eventName 
-   * @param {*=} eventMsg 
+   * @param {dcEvent} dcEvent 
    */
-  updateDcEvent(deviceManager, eventName, eventMsg){}
+  updatedDcEventOnDevice(dcEvent){}
 
 
   // /**

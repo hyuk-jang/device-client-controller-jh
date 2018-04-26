@@ -72,7 +72,7 @@ class Mediator extends AbstMediator {
   /* Commander에서 요청하는 부분 */
   /**
    * 명령 추가
-   * @param {commandFormat} cmdInfo 
+   * @param {commandSet} cmdInfo 
    * @return {boolean} 성공 or 실패
    */
   requestAddCommandSet(cmdInfo){
@@ -134,15 +134,13 @@ class Mediator extends AbstMediator {
   /* Device Manager에서 요청하는 부분  */
   /**
    * Device Manager에서 새로운 이벤트가 발생되었을 경우 알림
-   * @param {AbstManager} deviceManager 
-   * @param {string} eventName 
-   * @param {*=} eventMsg 
+   * @param {dcEvent} dcEvent 
    */
-  updateDcEvent(deviceManager, eventName, eventMsg){
-    const deviceCommanderList = this.getDeviceCommander(deviceManager);
+  updatedDcEventOnDevice(dcEvent){
+    const deviceCommanderList = this.getDeviceCommander(dcEvent.spreader);
 
     deviceCommanderList.forEach(commander => {
-      commander.updateDcEvent(eventName, eventMsg);
+      commander.updatedDcEventOnDevice(dcEvent);
     });
   }
 

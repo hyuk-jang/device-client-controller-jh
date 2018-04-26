@@ -55,7 +55,7 @@ class AbstController {
   notifyEvent(eventName, eventMsg){
     // BU.CLI('notifyEvent', eventName, eventMsg, this.configInfo);
     this.observers.forEach(currentItem => {
-      currentItem.updateDcEvent(eventName, eventMsg);
+      currentItem.onEvent(eventName, eventMsg);
     });
   }
 
@@ -64,7 +64,7 @@ class AbstController {
     BU.CLI('notifyConnect', this.configInfo);
     // 이미 연결된 상태였다면 이벤트를 보내지 않음
     if(!this.deviceControllerStauts.hasConnect){
-      this.notifyEvent('dcConnect');
+      this.notifyEvent('dcConnected');
     }
 
     // 타이머 해제, 접속 상태 변경, 에러 상태 변경
@@ -79,7 +79,7 @@ class AbstController {
     BU.CLI('notifyClose', this.configInfo);
     // 장치와의 연결이 계속해제된 상태였다면 이벤트를 보내지 않음
     if(this.deviceControllerStauts.hasConnect){
-      this.notifyEvent('dcClose');
+      this.notifyEvent('dcDisconnected');
     }
         
     this.deviceControllerStauts.hasConnect = false;
@@ -114,7 +114,7 @@ class AbstController {
   notifyData(data){
     // BU.CLI('notifyData', data, data.length);
     this.observers.forEach(currentItem => {
-      currentItem.updateDcData(data);
+      currentItem.onData(data);
     });
   }
 }

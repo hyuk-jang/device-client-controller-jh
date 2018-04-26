@@ -4,7 +4,7 @@ class AbstIterator {
   constructor() {
   }
   /** 
-   * @param {commandFormat} cmdInfo 추가할 명령
+   * @param {commandSet} cmdInfo 추가할 명령
    */
   addCmd(cmdInfo) {}
 
@@ -35,7 +35,7 @@ class AbstIterator {
   isDone (){
   }
 
-  /** @return {commandFormat} */
+  /** @return {commandSet} */
   getCurrentItem (){}
 
   /** @return {commandStorage} */

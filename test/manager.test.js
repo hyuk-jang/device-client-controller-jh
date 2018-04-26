@@ -23,9 +23,24 @@ const SocketDeviceController = require('../src/device-controller/socket/Socket')
 const DeviceManager = require('../src/device-manager/Manager');
 
 const {definedCommandSetRank, definedOperationStatus} = require('../src/format/moduleDefine');
+require('../src/format/define');
 
 describe('Device Manager Test', function() {
   this.timeout(20000);
+
+  
+  const commander = {
+    /** @param {dcData} dcData */
+    onDcData: dcData => BU.CLI(dcData.data),
+    /** @param {dcError} dcError */
+    onDcError: dcError => BU.CLI(dcError.errorInfo),
+    /** @param {dcMessage} dcMessage */
+    onDcMessage: dcMessage => BU.CLI(dcMessage.msgCode),
+    /** @param {dcEvent} dcEvent */
+    updatedDcEventOnDevice: dcEvent => BU.CLI(dcEvent.eventName),
+  };
+
+
   const deviceManager = new DeviceManager({
     target_id: 'VantagePro_1',
     target_name: 'Davis Vantage Pro2',
@@ -41,7 +56,9 @@ describe('Device Manager Test', function() {
   deviceManager.deviceController = {
     write: cmd => {
       BU.log(cmd);
-      deviceManager.updateDcData(`updateDcData: ${cmd}`);
+
+      BU.CLIN(deviceManager);
+      commander && commander.onDcData({data: `onDcData: ${cmd}`});
     }
   };
   // 장치 연결자 생성
@@ -69,7 +86,7 @@ describe('Device Manager Test', function() {
   it('Add & Delete CMD Test', function(done) {
     // 명령 자동 진행을 막기 위하여 1:1 모드로 고정함
     deviceManager.commandStorage.currentCommandSet = {test:'test', hasOneAndOne: true};
-    /** @type {commandFormat} */
+    /** @type {commandSet} */
 
     // [Add] Rank{2} * 3, Rank{3} * 2
     for(let i = 0; i < 5; i += 1){
@@ -129,7 +146,7 @@ describe('Device Manager Test', function() {
       deviceManager.addCommandSet(_.cloneDeep(cmdInfo));
     }
 
-    /** @type {commandFormat} */
+    /** @type {commandSet} */
     let emergencyCmdInfo = {
       rank: definedCommandSetRank.EMERGENCY,
       commandId: '긴급 홍길동',
@@ -214,7 +231,7 @@ describe('Device Manager Test', function() {
     }
 
     // 첫번째 명령부터 지연
-    /** @type {commandFormat} */
+    /** @type {commandSet} */
     let delayCmdInfo = {
       rank: definedCommandSetRank.SECOND,
       commandId: '지연 홍길동',
@@ -285,12 +302,6 @@ describe('Device Manager Test', function() {
     // 명령 자동 진행을 막기 위하여 1:1 모드로 고정함
     deviceManager.commandStorage.currentCommandSet = {test:'test', hasOneAndOne: true};
 
-    const commander = {
-      updateDcData: (currentCommandSet, data, manager) => BU.CLI(data),
-      updateDcError: (currentCommandSet, err) => BU.CLI(err),
-      updateDcEvent: (msg, cmdId) => BU.CLI(msg, cmdId),
-      updateDcComplete: (currentCommandSet) => BU.CLI(currentCommandSet.commandId),
-    };
 
     // [Add] Rank{2} * 1, Rank{3} * 1
     for(let i = 0; i < 2; i += 1){

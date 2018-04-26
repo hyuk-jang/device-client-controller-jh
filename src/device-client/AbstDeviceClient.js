@@ -22,7 +22,7 @@ class AbstDeviceClient extends EventEmitter {
   // Builder
   /**
    * Create 'Commander', 'Manager' And Set Property 'commander', 'manager'
-   * @param {deviceClientFormat} config 
+   * @param {deviceClientConstructionInfo} config 
    */
   setDeviceClient(config){
     try {
@@ -39,9 +39,9 @@ class AbstDeviceClient extends EventEmitter {
   // Default
   /**
    * Device와 연결을 수립하고 제어하고자 하는 컨트롤러를 생성하기 위한 생성 설정 정보를 가져옴
-   *  @return {deviceClientFormat} */
+   *  @return {deviceClientConstructionInfo} */
   getDefaultCreateDeviceConfig(){
-    /** @type {deviceClientFormat} */
+    /** @type {deviceClientConstructionInfo} */
     const generationConfigInfo = {
       target_id: '',
       target_category: '',
@@ -56,9 +56,9 @@ class AbstDeviceClient extends EventEmitter {
   
   /**
    * Commander로 명령을 내릴 기본 형태를 가져옴 
-   * @return {requestCommandFormat} */
+   * @return {requestCommandSet} */
   getDefaultCommandConfig(){
-    /** @type {requestCommandFormat} */
+    /** @type {requestCommandSet} */
     const commandFormatInfo = {
       rank: 2,
       commandId: '',
@@ -98,7 +98,7 @@ class AbstDeviceClient extends EventEmitter {
 
   /**
    * 명령 제어에 필요한 항목을 작성할 경우 사용
-   * @param {requestCommandFormat} cmdInfo 자동완성 기능을 사용할 경우
+   * @param {requestCommandSet} cmdInfo 자동완성 기능을 사용할 경우
    */
   executeManualCommand(cmdInfo) {
     return this.commander.executeManualCommand(cmdInfo);
@@ -133,40 +133,36 @@ class AbstDeviceClient extends EventEmitter {
   /**
    * 장치로부터 데이터 수신
    * @interface
-   * @param {commandFormat} processItem 현재 장비에서 실행되고 있는 명령 객체
-   * @param {Buffer} data 명령 수행 결과 데이터
+   * @param {dcData} dcData 현재 장비에서 실행되고 있는 명령 객체
    */
-  updateDcData(processItem, data){
-    BU.CLI(data.toString());
+  onDcData(dcData){
+    BU.CLI(dcData.data.toString());
   }
 
   /**
    * 명령 객체 리스트 수행 종료
    * @interface
-   * @param {commandFormat} processItem 현재 장비에서 실행되고 있는 명령 객체
+   * @param {commandSet} cmdInfo 현재 장비에서 실행되고 있는 명령 객체
    */
-  updateDcComplete(processItem) {
+  updatedDcCompleteCommandExecution(cmdInfo) {
     // BU.CLI('모든 명령이 수행 되었다고 수신 받음.', processItem.commander.id);
   }
 
   /**
    * Device Controller 변화가 생겨 관련된 전체 Commander에게 뿌리는 Event
    * @interface
-   * @param {string} eventName 'dcConnect', 'dcClose', 'dcError'
-   * @param {*=} eventMsg 
+   * @param {dcEvent} dcEvent 'dcConnect', 'dcClose', 'dcError'
    */
-  updateDcEvent(eventName, eventMsg) {
-    BU.log('updateDcEvent\t', eventName, eventMsg);
+  updatedDcEventOnDevice(dcEvent) {
+    BU.log('updatedDcEventOnDevice\t', dcEvent.eventName);
   }
 
   /**
    * 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트
-   * @param {commandFormat} processItem 현재 장비에서 실행되고 있는 명령 객체
-   * @param {Error} error 현재 장비에서 실행되고 있는 명령 객체
-   * @param {*} errMessage 
+   * @param {dcError} dcError 현재 장비에서 실행되고 있는 명령 객체
    */
-  updateDcError(processItem, error, errMessage){
-    BU.log(`updateDcError ${error}\t`, errMessage);
+  onDcError(dcError){
+    BU.log(`onDcError ${dcError.errorName}\t`, dcError.errorInfo);
   }
 
 

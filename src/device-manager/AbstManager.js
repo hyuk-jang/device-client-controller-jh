@@ -52,7 +52,7 @@ class AbstManager extends EventEmitter {
 
   /**
    * 명령 추가
-   * @param {commandFormat} cmdInfo 
+   * @param {commandSet} cmdInfo 
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */
   addCommandSet(cmdInfo) {}
@@ -70,30 +70,48 @@ class AbstManager extends EventEmitter {
    * @param {string} eventName 'dcConnect' 연결, 'dcClose' 닫힘, 'dcError' 에러
    * @param {*=} eventMsg 
    */
-  updateDcEvent(eventName, eventMsg){
+  onEvent(eventName, eventMsg){
     // BU.log(`AbstManager --> ${eventName}`);
     // this.emit(eventName, eventMsg);
-
+    
     if(_.isEmpty(this.deviceController.client)){
-      this.iterator.clearAllCommandSetStorage();
+      /** @type {dcError} */
+      const returnDcError = {
+        errorName: eventName,
+        errorInfo: eventMsg,
+        spreader: this
+      };
+      this.iterator.clearAllCommandSetStorage(returnDcError);
     } 
-
-    this.mediator.updateDcEvent(this, eventName, eventMsg);
+    
+    /** @type {dcEvent} */
+    const returnDcEvent = {
+      eventName,
+      eventMsg,
+      spreader: this
+    };
+    this.mediator.updatedDcEventOnDevice(returnDcEvent);
   }
 
   /**
    * 장치에서 데이터가 수신되었을 경우 해당 장치의 데이터를 수신할 Commander에게 전송
    * @param {*} data 
    */
-  updateDcData(data){
-    // BU.CLI('AbstManager --> updateDcData', data);
+  onData(data){
+    // BU.CLI('AbstManager --> onDcData', data);
     // BU.CLIN(this.iterator.currentItem);
     let receiver = this.iterator.currentReceiver;
     // BU.CLI(receiver);
     if(receiver === null){
       BU.log('Not set Responder --> Completed Data', data);
     } else {
-      receiver.updateDcData(this.iterator.currentCommandSet, data, this); 
+      /** @type {dcData} */
+      const returnValue = {
+        data,
+        commandSet: this.iterator.currentCommandSet,
+        spreader: this
+      };
+      receiver.onDcData(returnValue); 
     }
   }
 
@@ -103,7 +121,7 @@ class AbstManager extends EventEmitter {
   //   if(_.isEmpty(this.iterator.currentReceiver)){
   //     BU.log('Clear command', this.id);
   //   } else {
-  //     this.iterator.currentReceiver.updateDcError(this.iterator.currentItem, new Error('timeOut'));
+  //     this.iterator.currentReceiver.onDcError(this.iterator.currentItem, new Error('timeOut'));
   //   }
   // }
 }

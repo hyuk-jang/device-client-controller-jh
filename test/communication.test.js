@@ -16,7 +16,7 @@ require('../src/format/define');
 let config = [];
   
 for(let i = 0; i < 1; i += 1){
-  /** @type {deviceClientFormat} */
+  /** @type {deviceClientConstructionInfo} */
   let addObj = {};
   addObj.target_id = `device_${i}`;
   addObj.connect_type = 'socket';
@@ -46,10 +46,10 @@ class TestClass {
 
   /**
    * 장치로부터 데이터 수신
-   * @param {commandFormat} processItem 현재 장비에서 실행되고 있는 명령 객체
+   * @param {commandSet} processItem 현재 장비에서 실행되고 있는 명령 객체
    * @param {Buffer} data 명령 수행 결과 데이터
    */
-  updateDcData(processItem, data){
+  onDcData(processItem, data){
     BU.log(data.toString());
     let rainBuffer = data.slice(data.length - 6 - 8, data.length - 6);
     let rain = parseInt(rainBuffer, 16);
@@ -63,33 +63,32 @@ class TestClass {
     }, 1000);
   }
 
+
   /**
-   * 명령 객체 리스트 수행 종료
-   * @param {commandFormat} processItem 현재 장비에서 실행되고 있는 명령 객체
+   * 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트
+   * @param {dcMessage} dcMessage 현재 장비에서 실행되고 있는 명령 객체
    */
-  updateDcComplete(processItem) {
-    BU.CLI('모든 명령이 수행 되었다고 수신 받음.', processItem.commander.id);
+  onDcMessage(dcMessage){
+    BU.CLI('onDcMessage', dcMessage);
   }
 
   /**
    * Device Controller 변화가 생겨 관련된 전체 Commander에게 뿌리는 Event
-   * @param {string} eventName 'dcConnect', 'dcClose', 'dcError'
-   * @param {*=} eventMsg 
+   * @param {dcEvent} dcEvent 'dcConnect', 'dcClose', 'dcError'
    */
-  updateDcEvent(eventName, eventMsg) {
-    BU.log('updateDcEvent\t', eventName);
+  updatedDcEventOnDevice(dcEvent) {
+    BU.log('updatedDcEventOnDevice\t', dcEvent.eventName);
     this.manager = {};
   }
 
 
   /** 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트 */
   /**
-   * 장치에서 에러가 발생하였을 경우
-   * @param {commandFormat} processItem 현재 장비에서 실행되고 있는 명령 객체
-   * @param {Error} err 
+    * 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트
+   * @param {dcError} dcError 현재 장비에서 실행되고 있는 명령 객체
    */
-  updateDcError(processItem, err){
-    BU.log(`updateDcError ${processItem.commander.id}\t`, processItem, err);
+  onDcError(dcError){
+    BU.log(`onDcError ${dcError.errorInfo.message}\t`);
     this.manager = {};
   }
 

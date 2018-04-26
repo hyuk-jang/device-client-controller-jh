@@ -13,7 +13,7 @@ class AbstBuilder {
 
   /**
    * Create 'Commander', 'Manager'
-   * @param {deviceClientFormat} config 
+   * @param {deviceClientConstructionInfo} config 
    * @return {{deviceCommander: AbstCommander, deviceManager: AbstManager}}
    */
   setDeviceClient(config){
@@ -23,7 +23,7 @@ class AbstBuilder {
 
   // /**
   //  * Create 'Multi Commander', 'Manager'
-  //  * @param {deviceClientFormat} config 
+  //  * @param {deviceClientConstructionInfo} config 
   //  * @param {string} idList 
   //  * @return {{commanderList: Array.<AbstCommander>, deviceManager: AbstManager}}
   //  */
@@ -38,7 +38,7 @@ class AbstBuilder {
 
   // /**
   //  * Create 'Commander'
-  //  * @param {deviceClientFormat} config 
+  //  * @param {deviceClientConstructionInfo} config 
   //  * @return {AbstCommander}
   //  */
   // addCommander(){
@@ -47,7 +47,7 @@ class AbstBuilder {
 
   // /**
   //  * Create 'Manager'
-  //  * @param {deviceClientFormat} config 
+  //  * @param {deviceClientConstructionInfo} config 
   //  * @return {AbstManager}
   //  */
   // addManager(){

@@ -11,7 +11,7 @@ const AbstManager = require('./AbstManager');
 
 const Iterator = require('./Iterator');
 
-const { definedOperationStatus } = require('../format/moduleDefine');
+const { definedOperationStatus, definedCommandSetMessage } = require('../format/moduleDefine');
 
 require('../format/define');
 // DeviceManager는 DeviceController와 1:1 매칭.
@@ -24,7 +24,7 @@ class Manager extends AbstManager {
   }
 
   /** Manager를 초기화 처리 */
-  /** @param {deviceClientFormat} config */
+  /** @param {deviceClientConstructionInfo} config */
 
   /** Builder에서 요청 메소드 */
   setManager(config) {
@@ -146,7 +146,7 @@ class Manager extends AbstManager {
   }
 
   /**
-   * @param {commandFormat} cmdInfo 
+   * @param {commandSet} cmdInfo 
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */
   addCommandSet(cmdInfo) {
@@ -288,6 +288,13 @@ class Manager extends AbstManager {
     if (this.hasPerformCommand) {
       // 1:1 통신이라면 해당 사항 없음
       // 명령 집합의 Operation Status에 따른 분기
+
+      /** @type {dcError} */
+      const dcErrorFormat = {commandSet: currentCommandSet, spreader: this};
+      /** @type {dcMessage} */
+      const dcMessageFormat = {commandSet: currentCommandSet, spreader: this};
+
+
       switch (operationStatus) {
       case definedOperationStatus.WAIT: // Wait
         break;
@@ -297,26 +304,29 @@ class Manager extends AbstManager {
         this.iterator.moveToReservedCmdList();
         break;
       case definedOperationStatus.E_TIMEOUT:
-        receiver && receiver.updateDcError(currentCommandSet, new Error('timeout'));
+        BU.CLI('E_TIMEOUT');
+        dcErrorFormat.errorInfo = new Error('timeout');
+        receiver && receiver.onDcError(dcErrorFormat);
         break;
       case definedOperationStatus.E_RETRY_MAX:
-        BU.CLI('retryWrite Max Error');
-        receiver && receiver.updateDcError(currentCommandSet, new Error('retryMaxError'));
+        BU.CLI('E_RETRY_MAX');
+        dcErrorFormat.errorInfo = new Error('retryMaxError');
+        receiver && receiver.onDcError(dcErrorFormat);
         break;
       case definedOperationStatus.E_DISCONNECTED_DEVICE:
-        BU.CLI('Error Device Disconnected');
-        receiver && receiver.updateDcError(currentCommandSet, new Error('disconnectedDeviceError'));
-        this.iterator.clearAllCommandSetStorage();
-        break;
+        BU.CLI('E_DISCONNECTED_DEVICE');
+        return this.iterator.clearAllCommandSetStorage();
       case definedOperationStatus.E_UNEXPECTED:
-        BU.CLI('Error Unexpected Exception');
-        receiver && receiver.updateDcError(currentCommandSet, error);
+        BU.CLI('E_UNEXPECTED');
+        dcErrorFormat.errorInfo = error;
+        receiver && receiver.onDcError(dcErrorFormat);
         this.iterator.clearCurrentCommandSet();
         break;
-      case definedOperationStatus.E_NON_CMD:
+      case definedOperationStatus.E_NON_CMD:  // NOTE 현재 수행 명령이 없는 경우는 의도적인 것으로 판단하고 별다른 처리하지 않음
         break;
       case definedOperationStatus.REQUEST_DELETE: // Delete
-        receiver && receiver.updateDcEvent('Delete CommandSet', currentCommandSet.commandId);
+        dcMessageFormat.msgCode = definedCommandSetMessage.COMMANDSET_DELETE_SUCCESS;
+        receiver && receiver.onDcMessage(dcMessageFormat);
         this.iterator.clearCurrentCommandSet();
         break;
       default:
@@ -332,7 +342,8 @@ class Manager extends AbstManager {
         ];
         // 명령 요청 상태가 아니고 현재 명령 집합의 모든 명령을 수행했다면 발송
         if (sendUpdateDcCompleteTargetList.includes(operationStatus)) {
-          currentReceiver && currentReceiver.updateDcComplete(currentCommandSet);
+          dcMessageFormat.msgCode = definedCommandSetMessage.COMMANDSET_EXECUTION_TERMINATE;
+          currentReceiver && currentReceiver.onDcMessage(dcMessageFormat);
         }
         
         // Operation Status 초기화
@@ -340,7 +351,8 @@ class Manager extends AbstManager {
 
         // 1:1 통신이라면 진행 X
         if (currentCommandSet.hasOneAndOne) {
-          currentReceiver && currentReceiver.updateDcEvent('oneAndOne Comunication Done', this.iterator.currentCommandSet);
+          dcMessageFormat.msgCode = definedCommandSetMessage.ONE_AND_ONE_COMUNICATION;
+          currentReceiver && currentReceiver.onDcMessage(dcMessageFormat);
           return;
         }
 
