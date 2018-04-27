@@ -3,8 +3,8 @@
 const Promise = require('bluebird');
 const _ = require('lodash');
 
-const {BU} = require('base-util-jh');
-const {CU} = require('../../../base-util-jh');
+// const {BU} = require('base-util-jh');
+const {BU, CU} = require('../../../base-util-jh');
 const AbstManager = require('../device-manager/AbstManager');
 
 require('../format/define');
@@ -17,13 +17,8 @@ class AbstController {
     this.configInfo = null;
     this.client = {};
 
-    /** @type {deviceControllerStauts} */
-    this.deviceControllerStauts = {
-      hasConnect: null,
-      hasError: false,
-      connectTimer: new CU.Timer(() => this.doConnect(), 10)
-    };
-
+    this.hasConnect;
+    this.connectTimer = new CU.Timer(() => this.doConnect(), 10);
     this.connectIntervalTime = 1000 * 20;
   }
 
@@ -32,35 +27,32 @@ class AbstController {
   // 장치와의 접속을 시도
   async doConnect() {
     BU.CLI('doConnect');
-    const timer = this.deviceControllerStauts.connectTimer;
+    const timer = this.connectTimer;
     // 타이머가 작동중이고 남아있는 시간이 있다면 doConnect가 곧 호출되므로 실행하지 않음
     if(timer.getStateRunning() && timer.getTimeLeft() > 0){
       BU.CLI('이미 타이머가 작동 중입니다.');
     } else {
-      timer.pause();
+      // timer.pause();
       BU.CLI('도전 접속');
       try {
         // 장치 접속 관리 객체가 없다면 접속 수행
         if(_.isEmpty(this.client)){
           await this.connect();
   
-          // 장치 연결을 하고 나서도 연결 객체가 없다면 예외 발생
+          // 장치 연결 요청이 완료됐으나 연결 객체가 없다면 예외 발생
           if(_.isEmpty(this.client)){
             throw new Error('Try Connect To Device Error');
           }
         } 
         // 장치와 접속이 되었다고 알림
-        this.notifyConnect();
+        return this.notifyConnect();
       } catch (error) {
-        // 기존 타이머는 삭제
-        
         // 장치 접속 요청 실패 이벤트 발생
-        this.notifyEvent(definedControlEvent.CONNECT_FAIL, error);
+        this.notifyError(error);
         // 새로운 타이머 할당
-        this.deviceControllerStauts.connectTimer = new CU.Timer(() => {
-          this.doConnect();
+        this.connectTimer = new CU.Timer(() => {
+          _.isEmpty(this.client) ? this.doConnect() : this.notifyConnect();
           // 장치 접속 시도 후 타이머 제거
-          // this.deviceControllerStauts.connectTimer.pause();
         }, this.connectIntervalTime);
       }
     }
@@ -92,35 +84,39 @@ class AbstController {
     });
   }
 
-  notifyEvent(eventName, eventMsg){
-    BU.CLI('notifyEvent', eventName, eventMsg);
+  notifyEvent(eventName){
+    BU.CLI('notifyEvent', eventName);
     this.observers.forEach(observer => {
-      observer.onEvent(eventName, eventMsg);
+      observer.onEvent(eventName);
     });
   }
 
   /** 장치와의 연결이 수립되었을 경우 */
   notifyConnect() {
-    // BU.CLI('notifyConnect', this.configInfo);
-    // 신규 접속이라면 이벤트 발송
-    !this.deviceControllerStauts.hasConnect && this.notifyEvent(definedControlEvent.CONNECT_SUCCESS);
+    BU.CLI('notifyConnect');
+    if(!this.hasConnect && !_.isEmpty(this.client)){
+      this.hasConnect = true;
+      this.notifyEvent(definedControlEvent.CONNECT);
 
-    // 타이머 해제, 접속 상태 변경, 에러 상태 변경
-    this.deviceControllerStauts.hasConnect = true;
-    this.deviceControllerStauts.hasError = false;
+      // 타이머가 살아있다면 정지
+      this.connectTimer.getStateRunning() && this.connectTimer.pause();
+    }
   }
 
   /** 장치와의 연결이 해제되었을 경우 */
   notifyDisconnect() {
     // BU.CLI('notifyClose', this.configInfo);
     // 장치와의 연결이 계속해제된 상태였다면 이벤트를 보내지 않음
-    this.deviceControllerStauts.hasConnect && this.notifyEvent(definedControlEvent.DISCONNECT);
-        
-    this.deviceControllerStauts.hasConnect = false;
-    // 장치 연결이 해제되었기때문에 재 접속 시도
-    // 관련 이벤트 메시지를 보내기 위해 1초의 딜레이를 둠
-    // Promise.delay().then(() => this.doConnect());
-    this.doConnect();
+    if(this.hasConnect !== false && _.isEmpty(this.client)){
+      this.hasConnect = false;
+      this.notifyEvent(definedControlEvent.DISCONNECT);
+      // 이벤트 발송 및 약간의 장치와의 접속 딜레이를 1초 줌
+      Promise.delay(1000).then(() => {
+        if(_.isEmpty(this.client) && !this.connectTimer.getStateRunning()){
+          this.doConnect();
+        }
+      });
+    }
   }
 
   /**
@@ -130,8 +126,6 @@ class AbstController {
   notifyError(error) {
     BU.CLI('notifyError', error);
     // 장치에서 이미 에러 내역을 발송한 상태라면 이벤트를 보내지 않음
-    !this.deviceControllerStauts.hasError && this.notifyEvent(definedControlEvent.DEVICE_ERROR, error);
-    this.deviceControllerStauts.hasError = true;
     this.notifyDisconnect();
   }
 

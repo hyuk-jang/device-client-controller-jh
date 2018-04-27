@@ -52,8 +52,7 @@ async function init() {
   const receiver = new Receiver();
 
   const abstController = new AbstController();
-  const DCS = abstController.deviceControllerStauts;
-  let connectTimer = abstController.deviceControllerStauts.connectTimer;
+  let connectTimer = abstController.connectTimer;
   abstController.connectIntervalTime = 1000 * 1; // 재접속 주기 1초로 변경
   // 옵저버 추가
   abstController.attach(receiver);
@@ -71,16 +70,16 @@ async function init() {
     throw new Error();
 
   // 새로이 설정된 타이머의 시간 설정은 1000ms
-  if (DCS.connectTimer.getTimeLeft() < 500)
+  if (abstController.connectTimer.getTimeLeft() < 500)
     throw new Error();
 
   // 새로이 설정된 타이머는 바로 동작 중
-  if (!DCS.connectTimer.getStateRunning())
+  if (!abstController.connectTimer.getStateRunning())
     throw new Error();
 
   // 남아 있는 시간 만큼 대기. 새로이 돌아가고 있음
-  await Promise.delay(DCS.connectTimer.getTimeLeft());
-  BU.CLI(DCS.connectTimer.getTimeLeft());
+  await Promise.delay(abstController.connectTimer.getTimeLeft());
+  BU.CLI(abstController.connectTimer.getTimeLeft());
   // 객체 연결
   abstController.client = {
     alive: true
@@ -88,7 +87,7 @@ async function init() {
 
   await eventToPromise(receiver, definedControlEvent.CONNECT_SUCCESS);
   // 연결이 수립됐으므로 타이머는 정지
-  if(DCS.connectTimer.getStateRunning()){
+  if(abstController.connectTimer.getStateRunning()){
     throw new Error('타이머가 도네');
   }
 
@@ -96,11 +95,6 @@ async function init() {
   abstController.client = {};
   abstController.notifyError(new Error(definedControlEvent.DEVICE_ERROR));
   await eventToPromise(receiver, definedControlEvent.DISCONNECT);
-  BU.CLI(' 기다려 볼까');
-  await eventToPromise(receiver, definedControlEvent.CONNECT_FAIL);
-  BU.CLI(' 기다려 볼까');
-
-  await eventToPromise(receiver, definedControlEvent.DEVICE_ERROR);
   BU.CLI(' 기다려 볼까');
 
   abstController.client = {

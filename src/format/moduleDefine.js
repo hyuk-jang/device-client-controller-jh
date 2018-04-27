@@ -114,11 +114,7 @@ exports.definedControlEvent = {
   /**
    * @type {string} 장치와의 연결 성공
    */
-  CONNECT_SUCCESS: 'dcConnectSuccess', 
-  /**
-   * @type {string} 장치와의 연결 시도 실패
-   */
-  CONNECT_FAIL: 'dcConnectFail', 
+  CONNECT: 'dcConnect', 
   /**
    * @type {string} 장치와의 연결 해제
    */
