@@ -104,3 +104,27 @@ exports.definedCommandSetMessage = {
   ONE_AND_ONE_COMUNICATION: 5,   
 
 };
+
+
+exports.definedControlEvent = {
+  /**
+   * @type {string} 장치에서 데이터 발생
+   */
+  DATA: 'dcData', 
+  /**
+   * @type {string} 장치와의 연결 성공
+   */
+  CONNECT_SUCCESS: 'dcConnectSuccess', 
+  /**
+   * @type {string} 장치와의 연결 시도 실패
+   */
+  CONNECT_FAIL: 'dcConnectFail', 
+  /**
+   * @type {string} 장치와의 연결 해제
+   */
+  DISCONNECT: 'dcDisconnect',   
+  /**
+   * @type {number} 장치에서 에러 발생
+   */
+  DEVICE_ERROR: 'dcDeviceError',   
+};

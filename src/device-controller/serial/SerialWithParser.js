@@ -105,7 +105,7 @@ class SerialWithParser extends AbstController{
 
     client.on('close', err => {
       this.client = {};
-      this.notifyClose(err);
+      this.notifyDisconnect(err);
     });
 
     client.on('error', error => {
@@ -114,7 +114,6 @@ class SerialWithParser extends AbstController{
 
     await eventToPromise.multi(client, ['open'], ['error', 'close']);
     this.client = client;
-    this.notifyConnect();
     return this.client;
   }
 }

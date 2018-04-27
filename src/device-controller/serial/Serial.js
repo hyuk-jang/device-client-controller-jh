@@ -59,12 +59,12 @@ class Serial extends AbstController{
 
     client.on('close', err => {
       this.client = {};
-      this.notifyClose(err);
+      this.notifyDisconnect(err);
     });
 
     client.on('end', () => {
       this.client = {};
-      this.notifyClose();
+      this.notifyDisconnect();
     });
 
     client.on('error', error => {
@@ -73,8 +73,6 @@ class Serial extends AbstController{
 
     await eventToPromise.multi(client, ['open'], ['error', 'close']);
     this.client = client;
-    this.notifyConnect();
-    // this.notifyEvent('dcConnect');
     return this.client;
   }
 }

@@ -5,9 +5,7 @@ const _ = require('lodash');
 const Promise = require('bluebird');
 const eventToPromise = require('event-to-promise');
 
-// const BU = require('base-util-jh').baseUtil;
 const {BU, CU} = require('../../base-util-jh');
-const uuidv4 = require('uuid/v4');
 
 global._ = _;
 global.BU = BU;

@@ -69,8 +69,10 @@ class SerialWithXbee extends AbstController{
 
     /** @type {xbeeApi_0x8B} */
     let frameData = await eventToPromise(this.client, 'data');
-
-    return frameData.deliveryStatus === 0 ? true : false;
+    if(frameData.deliveryStatus === 0 ){
+      throw new Error('데이터 전송 실패');
+    }
+    return true;
   }
 
   async connect() {
@@ -86,7 +88,7 @@ class SerialWithXbee extends AbstController{
 
     client.on('close', err => {
       this.client = {};
-      this.notifyClose(err);
+      this.notifyDisconnect(err);
     });
 
     client.on('error', error => {
@@ -95,7 +97,6 @@ class SerialWithXbee extends AbstController{
 
     await eventToPromise.multi(client, ['open'], ['error', 'close']);
     this.client = client;
-    this.notifyConnect();
     return this.client;
   }
 }
