@@ -20,6 +20,9 @@ class AbstController {
     this.hasConnect;
     this.connectTimer = new CU.Timer(() => this.doConnect(), 10);
     this.connectIntervalTime = 1000 * 20;
+
+    // TEST
+    this.requestConnectCount = 0;
   }
 
   setInit(){}
@@ -33,10 +36,10 @@ class AbstController {
       BU.CLI('이미 타이머가 작동 중입니다.');
     } else {
       // timer.pause();
-      BU.CLI('도전 접속');
       try {
         // 장치 접속 관리 객체가 없다면 접속 수행
         if(_.isEmpty(this.client)){
+          BU.CLI('도전 접속');
           await this.connect();
   
           // 장치 연결 요청이 완료됐으나 연결 객체가 없다면 예외 발생
@@ -58,7 +61,7 @@ class AbstController {
     }
   }
   /** @return {Promise} 접속 성공시 Resolve, 실패시 Reject  */
-  async connect(){}
+  async connect(){this.requestConnectCount += 1;BU.CLI('?',this.requestConnectCount);}
 
   // TODO 장치와의 연결 접속 해제 필요시 작성
   disconnect(){}
@@ -105,7 +108,7 @@ class AbstController {
 
   /** 장치와의 연결이 해제되었을 경우 */
   notifyDisconnect() {
-    // BU.CLI('notifyClose', this.configInfo);
+    BU.CLI('notifyClose');
     // 장치와의 연결이 계속해제된 상태였다면 이벤트를 보내지 않음
     if(this.hasConnect !== false && _.isEmpty(this.client)){
       this.hasConnect = false;

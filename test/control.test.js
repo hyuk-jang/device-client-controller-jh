@@ -32,8 +32,8 @@ class Receiver extends EventEmitter {
     this.data = '';
     this.eventName = '';
 
-    this.occurConnectCount = 0;
-    this.occurDisconnectCount = 0;
+    this.connectCount = 0;
+    this.disconnectCount = 0;
   }
   onData(data) {
     this.data = data;
@@ -44,10 +44,10 @@ class Receiver extends EventEmitter {
     // if(eventName !== definedControlEvent.ERROR){
     BU.CLIS(eventName, eventMsg);
     if(eventName === definedControlEvent.CONNECT){
-      this.occurConnectCount++;
+      this.connectCount++;
     }
     if(eventName === definedControlEvent.DISCONNECT){
-      this.occurDisconnectCount++;
+      this.disconnectCount++;
     }
     this.emit(eventName);
     this.eventName = eventName;
@@ -83,7 +83,7 @@ describe('Device Manager Test', function() {
     // 장치 접속 성공
     // occurConnectCount: 1,  occurDisconnectCount: 1
     await eventToPromise(receiver, definedControlEvent.CONNECT);
-    expect(receiver.occurConnectCount).to.eq(1);
+    expect(receiver.connectCount).to.eq(1);
     // 장치 접속이 성공했으므로 현재 상태는 True
     expect(abstController.hasConnect).to.eq(true);
     
@@ -92,7 +92,7 @@ describe('Device Manager Test', function() {
     // occurConnectCount: 1,  occurDisconnectCount: 2
     abstController.doConnect();
     await eventToPromise(receiver, definedControlEvent.DISCONNECT);
-    expect(receiver.occurDisconnectCount).to.eq(2);
+    expect(receiver.disconnectCount).to.eq(2);
     expect(abstController.hasConnect).to.eq(false);
     
     // 장치에서 접속이 성공하여 연결 객체가 생성되고 이벤트가 올라온 상태 테스트
@@ -100,9 +100,9 @@ describe('Device Manager Test', function() {
     await eventToPromise(receiver, definedControlEvent.CONNECT);
     expect(abstController.hasConnect).to.eq(true);
     // occurConnectCount: 2,  occurDisconnectCount: 2
-    expect(receiver.occurConnectCount).to.eq(2);
-    expect(receiver.occurConnectCount).to.eq(2);
-    expect(receiver.occurDisconnectCount).to.eq(2);
+    expect(receiver.connectCount).to.eq(2);
+    expect(receiver.connectCount).to.eq(2);
+    expect(receiver.disconnectCount).to.eq(2);
 
 
 
