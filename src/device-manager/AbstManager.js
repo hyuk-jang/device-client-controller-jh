@@ -66,6 +66,16 @@ class AbstManager extends EventEmitter {
   deleteCommandSet(commandId){}
 
   /**
+   * 찾고자 하는 정보 AND 연산 
+   * @param {{commander: AbstCommander, commandId: string=}} searchInfo 
+   * @return {commandStorage}
+   */
+  findCommandStorage(searchInfo){}
+
+
+
+
+  /**
    * Device Controller에서 새로운 이벤트가 발생되었을 경우 알림
    * @param {string} eventName 'dcConnect' 연결, 'dcClose' 닫힘, 'dcError' 에러
    * @param {*=} eventMsg 
@@ -93,6 +103,7 @@ class AbstManager extends EventEmitter {
     this.mediator.updatedDcEventOnDevice(returnDcEvent);
   }
 
+
   /**
    * 장치에서 데이터가 수신되었을 경우 해당 장치의 데이터를 수신할 Commander에게 전송
    * @param {*} data 
@@ -111,7 +122,7 @@ class AbstManager extends EventEmitter {
         commandSet: this.iterator.currentCommandSet,
         spreader: this
       };
-      receiver.onDcData(returnValue); 
+      receiver.receiveDcData(returnValue); 
     }
   }
 

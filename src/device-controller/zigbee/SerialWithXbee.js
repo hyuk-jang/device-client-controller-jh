@@ -14,13 +14,14 @@ let instanceList = [];
 class SerialWithXbee extends AbstController{
   /**
    * Serial Port 객체를 생성하기 위한 설정 정보
-   * @param {constructorXbee} config 
+   * @param {deviceClientConstructionInfo} mainConfig
+   * @param {constructorXbee} connectInfo 
    */
-  constructor(config) {
-    super();
-    this.port = config.port;
-    this.baud_rate = config.baudRate;
-    this.xbeeConfig = config.addConfigInfo;
+  constructor(mainConfig, connectInfo) {
+    super(mainConfig);
+    this.port = connectInfo.port;
+    this.baud_rate = connectInfo.baudRate;
+    this.xbeeConfig = connectInfo.addConfigInfo;
     this.xbeeAPI = null;
 
     let foundInstance = _.find(instanceList, {id: this.port});

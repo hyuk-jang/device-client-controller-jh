@@ -67,8 +67,15 @@ init();
 
 async function init() {
   const receiver = new Receiver();
-
-  const abstController = new AbstController();
+  const config = {};
+  config.loggingOption = {
+    hasCommanderResponse: true,
+    hasTransferCommand: true,
+    hasDcError: true,
+    hasDcEvent: true,
+    hasReceiveData: true
+  };
+  const abstController = new AbstController(config);
   let connectTimer = abstController.connectTimer;
   abstController.connectIntervalTime = 1000 * 3; // 재접속 주기 1초로 변경
   // 옵저버 추가

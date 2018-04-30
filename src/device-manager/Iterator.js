@@ -127,7 +127,7 @@ class Iterator {
 
     // 현재 명령을 삭제 요청 할 경우 시스템에 해당 명령 삭제 상태로 교체
     if(this.currentCommandSet.commandId === commandId){
-      this.aggregate.currentCommandSet.operationStatus = definedOperationStatus.REQUEST_DELETE;
+      this.aggregate.currentCommandSet.operationStatus = definedOperationStatus.PROCESSING_DELETE_COMMAND;
     }
   }
 
@@ -167,6 +167,57 @@ class Iterator {
     } else {
       throw new Error(currentCommandSet.commandId + '는 delayMs를 가지고 있지 않습니다.');
     }
+  }
+
+
+
+  /**
+   * 찾고자 하는 정보 AND 연산 
+   * @param {{commander: AbstCommander, commandId: string=}} searchInfo 
+   * @return {commandStorage}
+   */
+  findCommandStorage(searchInfo){
+    /** @type {commandStorage} */
+    const returnValue = {
+      currentCommandSet: {},
+      delayCommandSetList: [],
+      standbyCommandSetList: []
+    };
+
+    // CurrentSet 확인
+    const hasEqualCurrentSet = _.isEqual(this.currentCommandSet.commander, searchInfo.commander);
+    if(hasEqualCurrentSet){
+      let hasTrue = _.isString(searchInfo.commandId) ? _.eq(this.currentCommandSet.commandId, searchInfo.commandId) : true;
+      if(hasTrue){
+        returnValue.currentCommandSet = this.currentCommandSet;
+      }
+    }
+    // 대기 집합 확인
+    this.aggregate.standbyCommandSetList.forEach(commandStorageInfo => {
+      let addObj = {rank: commandStorageInfo.rank, list: []};
+
+      addObj.list = _.filter(commandStorageInfo.list, commandSet => {
+        let hasEqualStandbySet = _.isEqual(commandSet.commander, searchInfo.commander);
+        if(hasEqualStandbySet){
+          let hasTrue = _.isString(searchInfo.commandId) ? _.eq(commandSet.commandId, searchInfo.commandId) : true;
+          return hasTrue;
+        } else {
+          return false;
+        }
+      });
+      returnValue.standbyCommandSetList.push(addObj);
+    });
+    // 지연 집합 확인
+    returnValue.delayCommandSetList = _.filter(this.aggregate.delayCommandSetList, commandSet => {
+      let hasEqualDelaySet = _.isEqual(commandSet.commander, searchInfo.commander);
+      if(hasEqualDelaySet){
+        let hasTrue = _.isString(searchInfo.commandId) ? _.eq(commandSet.commandId, searchInfo.commandId) : true;
+        return hasTrue;
+      } else {
+        return false;
+      }
+    });
+    return returnValue;
   }
 
   /**

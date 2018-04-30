@@ -14,12 +14,13 @@ let instanceList = [];
 class Socket extends AbstController {
   /**
    * Socket Client 접속 설정 정보
-   * @param {constructorSocket} config Socket Port
+   * @param {deviceClientConstructionInfo} mainConfig
+   * @param {constructorSocket} connectInfo Socket Port
    */
-  constructor(config) {
-    super();
-    this.port = config.port;
-    this.host = config.host || 'localhost';
+  constructor(mainConfig, connectInfo) {
+    super(mainConfig);
+    this.port = connectInfo.port;
+    this.host = connectInfo.host || 'localhost';
     
     this.configInfo = {host: this.host, port: this.port};
 

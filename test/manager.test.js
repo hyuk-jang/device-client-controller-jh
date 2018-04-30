@@ -319,6 +319,11 @@ describe('Device Manager Test', function() {
 });
 
 
+/**
+ * 
+ * @param {DeviceManager} deviceManager 
+ * @param {*} commander 
+ */
 function initDeviceManager(deviceManager, commander){
   deviceManager.commandStorage = { currentCommandSet: {}, standbyCommandSetList: [] };
   // 반복기 생성
@@ -332,6 +337,16 @@ function initDeviceManager(deviceManager, commander){
       commander && commander.onDcData({data: `onDcData: ${cmd}`});
     }
   };
+  /** @type {deviceClientConstructionInfo} */
+  deviceManager.config = {};
+  deviceManager.config.loggingOption = {
+    hasCommanderResponse: true,
+    hasTransferCommand: true,
+    hasDcError: true,
+    hasDcEvent: true,
+    hasReceiveData: true
+  };
+
   // 장치 연결자 생성
   deviceManager.deviceController.client = {alive:true};
   // 작업중인 상태 X

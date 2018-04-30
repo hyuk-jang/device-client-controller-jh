@@ -7,11 +7,18 @@ const _ = require('lodash');
 const {BU, CU} = require('../../../base-util-jh');
 const AbstManager = require('../device-manager/AbstManager');
 
+const {loggingFile} = require('../util/dcUtil');
+
 require('../format/define');
 const {definedControlEvent} = require('../format/moduleDefine');
 
 class AbstController {
-  constructor() {
+  /**
+   * Device Controller 객체를 생성하기 위한 설정 정보
+   * @param {deviceClientConstructionInfo} mainConfig
+   */
+  constructor(mainConfig) {
+    this.mainConfig = mainConfig;
     /** @type {Array.<AbstManager>}  */
     this.observers = [];
     this.configInfo = null;
@@ -40,6 +47,7 @@ class AbstController {
         // 장치 접속 관리 객체가 없다면 접속 수행
         if(_.isEmpty(this.client)){
           BU.CLI('도전 접속');
+          loggingFile(this, 'mainConfig.loggingOption.hasDcEvent', 'event', 'doConnect()');
           await this.connect();
   
           // 장치 연결 요청이 완료됐으나 연결 객체가 없다면 예외 발생
@@ -97,6 +105,7 @@ class AbstController {
   /** 장치와의 연결이 수립되었을 경우 */
   notifyConnect() {
     BU.CLI('notifyConnect');
+    loggingFile(this, 'mainConfig.loggingOption.hasDcEvent', 'event', 'notifyConnect');
     if(!this.hasConnect && !_.isEmpty(this.client)){
       this.hasConnect = true;
       this.notifyEvent(definedControlEvent.CONNECT);
@@ -109,6 +118,7 @@ class AbstController {
   /** 장치와의 연결이 해제되었을 경우 */
   notifyDisconnect() {
     BU.CLI('notifyClose');
+    loggingFile(this, 'mainConfig.loggingOption.hasDcEvent', 'event', 'notifyDisconnect');
     // 장치와의 연결이 계속해제된 상태였다면 이벤트를 보내지 않음
     if(this.hasConnect !== false && _.isEmpty(this.client)){
       this.hasConnect = false;
@@ -128,6 +138,8 @@ class AbstController {
    */
   notifyError(error) {
     BU.CLI('notifyError', error);
+    
+    loggingFile(this, 'mainConfig.loggingOption.hasDcEvent', 'event', 'notifyError', error);
     // 장치에서 이미 에러 내역을 발송한 상태라면 이벤트를 보내지 않음
     this.notifyDisconnect();
   }

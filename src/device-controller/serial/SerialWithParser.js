@@ -10,13 +10,14 @@ let instanceList = [];
 class SerialWithParser extends AbstController{
   /**
    * Serial Port 객체를 생성하기 위한 설정 정보
-   * @param {constructorSerialWithParser} config {port, baud_rate, raget_name}
+   * @param {deviceClientConstructionInfo} mainConfig
+   * @param {constructorSerialWithParser} connectInfo {port, baud_rate, raget_name}
    */
-  constructor(config) {
-    super();
-    this.port = config.port;
-    this.baud_rate = config.baudRate;
-    this.parserInfo = config.addConfigInfo;
+  constructor(mainConfig, connectInfo) {
+    super(mainConfig);
+    this.port = connectInfo.port;
+    this.baud_rate = connectInfo.baudRate;
+    this.parserInfo = connectInfo.addConfigInfo;
 
     let foundInstance = _.find(instanceList, {id: this.port});
     if(_.isEmpty(foundInstance)){

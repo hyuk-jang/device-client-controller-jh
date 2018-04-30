@@ -1,54 +1,85 @@
 exports.definedOperationStatus = {
   /**
-   * @type {number} Wait(Default)
+   * @type {string} Wait(Default)
    * @desc 명령 대기 상태
    */
-  WAIT: 0,
+  WAIT: 'wait',
   /**
-   * @type {number} Request Command
+   * @type {string} Request Command
    * @desc 명령 요청 상태 (진행 중)
    */
-  REQUEST_CMD: 1,
+  REQUEST_CMD: 'requesting Command',
   /**
-   * @type {number} Request Delay
-   * @desc 명령 요청 상태 (진행 중)
+   * @type {string} REQUEST_CMD가 성공적으로 실행될 경우 상태 변경
+   * @desc 데이터 수신 기다림
    */
-  REQUEST_DELAY: 2,
+  RECEIVE_WAIT_DATA: 'waiting for data',
   /**
-   * @type {number} Response Success
+   * @type {string} 데이터 수신이 이루어지고 해당 데이터에 대한 Commander의 응답을 기다리는 중
+   * @desc 데이터 수신 기다림
+   */
+  RECEIVE_WAIT_PROCESSING_DATA: 'wating for data processing',
+  /**
+   * @type {string} Commander로부터 더 많은 데이터를 원하는 경우(Timeout 시간까지 기다림)
+   * @desc 데이터 수신 기다림
+   */
+  RECEIVE_WAIT_MORE_DATA: 'wating for mor data',
+  /**
+   * @type {string} Commander로부터 데이터가 오류라는 지시를 얻은 경우
+   * @desc 데이터 수신 기다림
+   */
+  RECEIVE_DATA_ERROR: 'data Error',
+  /**
+   * @type {string} Commander로부터 데이터의 승인을 얻은 경우
    * @desc 명령 요청 처리 성공
    */
-  RESPONE_SUCCESS: 3,
+  RECEIVE_DATA_DONE: 'data Done',
   /**
-   * @type {number} Request Delete Current Command Set
+   * @type {string} 지연 명령 처리 상태
+   * @desc 명령 요청 상태 (진행 중)
+   */
+  PROCESSING_DELEAY_COMMAND: 'delay command processing',
+  /**
+   * @type {string} Request Delete Current Command Set
    * @desc 현재 명령 셋 삭제 요청 상태
    */
-  REQUEST_DELETE: 4,
+  PROCESSING_DELETE_COMMAND: 'delete command processing',
   /**
-   * @type {number} Error Timeout
-   * @desc 응답 시간 초과
-   */
-  E_TIMEOUT: 5,
-  /**
-   * @type {number} Error Retry Count Full
-   * @desc 명령 재시도 횟수 초과
-   */
-  E_RETRY_MAX: 6,
-  /**
-   * @type {number} Error Device Disconnected
+   * @type {string} Error Device Disconnected
    * @desc 장치와의 접속이 끊어짐
    */
-  E_DISCONNECTED_DEVICE: 7,
+  E_DISCONNECTED_DEVICE: 'E_DISCONNECTED_DEVICE',
   /**
-   * @type {number} Error Unexptected Error
+   * @type {string} Error Timeout
+   * @desc RECEIVE_WAIT_DATA, RECEIVE_WAIT_MORE_DATA
+   */
+  E_TIMEOUT: 'E_TIMEOUT',
+  /**
+   * @type {string} 데이터가 수신 되었으나 Commander가 아무런 조치를 하지 않은 경우
+   * @desc RECEIVE_WAIT_PROCESSING_DATA --> 데이터 미조치 에러
+   */
+  E_UNHANDLING_DATA: 'E_UNHANDLING_DATA',
+  /**
+   * @type {string} 데이터의 오류
+   * @desc RECEIVE_DATA_ERROR 
+   */
+  E_INCORRECT_DATA: 'E_INCORRECT_DATA',
+  /**
+   * @type {string} Error Retry Count Full
+   * @desc 명령 재시도 횟수 초과
+   */
+  E_RETRY_MAX: 'E_RETRY_MAX',
+  
+  /**
+   * @type {string} Error Unexptected Error
    * @desc 예상치 못한 에러
    */
-  E_UNEXPECTED: 8,
+  E_UNEXPECTED: 'E_UNEXPECTED',
   /**
-   * @type {number} Error Non Cmd
+   * @type {string} Error Non Cmd
    * @desc 유효한 명령 아님
    */
-  E_NON_CMD: 9,
+  E_NON_CMD: 'E_NON_CMD',
 };
 
 
@@ -123,4 +154,25 @@ exports.definedControlEvent = {
    * @type {number} 장치에서 에러 발생
    */
   DEVICE_ERROR: 'dcDeviceError',   
+};
+
+
+
+exports.definedCommanderResponse = {
+  /**
+   * @type {number} 수신된 데이터 참
+   */
+  DONE: 0, 
+  /**
+   * @type {number} 더 많은 데이터가 필요하니 기달려라
+   */
+  WAIT: 1, 
+  /**
+   * @type {number} 데이터에 문제가 있다
+   */
+  ERROR: 2,   
+  /**
+   * @type {number} 명령을 재전송 해달라
+   */
+  RETRY: 3,   
 };

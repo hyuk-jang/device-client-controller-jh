@@ -9,6 +9,7 @@ const AbstManager = require('../device-manager/AbstManager');
 const AbstDeviceClient = require('../device-client/AbstDeviceClient');
 
 require('../format/define');
+const { definedCommandSetRank, definedOperationStatus, definedCommandSetMessage, definedCommanderResponse } = require('../format/moduleDefine');
 
 const instanceList = [];
 
@@ -25,7 +26,8 @@ class Commander extends AbstCommander {
       this.hasOneAndOne = config.hasOneAndOne ? true : false;
       /** Commander를 명령하는 Client 객체 */
       /** @type {AbstDeviceClient} */
-      this.user = config.user === null ? null : config.user;
+      this.user = config.user || null;
+      this.loggingOption = config.loggingOption;
       instanceList.push({
         id: config.target_id,
         instance: this
@@ -57,9 +59,12 @@ class Commander extends AbstCommander {
     this.mediator = deviceMediator;
   }
 
+
   /** 장치의 연결이 되어있는지 여부 @return {boolean} */
   get hasConnectedDevice() {
-    return _.isEmpty(this.mediator.getDeviceManager().deviceController.client) ? false : true;
+    let hasDisConnected = _.chain(this.manager).get('deviceController.client').isEmpty().value();
+
+    return !hasDisConnected;
   }
 
   /* Client가 요청 */
@@ -74,7 +79,7 @@ class Commander extends AbstCommander {
     /** @type {commandSet} */
     let commandInfo = {};
     // commandSet 형식을 따르지 않을 경우 자동으로 구성
-    commandInfo.rank = 2;
+    commandInfo.rank = definedCommandSetRank.SECOND;
     commandInfo.commandId = null;
     
     commandInfo.commander = this;
@@ -98,18 +103,18 @@ class Commander extends AbstCommander {
     commandInfo.hasOneAndOne = this.hasOneAndOne;
     // BU.CLIN(commandInfo);
 
-    return this.mediator.requestAddCommandSet(commandInfo, this);
+    return this.manager.addCommandSet(commandInfo);
   }
 
   /**
    * 장치를 제어하는 실제 명령만을 가지고 요청할 경우
    * @param {Buffer|string|undefined} cmdInfo 자동완성 기능을 사용할 경우
    */
-  executeAutoCommand(cmdInfo) {
+  generationAutoCommand(cmdInfo) {
     /** @type {commandSet} */
     let commandInfo = {};
     // commandSet 형식을 따르지 않을 경우 자동으로 구성
-    commandInfo.rank = 2;
+    commandInfo.rank = definedCommandSetRank.SECOND;
     commandInfo.commandId = null;
     commandInfo.currCmdIndex = 0;
     commandInfo.cmdList = [];
@@ -136,14 +141,14 @@ class Commander extends AbstCommander {
       });
     }
 
-    return this.mediator.requestAddCommandSet(commandInfo, this);
+    return this.manager.addCommandSet(commandInfo);
   }
 
   /**
    * 명령 제어에 필요한 항목을 작성할 경우 사용
    * @param {requestCommandSet} cmdInfo 자동완성 기능을 사용할 경우
    */
-  executeManualCommand(cmdInfo) {
+  generationManualCommand(cmdInfo) {
     /** @type {commandSet} */
     let commandInfo = this.executeAutoCommand();
 
@@ -155,17 +160,17 @@ class Commander extends AbstCommander {
     commandInfo.operationStatus = 0;
     commandInfo.commander = this;
     commandInfo.hasOneAndOne = this.hasOneAndOne;
-    return this.mediator.requestAddCommandSet(commandInfo, this);
+    return this.manager.addCommandSet(commandInfo);
   }
 
   /**
    * Commander와 연결된 장비에서 진행중인 저장소의 모든 명령을 가지고 옴 
+   * @param {{commander: AbstCommander, commandId: string=}} searchInfo 
    * @return {commandStorage}
    */
-  getCommandStorage() {
+  getCommandStorage(searchInfo) {
     try {
-      const commandStorage = this.mediator.getCommandStorage(this);
-      return commandStorage;
+      return this.manager.findCommandStorage(searchInfo);
       // BU.CLIN(commandStorage, 3);
     } catch (error) {
       throw error;

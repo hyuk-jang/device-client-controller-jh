@@ -11,12 +11,13 @@ let instanceList = [];
 class Serial extends AbstController{
   /**
    * Serial Port 객체를 생성하기 위한 설정 정보
-   * @param {constructorSerial} config {port, baud_rate}
+   * @param {deviceClientConstructionInfo} mainConfig
+   * @param {constructorSerial} connectInfo {port, baud_rate}
    */
-  constructor(config) {
-    super();
-    this.port = config.port;
-    this.baud_rate = config.baudRate;
+  constructor(mainConfig, connectInfo) {
+    super(mainConfig);
+    this.port = connectInfo.port;
+    this.baud_rate = connectInfo.baudRate;
     
     let foundInstance = _.find(instanceList, {id: this.port});
     if(_.isEmpty(foundInstance)){

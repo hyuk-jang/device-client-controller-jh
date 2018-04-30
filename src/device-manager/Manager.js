@@ -11,7 +11,9 @@ const AbstManager = require('./AbstManager');
 
 const Iterator = require('./Iterator');
 
-const { definedOperationStatus, definedCommandSetMessage } = require('../format/moduleDefine');
+const { definedOperationStatus, definedCommandSetMessage, definedCommanderResponse } = require('../format/moduleDefine');
+
+const {loggingFile} = require('../util/dcUtil');
 
 require('../format/define');
 // DeviceManager는 DeviceController와 1:1 매칭.
@@ -61,7 +63,7 @@ class Manager extends AbstManager {
     if (_.isNull(controller)) {
       throw new Error('해당 장치는 없습니다.');
     } else {
-      deviceController = new controller(config.connect_info);
+      deviceController = new controller(config, config.connect_info);
     }
     // 해당 장치가 이미 존재하는지 체크
     let foundInstance = _.find(instanceList, { id: deviceController.id });
@@ -110,9 +112,9 @@ class Manager extends AbstManager {
    * updateData를 통해 전달받은 데이터에 대한 Commander의 응답을 받을 메소드
    * 응답받은 데이터에 문제가 있거나 다른 사유로 명령을 재 전송하고자 할 경우(3회까지 가능)
    * @param {AbstCommander} commander 
-   * @param {string} msg 'isOk', 'retry'
+   * @param {string} commanderResponse 
    */
-  responseToDataFromCommander(commander, msg) {
+  responseToDataFromCommander(commander, commanderResponse) {
     // BU.CLI('responseToDataFromCommander');
     let currentCommandSet = this.iterator.currentCommandSet;
 
@@ -122,17 +124,30 @@ class Manager extends AbstManager {
 
     // 현재 진행중인 명령 객체와 일치해야지만 가능
     if (_.isEqual(currentCommandSet.commander, commander)) {
-      switch (msg) {
-      case 'isOk':
+      loggingFile(this, 'config.loggingOption.hasCommanderResponse', 'data', 'commanderResponse', commanderResponse);
+
+      switch (commanderResponse) {
+      case definedCommanderResponse.DONE:
         BU.CLI('isOk', this.iterator.currentReceiver.id);
         // 타이머가 붙어있다면 타이머 해제
         currentCommandSet.commandExecutionTimer && currentCommandSet.commandExecutionTimer.pause();
-        this.updateOperationStatus(definedOperationStatus.RESPONE_SUCCESS);
+        this.updateOperationStatus(definedOperationStatus.RECEIVE_DATA_DONE);
         this.manageProcessingCommand();
         break;
-        // 명령을 재요청할 경우 진행중인 timeout 처리는 해제
-      case 'retry':
-        BU.CLI('retry', this.iterator.currentReceiver.id);
+        // 데이터의 수신은 이루어졌으나 더 많은 데이터가 필요하니 기달려라
+      case definedCommanderResponse.WAIT:
+        BU.CLI('definedCommanderResponse.WAIT');
+        this.updateOperationStatus(definedOperationStatus.RECEIVE_WAIT_MORE_DATA);
+        break;
+        // 데이터에 문제가 있다.
+      case definedCommanderResponse.ERROR:
+        BU.CLI('definedCommanderResponse.ERROR');
+        this.updateOperationStatus(definedOperationStatus.RECEIVE_DATA_ERROR);
+        this.manageProcessingCommand();
+        break;
+        // 명령을 재전송 해달라
+      case definedCommanderResponse.RETRY:
+        BU.CLI('definedCommanderResponse.RETRY', this.iterator.currentReceiver.id);
         // 타이머가 붙어있다면 타이머 해제
         currentCommandSet.commandExecutionTimer && currentCommandSet.commandExecutionTimer.pause();
         this.retryRequestProcessingCommand();
@@ -177,6 +192,41 @@ class Manager extends AbstManager {
     return this.iterator.commandSetStorage;
   }
 
+  /**
+   * 찾고자 하는 정보 AND 연산 
+   * @param {{commander: AbstCommander, commandId: string=}} searchInfo 
+   * @return {commandStorage}
+   */
+  findCommandStorage(searchInfo){
+    return this.iterator.findCommandStorage(searchInfo);
+  }
+
+
+  /** AbstManager Implement */
+  /**
+   * 장치에서 데이터가 수신되었을 경우 해당 장치의 데이터를 수신할 Commander에게 전송
+   * @param {*} data 
+   */
+  onData(data){
+    // this.iterator.currentReceiver && 
+    // 데이터 수신이 이루어지고 해당 데이터에 대한 Commander의 응답을 기다리는 중
+    this.updateOperationStatus(definedOperationStatus.RECEIVE_WAIT_PROCESSING_DATA);
+    loggingFile(this, 'config.loggingOption.hasReceiveData', 'data', 'onData', data);
+
+    let receiver = this.iterator.currentReceiver;
+    // BU.CLI(receiver);
+    if(receiver === null){
+      BU.log('Not set Responder --> Completed Data', data);
+    } else {
+      /** @type {dcData} */
+      const returnValue = {
+        data,
+        commandSet: this.iterator.currentCommandSet,
+        spreader: this
+      };
+      receiver.onDcData(returnValue); 
+    }
+  }
 
 
 
@@ -195,12 +245,30 @@ class Manager extends AbstManager {
     let currentCommand = this.iterator.currentCommand;
 
     // 명령 전송을 기다림
+    this.updateOperationStatus(definedOperationStatus.REQUEST_CMD);
+
+
+    loggingFile(this, 'config.loggingOption.hasTransferCommand', 'data', 'transferData', currentCommand.data);
+
     await this.deviceController.write(currentCommand.data);
+    // 명령 전송이 성공하였으므로 데이터 수신 상태로 변경
+    this.updateOperationStatus(definedOperationStatus.RECEIVE_WAIT_DATA);
 
     // BU.CLI('명령 요청', this.iterator.currentReceiver.id, processItem.commandExecutionTimeoutMs);
     // console.time(`timeout ${testId}`);
     currentCommandSet.commandExecutionTimer = new CU.Timer(() => {
-      this.updateOperationStatus(definedOperationStatus.E_TIMEOUT);
+      switch (currentCommandSet.operationStatus) {
+      case definedOperationStatus.REQUEST_CMD:
+      case definedOperationStatus.RECEIVE_WAIT_MORE_DATA:
+        this.updateOperationStatus(definedOperationStatus.E_TIMEOUT);
+        break;
+      case definedOperationStatus.RECEIVE_WAIT_PROCESSING_DATA:
+        this.updateOperationStatus(definedOperationStatus.E_UNHANDLING_DATA);
+        break;
+      default:
+        this.updateOperationStatus(definedOperationStatus.E_UNEXPECTED);
+        break;
+      }
       return this.manageProcessingCommand();
     }, currentCommand.commandExecutionTimeoutMs || 1000);
   }
@@ -226,10 +294,9 @@ class Manager extends AbstManager {
       } else {
         // 명령 수행에 대기 시간이 존재한다면 해당 시간만큼 setTimer 가동 시킨 후 대기열로 이동
         if (currentCommand.delayExecutionTimeoutMs) {
-          this.updateOperationStatus(definedOperationStatus.REQUEST_DELAY);
+          this.updateOperationStatus(definedOperationStatus.PROCESSING_DELEAY_COMMAND);
           return this.manageProcessingCommand();
         } else {
-          this.iterator.currentCommandSet.operationStatus = definedOperationStatus.REQUEST_CMD;
           return this.transferCommandToDevice();
         }
       }
@@ -263,7 +330,7 @@ class Manager extends AbstManager {
     // BU.CLI('updateOperationStatus', operationStatus);
     let currentCommandSet = this.iterator.currentCommandSet;
     // 명령 삭제 일 경우에는 업데이트 제외
-    if (currentCommandSet.operationStatus !== definedOperationStatus.REQUEST_DELETE) {
+    if (currentCommandSet.operationStatus !== definedOperationStatus.PROCESSING_DELETE_COMMAND) {
       currentCommandSet.operationStatus = operationStatus;
     }
   }
@@ -294,54 +361,69 @@ class Manager extends AbstManager {
       /** @type {dcMessage} */
       const dcMessageFormat = {commandSet: currentCommandSet, spreader: this};
 
-
+      let hasError = false;
       switch (operationStatus) {
       case definedOperationStatus.WAIT: // Wait
         break;
       case definedOperationStatus.REQUEST_CMD: // 명령을 요청중이라면 진행 X
+      case definedOperationStatus.RECEIVE_WAIT_DATA: // 데이터 수신을 기다리는 중이라면 진행 X
+      case definedOperationStatus.RECEIVE_WAIT_PROCESSING_DATA: // 데이터 수신이 이루어지고 처리를 기다리는 중이라면 진행 X
+      case definedOperationStatus.RECEIVE_WAIT_MORE_DATA: // 더 많은 데이터 수신을 기다리는 중이라면 진행 X
         return false;
-      case definedOperationStatus.REQUEST_DELAY: // 현재 명령이 Delay가 필요하다면 명령 교체
+      case definedOperationStatus.RECEIVE_DATA_ERROR: // 데이터에 오류가 있을 경우에는 Commander에서 이미 인지하고 있으므로 별도의 메시지를 보내지 않음
+        BU.CLI('dataError');
+        break;
+      case definedOperationStatus.RECEIVE_DATA_DONE: // 데이터 처리 완료
+        BU.CLI('RECEIVE_DATA_DONE');
+        break;
+      case definedOperationStatus.PROCESSING_DELEAY_COMMAND: // 현재 명령이 Delay가 필요하다면 명령 교체
         this.iterator.moveToReservedCmdList();
         break;
-      case definedOperationStatus.E_TIMEOUT:
-        BU.CLI('E_TIMEOUT');
-        dcErrorFormat.errorInfo = new Error('timeout');
-        receiver && receiver.onDcError(dcErrorFormat);
-        break;
-      case definedOperationStatus.E_RETRY_MAX:
-        BU.CLI('E_RETRY_MAX');
-        dcErrorFormat.errorInfo = new Error('retryMaxError');
-        receiver && receiver.onDcError(dcErrorFormat);
-        break;
-      case definedOperationStatus.E_DISCONNECTED_DEVICE:
-        BU.CLI('E_DISCONNECTED_DEVICE');
-        return this.iterator.clearAllCommandSetStorage();
-      case definedOperationStatus.E_UNEXPECTED:
-        BU.CLI('E_UNEXPECTED');
-        dcErrorFormat.errorInfo = error;
-        receiver && receiver.onDcError(dcErrorFormat);
-        this.iterator.clearCurrentCommandSet();
-        break;
-      case definedOperationStatus.E_NON_CMD:  // NOTE 현재 수행 명령이 없는 경우는 의도적인 것으로 판단하고 별다른 처리하지 않음
-        break;
-      case definedOperationStatus.REQUEST_DELETE: // Delete
+      case definedOperationStatus.PROCESSING_DELETE_COMMAND: // Delete
         dcMessageFormat.msgCode = definedCommandSetMessage.COMMANDSET_DELETE_SUCCESS;
         receiver && receiver.onDcMessage(dcMessageFormat);
-        this.iterator.clearCurrentCommandSet();
+        this.iterator.clearCurrentCommandSet();        
+        break;
+      case definedOperationStatus.E_DISCONNECTED_DEVICE:  // 장치와의 연결이 해제될 경우에는 반복기에 처리 의뢰. AbstManager에서 이미 해당 메소드를 호출함
+        BU.CLI('E_DISCONNECTED_DEVICE');
+        return this.iterator.clearAllCommandSetStorage();
+      case definedOperationStatus.E_TIMEOUT:
+        hasError = true;
+        dcErrorFormat.errorInfo = new Error(definedOperationStatus.E_TIMEOUT);
+        break;
+      case definedOperationStatus.E_UNHANDLING_DATA:
+        hasError = true;
+        dcErrorFormat.errorInfo = new Error(definedOperationStatus.E_UNHANDLING_DATA);
+        break;
+      case definedOperationStatus.E_INCORRECT_DATA:
+        hasError = true;
+        dcErrorFormat.errorInfo = new Error(definedOperationStatus.E_INCORRECT_DATA);
+        break;
+      case definedOperationStatus.E_RETRY_MAX:
+        hasError = true;
+        dcErrorFormat.errorInfo = new Error(definedOperationStatus.E_RETRY_MAX);
+        break;
+      case definedOperationStatus.E_UNEXPECTED:
+        hasError = true;
+        dcErrorFormat.errorInfo = error;
+        break;
+      case definedOperationStatus.E_NON_CMD:  // NOTE 현재 수행 명령이 없는 경우는 의도적인 것으로 판단하고 별다른 처리하지 않음
         break;
       default:
         break;
       }
 
+      // 에러가 있고 수신자가 있다면 메시지를 보냄
+      hasError && receiver && receiver.onDcError(dcErrorFormat);
+
       // 진행 중인 명령이 모두 수행되었을 경우
       if (this.iterator.isDone()) {
-        let sendUpdateDcCompleteTargetList = [
-          definedOperationStatus.E_RETRY_MAX,
-          definedOperationStatus.E_TIMEOUT,
-          definedOperationStatus.RESPONE_SUCCESS,
+        let skipOperationStatus = [
+          definedOperationStatus.RECEIVE_DATA_ERROR,
+          definedOperationStatus.PROCESSING_DELETE_COMMAND
         ];
-        // 명령 요청 상태가 아니고 현재 명령 집합의 모든 명령을 수행했다면 발송
-        if (sendUpdateDcCompleteTargetList.includes(operationStatus)) {
+        // Skip 요청 상태가 아니고 현재 명령 집합의 모든 명령을 수행했다면 발송
+        if (!skipOperationStatus.includes(operationStatus)) {
           dcMessageFormat.msgCode = definedCommandSetMessage.COMMANDSET_EXECUTION_TERMINATE;
           currentReceiver && currentReceiver.onDcMessage(dcMessageFormat);
         }
