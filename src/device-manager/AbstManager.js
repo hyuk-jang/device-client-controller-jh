@@ -51,6 +51,13 @@ class AbstManager extends EventEmitter {
 
 
   /**
+   * Manager에게 Msg를 보내어 명령 진행 의사 결정을 취함
+   * @param {string} key 요청 key
+   * 
+   */
+  requestTakeAction(key) {}
+
+  /**
    * 명령 추가
    * @param {commandSet} cmdInfo 
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
@@ -71,7 +78,6 @@ class AbstManager extends EventEmitter {
    * @return {commandStorage}
    */
   findCommandStorage(searchInfo){}
-
 
 
 
@@ -103,7 +109,6 @@ class AbstManager extends EventEmitter {
     this.mediator.updatedDcEventOnDevice(returnDcEvent);
   }
 
-
   /**
    * 장치에서 데이터가 수신되었을 경우 해당 장치의 데이터를 수신할 Commander에게 전송
    * @param {*} data 
@@ -125,16 +130,6 @@ class AbstManager extends EventEmitter {
       receiver.receiveDcData(returnValue); 
     }
   }
-
-  /** 명령을 보냈으나 일정시간(1초) 응답이 없을 경우 해당 명령을 내린 Commander에게 알려줌 */
-  // updateDcTimeout(){
-  //   // BU.log('AbstManager --> updateDcTimeout');
-  //   if(_.isEmpty(this.iterator.currentReceiver)){
-  //     BU.log('Clear command', this.id);
-  //   } else {
-  //     this.iterator.currentReceiver.onDcError(this.iterator.currentItem, new Error('timeOut'));
-  //   }
-  // }
 }
 
 module.exports = AbstManager;

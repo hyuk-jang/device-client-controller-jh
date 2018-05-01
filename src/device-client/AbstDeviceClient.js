@@ -2,7 +2,7 @@
 
 const EventEmitter = require('events');
 
-const BU = require('base-util-jh').baseUtil;
+const {BU} = require('base-util-jh');
 
 const Builder = require('../device-builder/Builder');
 const AbstCommander = require('../device-commander/AbstCommander');
@@ -28,7 +28,7 @@ class AbstDeviceClient extends EventEmitter {
     try {
       const builder = new Builder();
       config.user = this;
-      const deviceClientInfo =  builder.setDeviceClient(config);
+      const deviceClientInfo = builder.setDeviceClient(config);
       this.commander = deviceClientInfo.deviceCommander;
       this.manager = deviceClientInfo.deviceManager;
     } catch (error) {
@@ -45,7 +45,7 @@ class AbstDeviceClient extends EventEmitter {
     const generationConfigInfo = {
       target_id: '',
       target_category: '',
-      target_protocol: '',
+      hasOneAndOne: false,
       connect_info: {
         type: '',
       }
@@ -62,17 +62,20 @@ class AbstDeviceClient extends EventEmitter {
     const commandFormatInfo = {
       rank: 2,
       commandId: '',
-      cmdList: [],
       currCmdIndex: 0,
-      commandExecutionTimeoutMs: 1000,
+      cmdList: []
     };
- 
     return commandFormatInfo;
   }
 
 
-  getAllCommandStorage(){
-    return this.commander.getCommandStorage();
+  /**
+   * Commander와 연결된 장비에서 진행중인 저장소의 모든 명령을 가지고 옴 
+   * @param {{commander: AbstCommander, commandId: string=}} searchInfo 
+   * @return {commandStorage}
+   */
+  findCommandStorage(searchInfo) {
+    return this.commander.findCommandStorage();
   }
 
   /** 장치의 연결이 되어있는지 여부 @return {boolean} */
@@ -88,32 +91,45 @@ class AbstDeviceClient extends EventEmitter {
   }
 
   /* Client가 요청 */
+
+  /**
+   * 장치로 명령을 내림
+   * 아무런 명령을 내리지 않을 경우 해당 장치와의 연결고리를 끊지 않는다고 판단
+   * 명시적으로 hasOneAndOne을 True로 줄 해당 명령 리스트를 모두 수행하고 다음 CommandFormat으로 이동하지 않음
+   * @param {commandSet} commandSet 
+   * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
+   */
+  executeCommand(commandSet) {
+    try {
+      return this.commander.executeCommand(commandSet);
+    } catch (error) {
+      throw error;      
+    }
+  }
+
+
   /**
    * 장치를 제어하는 실제 명령만을 가지고 요청할 경우
-   * @param {Buffer|string|undefined} cmdInfo 자동완성 기능을 사용할 경우
+   * @param {Buffer|string|Object} cmd 자동완성 기능을 사용할 경우
    */
-  executeAutoCommand(cmdInfo) {
-    return this.commander.executeAutoCommand(cmdInfo);
+  generationAutoCommand(cmd) {
+    try {
+      return this.commander.generationAutoCommand(cmd);
+    } catch (error) {
+      throw error;
+    }
   }
 
   /**
    * 명령 제어에 필요한 항목을 작성할 경우 사용
-   * @param {requestCommandSet} cmdInfo 자동완성 기능을 사용할 경우
+   * @param {requestCommandSet} commandSetInfo 자동완성 기능을 사용할 경우
    */
-  executeManualCommand(cmdInfo) {
-    return this.commander.executeManualCommand(cmdInfo);
-  }
-
-
-
-  /** Manager에게 다음 명령을 수행하도록 요청 */
-  requestNextCommand(){
-    this.commander.requestNextCommand();
-  }
-  
-  /** Manager에게 현재 실행중인 명령을 재 전송하도록 요청 */
-  requestRetryCommand(){
-    this.commander.requestRetryCommand();
+  generationManualCommand(commandSetInfo) {
+    try {
+      return this.commander.generationManualCommand(commandSetInfo);
+    } catch (error) {
+      throw error;
+    }
   }
 
   /**
@@ -122,13 +138,33 @@ class AbstDeviceClient extends EventEmitter {
   */
   requestTakeAction(key){
     try {
-      this.commander.requestTakeAction(key);
+      return this.commander.requestTakeAction(key);
     } catch (error) {
-      // console.error(error);     
       throw error;
     }
   }
 
+
+
+  /**
+   * Device Controller 변화가 생겨 관련된 전체 Commander에게 뿌리는 Event
+   * @interface
+   * @param {dcEvent} dcEvent 'dcConnect', 'dcClose', 'dcError'
+   */
+  updatedDcEventOnDevice(dcEvent) {
+    BU.log('updatedDcEventOnDevice\t', dcEvent.eventName);
+  }
+
+
+
+
+  /**
+   * 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트
+   * @param {dcMessage} dcMessage 현재 장비에서 실행되고 있는 명령 객체
+   */
+  onDcMessage(dcMessage){
+    BU.CLI(dcMessage.msgCode);
+  }
 
   /**
    * 장치로부터 데이터 수신
@@ -139,23 +175,7 @@ class AbstDeviceClient extends EventEmitter {
     BU.CLI(dcData.data.toString());
   }
 
-  /**
-   * 명령 객체 리스트 수행 종료
-   * @interface
-   * @param {commandSet} cmdInfo 현재 장비에서 실행되고 있는 명령 객체
-   */
-  updatedDcCompleteCommandExecution(cmdInfo) {
-    // BU.CLI('모든 명령이 수행 되었다고 수신 받음.', processItem.commander.id);
-  }
 
-  /**
-   * Device Controller 변화가 생겨 관련된 전체 Commander에게 뿌리는 Event
-   * @interface
-   * @param {dcEvent} dcEvent 'dcConnect', 'dcClose', 'dcError'
-   */
-  updatedDcEventOnDevice(dcEvent) {
-    BU.log('updatedDcEventOnDevice\t', dcEvent.eventName);
-  }
 
   /**
    * 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트

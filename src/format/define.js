@@ -47,14 +47,15 @@
  * @property {string} target_category inverter, connector, weather
  * @property {string} target_protocol s_hex, dm_v2, ...
  * @property {string} hasOneAndOne 계속하여 연결을 수립할지 여부
- * @property {loggingOption} loggingOption 일어나는 이벤트에 대해 FileSystem 처리할 항목
+ * @property {logOption} logOption 일어나는 이벤트에 대해 FileSystem 처리할 항목
  * @property {connectInfo} connect_info
  */
 
 /**
- * @typedef {Object} loggingOption 일어나는 이벤트에 대해 FileSystem 처리할 항목
- * @property {boolean} hasDcEvent device ID
- * @property {boolean} hasDcError inverter, connector, weather
+ * @typedef {Object} logOption 일어나는 이벤트에 대해 FileSystem 처리할 항목
+ * @property {boolean} hasDcEvent Connect, Disconnect
+ * @property {boolean} hasDcError Timeout, Incorrect, Unhandling, ...
+ * @property {boolean} hasDcMessage ExecutionTerminate, OneAndOne, Delete Success
  * @property {boolean} hasTransferCommand 요청 Data 
  * @property {boolean} hasCommanderResponse 데이터에 대한 Commander의 요청
  * @property {boolean} hasReceiveData 수신 Data 

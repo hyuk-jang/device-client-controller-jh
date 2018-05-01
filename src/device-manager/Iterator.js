@@ -114,7 +114,6 @@ class Iterator {
     // BU.CLI('deleteCmd 수행', commandId);
     // 명령 대기 리스트 삭제
     this.aggregate.standbyCommandSetList.forEach(rank => {
-
       _.remove(rank.list, {commandId});
     });
 

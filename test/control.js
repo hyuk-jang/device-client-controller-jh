@@ -68,7 +68,7 @@ init();
 async function init() {
   const receiver = new Receiver();
   const config = {};
-  config.loggingOption = {
+  config.logOption = {
     hasCommanderResponse: true,
     hasTransferCommand: true,
     hasDcError: true,

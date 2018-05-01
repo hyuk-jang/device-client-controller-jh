@@ -23,7 +23,8 @@ const {BU} = require('base-util-jh');
  * @param {string=} dataTitle log event Type
  * @param {*=} data 
  */
-function loggingFile(logObj, path, eventType, dataTitle, data){
+function writeLogFile(logObj, path, eventType, dataTitle, data){
+  // BU.CLIS(path, eventType, dataTitle, data, _.get(logObj, path));
   if(_.get(logObj, path)){
     let id = _.get(logObj, 'id', 'etc');
     if(data === undefined){
@@ -32,6 +33,10 @@ function loggingFile(logObj, path, eventType, dataTitle, data){
       let realData = '';
       if(Buffer.isBuffer(data)){
         realData = data.toString('hex');
+      } else if(data instanceof Error){
+        realData = data;
+      } else if(_.isObject(data)){
+        realData = JSON.stringify(data);
       } else {
         realData = data;
       }
@@ -39,7 +44,7 @@ function loggingFile(logObj, path, eventType, dataTitle, data){
     }
   }
 }
-exports.loggingFile = loggingFile;
+exports.writeLogFile = writeLogFile;
 
 
 /**
@@ -54,15 +59,19 @@ function initManager(manager, commander){
   // 명령을 받을 객체 생성
   manager.deviceController = {
     write: cmd => {
-      BU.log(cmd);
-  
-      BU.CLIN(manager);
+      if(_.has(cmd, 'data')){
+        // BU.CLI(cmd.data);
+      } else {
+        // BU.CLI(cmd);
+      }
+      // BU.CLIN(manager);
       commander && commander.onDcData({data: `onDcData: ${cmd}`});
-    }
+    },
+    id: {port:3000}
   };
   /** @type {deviceClientConstructionInfo} */
   manager.config = {};
-  manager.config.loggingOption = {
+  manager.config.logOption = {
     hasCommanderResponse: true,
     hasTransferCommand: true,
     hasDcError: true,

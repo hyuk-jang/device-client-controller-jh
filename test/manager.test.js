@@ -22,6 +22,8 @@ const DeviceManager = require('../src/device-manager/Manager');
 
 const {definedCommandSetRank, definedOperationStatus} = require('../src/format/moduleDefine');
 require('../src/format/define');
+const {initManager} =  require('../src/util/dcUtil');
+
 
 describe('Device Manager Test', function() {
   this.timeout(20000);
@@ -57,7 +59,8 @@ describe('Device Manager Test', function() {
       target_category: '',
       target_protocol: '',
     });
-    initDeviceManager(deviceManager);
+    initManager(deviceManager);
+
 
     // 명령 자동 진행을 막기 위하여 1:1 모드로 고정함
     deviceManager.commandStorage.currentCommandSet = {test:'test', hasOneAndOne: true};
@@ -110,7 +113,7 @@ describe('Device Manager Test', function() {
       target_category: '',
       target_protocol: '',
     });
-    initDeviceManager(deviceManager);
+    initManager(deviceManager);
     deviceManager.commandStorage.currentCommandSet = {};
     // this.timeout(5000);
     // [Add] Rank{2} * 1, Rank{3} * 1
@@ -203,7 +206,7 @@ describe('Device Manager Test', function() {
       target_category: '',
       target_protocol: '',
     });
-    initDeviceManager(deviceManager);
+    initManager(deviceManager);
     // [Add] Rank{2} * 1, Rank{3} * 1
     for(let i = 0; i < 2; i += 1){
       cmdInfo.rank = i + 2;
@@ -306,10 +309,6 @@ describe('Device Manager Test', function() {
       deviceManager.addCommandSet(_.cloneDeep(cmdInfo));
 
       // isOk 테스트
-
-
-
-      // BU.CLI(cmdInfo);
     }
   });
 
@@ -317,44 +316,6 @@ describe('Device Manager Test', function() {
 
 
 });
-
-
-/**
- * 
- * @param {DeviceManager} deviceManager 
- * @param {*} commander 
- */
-function initDeviceManager(deviceManager, commander){
-  deviceManager.commandStorage = { currentCommandSet: {}, standbyCommandSetList: [] };
-  // 반복기 생성
-  deviceManager.createIterator();
-  // 명령을 받을 객체 생성
-  deviceManager.deviceController = {
-    write: cmd => {
-      BU.log(cmd);
-  
-      BU.CLIN(deviceManager);
-      commander && commander.onDcData({data: `onDcData: ${cmd}`});
-    }
-  };
-  /** @type {deviceClientConstructionInfo} */
-  deviceManager.config = {};
-  deviceManager.config.loggingOption = {
-    hasCommanderResponse: true,
-    hasTransferCommand: true,
-    hasDcError: true,
-    hasDcEvent: true,
-    hasReceiveData: true
-  };
-
-  // 장치 연결자 생성
-  deviceManager.deviceController.client = {alive:true};
-  // 작업중인 상태 X
-  deviceManager.hasPerformCommand = false;
-  // 명령 저장소는 테스트전 청소 처리
-  deviceManager.iterator.clearAllCommandSetStorage();
-}
-
 
 describe.skip('DeviceController Test', () => {
   it('AbstractDeviceManager', async() => {

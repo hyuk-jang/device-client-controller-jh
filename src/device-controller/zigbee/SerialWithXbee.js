@@ -62,7 +62,7 @@ class SerialWithXbee extends AbstController{
    */
   async write(frame_obj) {
     if(_.isEmpty(this.client)){
-      throw new Error(`장치와 접속이 수행되지 않았습니다.. ${this.port}`);
+      throw new Error(`장치와 접속이 수행되지 않았습니다. ${this.port}`);
     }
 
     this.xbeeAPI.builder.write(frame_obj);

@@ -25,43 +25,59 @@ class AbstCommander {
    */
   setMediator(deviceMediator) {}
 
+
+  /** Device Client에서 요청하는 부분 */
+
   /** 장치의 연결이 되어있는지 여부 @return {boolean} */
   get hasConnectedDevice(){}
 
   /**
-   * Commander와 연결된 장비에서 진행중인 저장소의 모든 명령을 가지고 옴 
-   * @return {commandStorage}
+   * 장치로 명령을 내림
+   * 아무런 명령을 내리지 않을 경우 해당 장치와의 연결고리를 끊지 않는다고 판단
+   * 명시적으로 hasOneAndOne을 True로 줄 해당 명령 리스트를 모두 수행하고 다음 CommandFormat으로 이동하지 않음
+   * @param {commandSet} commandSet 
+   * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */
-  getCommandStorage() {}
+  executeCommand(commandSet) {}
 
-
-  /* Client가 요청 */
   /**
    * 장치를 제어하는 실제 명령만을 가지고 요청할 경우
    * @param {Buffer|string|undefined} cmdInfo 자동완성 기능을 사용할 경우
    */
-  executeAutoCommand(cmdInfo) {}
+  generationAutoCommand(cmdInfo) {}
 
   /**
    * 명령 제어에 필요한 항목을 작성할 경우 사용
-   * @param {requestCommandSet} cmdInfo 자동완성 기능을 사용할 경우
+   * @param {requestCommandSet} commandSetInfo 자동완성 기능을 사용할 경우
    */
-  executeManualCommand(cmdInfo) {}
+  generationManualCommand(commandSetInfo) {}
 
-  /* 장치에서 일괄 이벤트 발생 */
+  /**
+   * Commander와 연결된 장비에서 진행중인 저장소의 모든 명령을 가지고 옴 
+   * @param {{commander: AbstCommander, commandId: string=}} searchInfo 
+   * @return {commandStorage}
+   */
+  findCommandStorage(searchInfo) {}
+
+  /**
+   * Manager에게 Msg를 보내어 명령 진행 의사 결정을 취함
+   * @param {string} key 요청 key
+   */
+  requestTakeAction(key) {}
+
+
+  /* Device Controller에서 수신 --> 장치에서 일괄 이벤트 발생 */
   /**
    * Device Controller 변화가 생겨 관련된 전체 Commander에게 뿌리는 Event
-   * @protected 
    * @param {dcEvent} dcEvent 'dcConnect', 'dcClose', 'dcError'
    */
   updatedDcEventOnDevice(dcEvent) {}
 
 
-  /**
-   * 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트
-   * @param {dcMessage} dcMessage 현재 장비에서 실행되고 있는 명령 객체
-   */
-  onDcMessage(dcMessage){}
+
+
+
+  /** Device Manager에서 Event 발생 */
 
   /**
    * 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트
@@ -70,23 +86,15 @@ class AbstCommander {
   onDcError(dcError){}
 
   /**
+   * 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트
+   * @param {dcMessage} dcMessage 현재 장비에서 실행되고 있는 명령 객체
+   */
+  onDcMessage(dcMessage){}
+
+  /**
    * 장치로부터 데이터 수신
-   * @protected 
    * @param {dcData} dcData 현재 장비에서 실행되고 있는 명령 객체
    */
   onDcData(dcData){}
-
-
-  /** Manager에게 다음 명령을 수행하도록 요청 */
-  requestNextCommand(){}
-
-  /** Manager에게 현재 실행중인 명령을 재 전송하도록 요청 */
-  requestRetryCommand(){}
-
-  /**
-  * Manager에게 Msg를 보내어 명령 진행 의사 결정을 취함
-  * @param {string} key 요청 key
-  */
-  requestTakeAction(key){}
 }
 module.exports = AbstCommander;
