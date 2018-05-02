@@ -44,13 +44,17 @@ class SerialWithXbee extends AbstController{
 
     // All frames parsed by the XBee will be emitted here
     this.xbeeAPI.parser.on('data', frame => {
-      console.log('>>', frame);
-
-      // Trasmit Status는 write에서 참조하므로 제외. 나머지 메시지는 데이터 수신 이벤트를 발생시킴
       /** @type {xbeeApi_0x88|xbeeApi_0x8B|xbeeApi_0x90} */
       const frameObj = frame;
-      if(frameObj.type !== 0x8B){
-        return this.notifyData(frame);
+      if (frameObj.type === 0x8B) {
+        if(frameObj.id !== this.currentFrameId){
+          // This frame is definitely the response!
+          this.notifyError(new Error(`요청한 frameId가 맞지 않습니다. 요청 Id: ${this.currentFrameId}, 응답 Id: ${frameObj.id}`));
+        }
+        // console.log('Node identifier:', String.fromCharCode(frameObj.commandData));
+      } else {
+        return this.notifyData(frameObj);
+        // This is some other frame
       }
     });
   }
@@ -64,6 +68,8 @@ class SerialWithXbee extends AbstController{
     if(_.isEmpty(this.client)){
       throw new Error(`장치와 접속이 수행되지 않았습니다. ${this.port}`);
     }
+
+    this.currentFrameId = frame_obj.id;
 
     this.xbeeAPI.builder.write(frame_obj);
 

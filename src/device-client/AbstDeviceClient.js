@@ -48,6 +48,14 @@ class AbstDeviceClient extends EventEmitter {
       hasOneAndOne: false,
       connect_info: {
         type: '',
+      },
+      logOption: {
+        hasCommanderResponse: false,
+        hasDcError: false,
+        hasDcEvent: false,
+        hasReceiveData: false,
+        hasDcMessage: false,
+        hasTransferCommand: false
       }
     };
  
@@ -172,7 +180,7 @@ class AbstDeviceClient extends EventEmitter {
    * @param {dcData} dcData 현재 장비에서 실행되고 있는 명령 객체
    */
   onDcData(dcData){
-    BU.CLI(dcData.data.toString());
+    BU.CLI(dcData.data);
   }
 
 

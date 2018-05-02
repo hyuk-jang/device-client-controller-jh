@@ -349,7 +349,7 @@ class Manager extends AbstManager {
       spreader: this
     };
 
-    BU.CLIN(currentReceiver);
+    // BU.CLIN(currentReceiver);
     currentReceiver && currentReceiver.onDcMessage(dcMessageFormat);
   }
 

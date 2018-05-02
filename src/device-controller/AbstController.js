@@ -141,7 +141,7 @@ class AbstController {
     
     writeLogFile(this, 'mainConfig.logOption.hasDcEvent', 'event', 'notifyError', error);
     // 장치에서 이미 에러 내역을 발송한 상태라면 이벤트를 보내지 않음
-    this.notifyDisconnect();
+    // this.notifyDisconnect();
   }
 
   /**
