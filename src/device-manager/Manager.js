@@ -391,6 +391,9 @@ class Manager extends AbstManager {
       case definedOperationStatus.RECEIVE_DATA_DONE: // 데이터 처리 완료
         BU.CLI('RECEIVE_DATA_DONE');
         break;
+      case definedOperationStatus.RECEIVE_NEXT_FORCE: // 강제 진행
+        BU.CLI('RECEIVE_NEXT_FORCE');
+        break;        
       case definedOperationStatus.PROCESSING_DELEAY_COMMAND: // 현재 명령이 Delay가 필요하다면 명령 교체
         this._sendMessageToCommander(definedCommandSetMessage.COMMANDSET_MOVE_DELAYSET);
         this.iterator.moveToReservedCmdList();
@@ -450,7 +453,7 @@ class Manager extends AbstManager {
         currentCommandSet.operationStatus = definedOperationStatus.WAIT;
 
         // 1:1 통신이라면 진행 X
-        if (currentCommandSet.hasOneAndOne) {
+        if (currentCommandSet.hasOneAndOne && operationStatus !== definedOperationStatus.RECEIVE_NEXT_FORCE) {
           this._sendMessageToCommander(definedCommandSetMessage.ONE_AND_ONE_COMUNICATION);
           return;
         }

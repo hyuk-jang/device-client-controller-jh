@@ -35,6 +35,11 @@ exports.definedOperationStatus = {
    */
   RECEIVE_DATA_DONE: 'RECEIVE_DATA_DONE',
   /**
+   * @type {string} Commander로부터 강제로 다음단계로 가라고 명령 받음
+   * @desc 다음 단계로 나아감
+   */
+  RECEIVE_NEXT_FORCE: 'RECEIVE_NEXT_FORCE',  
+  /**
    * @type {string} 지연 명령 처리 상태
    * @desc 명령 요청 상태 (진행 중)
    */
@@ -226,4 +231,8 @@ exports.definedCommanderResponse = {
    * @type {string} 명령을 재전송 해달라
    */
   RETRY: 'RETRY',   
+  /**
+   * @type {string} 다음 명령으로 가라.(강제)
+   */
+  NEXT: 'NEXT',     
 };
