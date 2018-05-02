@@ -8,6 +8,7 @@ const Builder = require('../device-builder/Builder');
 const AbstCommander = require('../device-commander/AbstCommander');
 const AbstManager = require('../device-manager/AbstManager');
 
+const {definedCommanderResponse, definedCommandSetMessage, definedCommandSetRank, definedControlEvent, definedOperationError} = require('../format/moduleDefine');
 require('../format/define');
 
 class AbstDeviceClient extends EventEmitter {
@@ -17,6 +18,12 @@ class AbstDeviceClient extends EventEmitter {
     this.commander = {};
     /** @type {AbstManager} @private */
     this.manager = {};
+
+    this.definedCommanderResponse = definedCommanderResponse;
+    this.definedCommandSetMessage = definedCommandSetMessage;
+    this.definedCommandSetRank = definedCommandSetRank;
+    this.definedControlEvent = definedControlEvent;
+    this.definedOperationError = definedOperationError;
   }
 
   // Builder

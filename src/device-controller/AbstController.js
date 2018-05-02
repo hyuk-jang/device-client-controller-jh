@@ -3,8 +3,7 @@
 const Promise = require('bluebird');
 const _ = require('lodash');
 
-// const {BU} = require('base-util-jh');
-const {BU, CU} = require('../../../base-util-jh');
+const {BU, CU} = require('base-util-jh');
 const AbstManager = require('../device-manager/AbstManager');
 
 const {writeLogFile} = require('../util/dcUtil');
