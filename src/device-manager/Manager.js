@@ -456,7 +456,12 @@ class Manager extends AbstManager {
       }
 
       // 에러가 있고 수신자가 있다면 메시지를 보냄
-      hasError && currentReceiver && currentReceiver.onDcError(dcErrorFormat);
+      // hasError && currentReceiver && currentReceiver.onDcError(dcErrorFormat);
+      // NOTE 에러가 있다면 다음 명령은 처리 하지 않음
+      if(hasError){
+        currentReceiver && currentReceiver.onDcError(dcErrorFormat);
+        this.iterator.clearCurrentCommandSet();
+      }
 
       // 진행 중인 명령이 모두 수행되었을 경우
       if (this.iterator.isDone()) {
