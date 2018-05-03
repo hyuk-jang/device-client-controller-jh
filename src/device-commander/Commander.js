@@ -194,7 +194,7 @@ class Commander extends AbstCommander {
    * 
    */
   requestTakeAction(key) {
-    BU.CLI('requestTakeAction', key);
+    // BU.CLI('requestTakeAction', key);
     try {
       if(_.has(definedCommanderResponse, key)){
         this.manager.requestTakeAction(this, key);

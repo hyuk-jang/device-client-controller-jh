@@ -35,17 +35,17 @@ class AbstController {
 
   // 장치와의 접속을 시도
   async doConnect() {
-    BU.CLI('doConnect');
+    // BU.CLI('doConnect');
     const timer = this.connectTimer;
     // 타이머가 작동중이고 남아있는 시간이 있다면 doConnect가 곧 호출되므로 실행하지 않음
     if(timer.getStateRunning() && timer.getTimeLeft() > 0){
-      BU.CLI('이미 타이머가 작동 중입니다.');
+      // BU.CLI('이미 타이머가 작동 중입니다.');
+      return false;
     } else {
-      // timer.pause();
+      timer.pause();
       try {
         // 장치 접속 관리 객체가 없다면 접속 수행
         if(_.isEmpty(this.client)){
-          BU.CLI('도전 접속');
           writeLogFile(this, 'mainConfig.logOption.hasDcEvent', 'event', 'doConnect()');
           await this.connect();
   
@@ -95,7 +95,7 @@ class AbstController {
   }
 
   notifyEvent(eventName){
-    BU.CLI('notifyEvent', eventName);
+    // BU.CLI('notifyEvent', eventName);
     this.observers.forEach(observer => {
       observer.onEvent(eventName);
     });
@@ -103,7 +103,7 @@ class AbstController {
 
   /** 장치와의 연결이 수립되었을 경우 */
   notifyConnect() {
-    BU.CLI('notifyConnect');
+    // BU.CLI('notifyConnect');
     writeLogFile(this, 'mainConfig.logOption.hasDcEvent', 'event', 'notifyConnect');
     if(!this.hasConnect && !_.isEmpty(this.client)){
       this.hasConnect = true;
@@ -116,7 +116,7 @@ class AbstController {
 
   /** 장치와의 연결이 해제되었을 경우 */
   notifyDisconnect() {
-    BU.CLI('notifyClose');
+    // BU.CLI('notifyClose');
     writeLogFile(this, 'mainConfig.logOption.hasDcEvent', 'event', 'notifyDisconnect');
     // 장치와의 연결이 계속해제된 상태였다면 이벤트를 보내지 않음
     if(this.hasConnect !== false && _.isEmpty(this.client)){
@@ -136,8 +136,7 @@ class AbstController {
    * @param {Error} error 
    */
   notifyError(error) {
-    BU.CLI('notifyError', error);
-    
+    // BU.CLI('notifyError', error);
     writeLogFile(this, 'mainConfig.logOption.hasDcEvent', 'event', 'notifyError', error);
     // 장치에서 이미 에러 내역을 발송한 상태라면 이벤트를 보내지 않음
     // this.notifyDisconnect();

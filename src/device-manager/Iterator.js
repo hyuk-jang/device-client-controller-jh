@@ -265,7 +265,7 @@ class Iterator {
    * @return {void} 다음 진행해야할 명령이 존재한다면 true, 없다면 false
    */
   changeNextCommand (){
-    BU.CLI('changeNextCommand');
+    // BU.CLI('changeNextCommand');
     try {
       const currentCommandSet = this.currentCommandSet;
       // 현재 진행중인 명령이 비어있다면 다음 순위 명령을 가져옴
@@ -306,7 +306,7 @@ class Iterator {
    * @return {void} 
    */
   changeNextCommandSet (standbyCommandSetList){
-    BU.CLI('changeNextCommandSet');
+    // BU.CLI('changeNextCommandSet');
     if(standbyCommandSetList === undefined){
       standbyCommandSetList = _.find(this.aggregate.standbyCommandSetList, rankInfo => {
         return rankInfo.list.length;

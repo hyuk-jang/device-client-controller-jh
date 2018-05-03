@@ -1,5 +1,6 @@
 'use strict';
 
+const _ = require('lodash');
 const EventEmitter = require('events');
 
 const {BU} = require('base-util-jh');
@@ -90,7 +91,7 @@ class AbstDeviceClient extends EventEmitter {
    * @return {commandStorage}
    */
   findCommandStorage(searchInfo) {
-    return this.commander.findCommandStorage();
+    return this.commander.findCommandStorage(searchInfo);
   }
 
   /** 장치의 연결이 되어있는지 여부 @return {boolean} */
@@ -167,9 +168,8 @@ class AbstDeviceClient extends EventEmitter {
    * @param {dcEvent} dcEvent 'dcConnect', 'dcClose', 'dcError'
    */
   updatedDcEventOnDevice(dcEvent) {
-    BU.log('updatedDcEventOnDevice\t', dcEvent.eventName);
+    BU.CLI(dcEvent.eventName, _.get(this, 'id'));
   }
-
 
 
 
@@ -178,7 +178,7 @@ class AbstDeviceClient extends EventEmitter {
    * @param {dcMessage} dcMessage 현재 장비에서 실행되고 있는 명령 객체
    */
   onDcMessage(dcMessage){
-    BU.CLI(dcMessage.msgCode);
+    BU.CLI(dcMessage.msgCode, _.get(dcMessage.commandSet, 'commandId'));
   }
 
   /**
@@ -187,7 +187,7 @@ class AbstDeviceClient extends EventEmitter {
    * @param {dcData} dcData 현재 장비에서 실행되고 있는 명령 객체
    */
   onDcData(dcData){
-    BU.CLI(dcData.data);
+    BU.CLI(dcData.data, _.get(dcData.commandSet, 'commandId'));
   }
 
 
@@ -197,7 +197,7 @@ class AbstDeviceClient extends EventEmitter {
    * @param {dcError} dcError 현재 장비에서 실행되고 있는 명령 객체
    */
   onDcError(dcError){
-    BU.log(`onDcError ${dcError.errorName}\t`, dcError.errorInfo);
+    BU.CLI(dcError.errorInfo, _.get(dcError.commandSet, 'commandId'));
   }
 
 
