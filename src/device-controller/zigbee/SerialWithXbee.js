@@ -29,6 +29,7 @@ class SerialWithXbee extends AbstController{
       this.xbeeAPI = new xbee_api.XBeeAPI(this.xbeeConfig);
       this.configInfo = {port: this.port, baud_rate: this.baud_rate, xbeeConfig: this.xbeeConfig };
       instanceList.push({id: this.port, instance: this});
+      this.setInit();
     } else {
       return foundInstance.instance;
     }

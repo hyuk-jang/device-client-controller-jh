@@ -116,6 +116,7 @@ class AbstDeviceClient extends EventEmitter {
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */
   executeCommand(commandSet) {
+    // BU.CLI(commandSet);
     try {
       return this.commander.executeCommand(commandSet);
     } catch (error) {
@@ -127,6 +128,7 @@ class AbstDeviceClient extends EventEmitter {
   /**
    * 장치를 제어하는 실제 명령만을 가지고 요청할 경우
    * @param {Buffer|string|Object} cmd 자동완성 기능을 사용할 경우
+   * @return {commandSet}
    */
   generationAutoCommand(cmd) {
     try {
@@ -139,6 +141,7 @@ class AbstDeviceClient extends EventEmitter {
   /**
    * 명령 제어에 필요한 항목을 작성할 경우 사용
    * @param {requestCommandSet} commandSetInfo 자동완성 기능을 사용할 경우
+   * @return {commandSet}
    */
   generationManualCommand(commandSetInfo) {
     try {

@@ -23,6 +23,7 @@ class Serial extends AbstController{
     if(_.isEmpty(foundInstance)){
       this.configInfo = {port: this.port, baud_rate: this.baud_rate};
       instanceList.push({id: this.port, instance: this});
+      this.setInit();
     } else {
       return foundInstance.instance;
     }

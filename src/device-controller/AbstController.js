@@ -24,14 +24,18 @@ class AbstController {
     this.client = {};
 
     this.hasConnect;
-    this.connectTimer = new CU.Timer(() => this.doConnect(), 10);
+    this.connectTimer;
     this.connectIntervalTime = 1000 * 20;
+
+    this.hasConnectionAttempt = false;
 
     // TEST
     this.requestConnectCount = 0;
   }
 
-  setInit(){}
+  setInit(){
+    this.connectTimer = new CU.Timer(() => this.doConnect(), 10);
+  }
 
   // 장치와의 접속을 시도
   async doConnect() {

@@ -3,7 +3,7 @@ const _ = require('lodash');
 const net = require('net');
 const eventToPromise = require('event-to-promise');
 
-// const BU = require('base-util-jh').baseUtil;
+const {BU, CU} = require('base-util-jh');
 
 const AbstController = require('../AbstController');
 require('../../format/controllerConstructor');
@@ -24,12 +24,15 @@ class Socket extends AbstController {
     
     this.configInfo = {host: this.host, port: this.port};
 
+    
+
     let foundInstance = _.find(instanceList, instanceInfo => {
       return _.isEqual(instanceInfo.id, this.configInfo);
     });
     
     if(_.isEmpty(foundInstance)){
       instanceList.push({id: this.configInfo, instance: this});
+      this.setInit();
     } else {
       return foundInstance.instance;
     }
@@ -53,7 +56,7 @@ class Socket extends AbstController {
 
   /** 장치 접속 시도 */
   async connect() {
-    // BU.log('Try Connect', this.port);
+    BU.log('Try Connect', this.port);
     /** 접속 중인 상태라면 접속 시도하지 않음 */
     if(!_.isEmpty(this.client)){
       throw new Error(`이미 접속중입니다. ${this.port}`);
