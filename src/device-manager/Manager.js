@@ -92,17 +92,18 @@ class Manager extends AbstManager {
         id: deviceController.id,
         instance: this
       });
+      this.retryChance = 3; // 데이터 유효성 검사가 실패, 데이터 수신 에러가 있을 경우 3회까지 ProcessCmd 재전송
+      /**
+       * @type {commandStorage}
+       */
+      this.commandStorage = {};
+  
+      this.createIterator();
+  
+      return this;
     } else { // singleton pattern
       return foundInstance.instance;
     }
-
-    this.retryChance = 3; // 데이터 유효성 검사가 실패, 데이터 수신 에러가 있을 경우 3회까지 ProcessCmd 재전송
-    /**
-     * @type {commandStorage}
-     */
-    this.commandStorage = {};
-
-    this.createIterator();
   }
 
   /** Iterator 정의 */
@@ -190,7 +191,6 @@ class Manager extends AbstManager {
     if (_.isEmpty(this.deviceController.client)) {
       throw new Error('Device Controller가 연결되지 않았습니다.');
     }
-    // BU.CLIN(cmdInfo);
     this.iterator.addCmd(commandSet);
     return this.manageProcessingCommand();
     // return false;
@@ -260,7 +260,7 @@ class Manager extends AbstManager {
     // 명령 전송을 기다림
     this.updateOperationStatus(definedOperationStatus.REQUEST_CMD);
 
-    // BU.CLIN(currentCommand.data);
+    // BU.CLIN(currentCommand.data, currentCommand.commandExecutionTimeoutMs);
     writeLogFile(this, 'config.logOption.hasTransferCommand', 'data', 'transferData', currentCommand.data);
 
     await this.deviceController.write(currentCommand.data);
@@ -345,10 +345,12 @@ class Manager extends AbstManager {
   updateOperationStatus(operationStatus) {
     // BU.CLI('updateOperationStatus', operationStatus);
     let currentCommandSet = this.iterator.currentCommandSet;
-    // 명령 삭제 일 경우에는 업데이트 제외
-    if (currentCommandSet.operationStatus !== definedOperationStatus.PROCESSING_DELETE_COMMAND) {
-      currentCommandSet.operationStatus = operationStatus;
+
+    // 진행 중인 명령이 없거나 명령 삭제 일 경우에는 업데이트 제외
+    if(_.isEmpty(currentCommandSet) || currentCommandSet.operationStatus === definedOperationStatus.PROCESSING_DELETE_COMMAND){
+      return false;
     }
+    currentCommandSet.operationStatus = operationStatus;
   }
 
   /**
@@ -458,9 +460,9 @@ class Manager extends AbstManager {
       // 에러가 있고 수신자가 있다면 메시지를 보냄
       // hasError && currentReceiver && currentReceiver.onDcError(dcErrorFormat);
       // NOTE 에러가 있다면 다음 명령은 처리 하지 않음
-      if(hasError){
+      if(hasError && !currentCommandSet.hasOneAndOne){
         currentReceiver && currentReceiver.onDcError(dcErrorFormat);
-        this.iterator.clearCurrentCommandSet();
+        // this.iterator.clearCurrentCommandSet();
       }
 
       // 진행 중인 명령이 모두 수행되었을 경우
@@ -475,7 +477,7 @@ class Manager extends AbstManager {
         }
 
         // Operation Status 초기화
-        currentCommandSet.operationStatus = definedOperationStatus.WAIT;
+        this.updateOperationStatus(definedOperationStatus.WAIT);
 
         // 1:1 통신이라면 진행 X
         if (currentCommandSet.hasOneAndOne && operationStatus !== definedOperationStatus.RECEIVE_NEXT_FORCE) {

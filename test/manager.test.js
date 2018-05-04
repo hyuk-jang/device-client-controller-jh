@@ -127,7 +127,6 @@ describe('Device Manager Test', function() {
         let addCmdData = {data:`i:${i} j:${j}`};
         cmdInfo.cmdList.push(addCmdData);
       }
-      // BU.CLI(cmdInfo);
       deviceManager.addCommandSet(_.cloneDeep(cmdInfo));
     }
 
@@ -144,11 +143,9 @@ describe('Device Manager Test', function() {
     };
 
     // Rank 2 CmdList[0] 수행 중, 0.5초후 긴급 명령 추가
-    await Promise.delay(500)
-      .then(() => {
-        // [Add] Rank{0} * 1,  Rank{2} * 3, Rank{3} * 1
-        deviceManager.addCommandSet(emergencyCmdInfo);
-      });
+    await Promise.delay(500);
+    // [Add] Rank{0} * 1,  Rank{2} * 3, Rank{3} * 1
+    deviceManager.addCommandSet(emergencyCmdInfo);
 
     // 긴급 명령이 추가됨
     let foundRankEmergency = deviceManager.iterator.findStandbyCommandSetList({rank: definedCommandSetRank.EMERGENCY});

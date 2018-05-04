@@ -72,7 +72,7 @@ describe('Request Execution Command', function(){
   // 3. 긴급 명령 * 2 (Rank:0, timeout:1000)
   // 시나리오 : 명령 1, 2 추가 후 0.5초 후 명령 3 추가 
   // 예상: 1[0] -> 3[0] -> 3[1] -> 2[0] -> 1[1] -> 2[1]
-  it.skip('Manual Execution', async function(){
+  it('Manual Execution', async function(){
     const commandExecutionTimeoutMs = 100; // 장치에서의 타임아웃 시간은 1초로
     const delayExecutionTimeoutMs = 300; // 지연 시간 3초
     let construct = _.cloneDeep(constructorInfo);
@@ -126,7 +126,7 @@ describe('Request Execution Command', function(){
   // 1. 자동명령 생성 수행 테스트(Rank:2, CmdList: 3, timeout:1000)
   // 2. 자동명령 생성 수행 테스트(Rank:2, CmdList: 1, timeout:1000)
   // 3. 명령 수행 findCommandStorage() 검증 테스트
-  it.skip('Automation Execution', async function(){
+  it('Automation Execution', async function(){
     let construct = _.cloneDeep(constructorInfo);
     construct.target_id = '홍길동 2';
 
@@ -153,6 +153,7 @@ describe('Request Execution Command', function(){
     // 1[1]
     expect(manager.iterator.currentCommandSet.commandId).to.eq(firstCommandSet.commandId);
     expect(manager.iterator.currentCommand.data).to.eq(_.nth(cmdArray, 1));
+    BU.CLI(manager.iterator.currentCommand);
 
     // 2. 단일 명령일 경우
     let cmd = Buffer.from([0x30, 0x31]);
@@ -197,6 +198,7 @@ describe('Request Execution Command', function(){
     expect(manager.iterator.currentCommand.data).to.eq(cmd);
     
     await Promise.delay(1000);
+    BU.CLIN(manager.iterator.currentCommandSet);
     expect(_.isEmpty(manager.iterator.currentCommandSet)).to.eq(true);
   });
 });
@@ -210,11 +212,11 @@ describe('Handling Receive Data', function(){
   // *** 사용 시나리오는 'Manual Execution' 사용
   // 시나리오 : 명령 1, 2 추가 후 0.5초 후 명령 3 추가 (동작: 1[0] -> 3[0] -> 3[1] -> 2[0] -> 1[1] -> 2[1]  )
   // 예상: 
-  it('DONE', async function() {
+  it.skip('DONE', async function() {
     const commandExecutionTimeoutMs = 100; // 장치에서의 타임아웃 시간은 1초로
     const delayExecutionTimeoutMs = 300; // 지연 시간 3초
     let construct = _.cloneDeep(constructorInfo);
-    construct.target_id = '홍길동 1';
+    construct.target_id = '홍길동 DONE';
 
     const manager = new Manager(construct);
     initManager(manager);

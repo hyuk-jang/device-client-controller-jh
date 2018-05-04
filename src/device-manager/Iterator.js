@@ -341,6 +341,45 @@ class Iterator {
     this.aggregate.currentCommandSet = {};
   }
 
+
+  /**
+   * 삭제하고자 하는 정보 AND 연산 
+   * @param {{commander: AbstCommander, commandId: string=}} searchInfo 
+   */
+  clearCommandSet(searchInfo){
+    // CurrentSet 확인 후  삭제 요청
+    const hasEqualCurrentSet = _.isEqual(this.currentCommandSet.commander, searchInfo.commander);
+    if(hasEqualCurrentSet){
+      let hasTrue = _.isString(searchInfo.commandId) ? _.eq(this.currentCommandSet.commandId, searchInfo.commandId) : true;
+      if(hasTrue){
+        this.deleteCmd(searchInfo.commandId);
+      }
+    }
+    // 대기 집합 확인 후 삭제
+    this.aggregate.standbyCommandSetList.forEach(commandStorageInfo => {
+      _.remove(commandStorageInfo.list, commandSet => {
+        let hasEqualStandbySet = _.isEqual(commandSet.commander, searchInfo.commander);
+        if(hasEqualStandbySet){
+          return _.isString(searchInfo.commandId) ? _.eq(commandSet.commandId, searchInfo.commandId) : true;
+        } else {
+          return false;
+        }
+      });
+    });
+    // 지연 집합 확인 후 삭제
+    _.remove(this.aggregate.delayCommandSetList, commandSet => {
+      let hasEqualDelaySet = _.isEqual(commandSet.commander, searchInfo.commander);
+      if(hasEqualDelaySet){
+        return _.isString(searchInfo.commandId) ? _.eq(commandSet.commandId, searchInfo.commandId) : true;
+      } else {
+        return false;
+      }
+    });
+  }
+
+
+
+
   /** 모든 명령을 초기화 */
 
   /**
