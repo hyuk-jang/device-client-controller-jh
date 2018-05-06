@@ -154,14 +154,14 @@ class Commander extends AbstCommander {
         }
       });
 
-      commandInfo.cmdList = [];
-      _.forEach(commandSetInfo.cmdList, cmdInfo => {
-        if(_.has(cmdInfo, 'data') &&  _.has(cmdInfo, 'commandExecutionTimeoutMs')){
-          commandInfo.cmdList.push(cmdInfo);
-        } else {
-          throw new Error('commandSetInfo 형식이 맞지 않습니다.');
-        }
-      });
+      commandInfo.cmdList = commandSetInfo.cmdList;
+      // _.forEach(commandSetInfo.cmdList, cmdInfo => {
+      //   if(_.has(cmdInfo, 'data') &&  _.has(cmdInfo, 'commandExecutionTimeoutMs')){
+      //     commandInfo.cmdList.push(cmdInfo);
+      //   } else {
+      //     throw new Error('commandSetInfo 형식이 맞지 않습니다.');
+      //   }
+      // });
   
       // 자동 생성
       commandInfo.operationStatus = definedOperationStatus.WAIT;

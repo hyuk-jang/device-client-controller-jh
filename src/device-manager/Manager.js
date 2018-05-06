@@ -87,6 +87,7 @@ class Manager extends AbstManager {
       // Manager에 Device 등록
       this.deviceController = deviceController;
       this.id = deviceController.id;
+      BU.CLI('@@@@@@@@@@@', this.id);
       // 신규 정의시 instanceList에 저장
       instanceList.push({
         id: deviceController.id,
