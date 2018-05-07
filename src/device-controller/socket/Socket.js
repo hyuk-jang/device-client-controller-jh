@@ -24,8 +24,6 @@ class Socket extends AbstController {
     
     this.configInfo = {host: this.host, port: this.port};
 
-    
-
     let foundInstance = _.find(instanceList, instanceInfo => {
       return _.isEqual(instanceInfo.id, this.configInfo);
     });

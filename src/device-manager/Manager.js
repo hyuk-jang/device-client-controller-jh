@@ -10,6 +10,7 @@ const {
 
 const AbstCommander = require('../device-commander/AbstCommander');
 const AbstMediator = require('../device-mediator/AbstMediator');
+const AbstController = require('../device-controller/AbstController');
 const AbstManager = require('./AbstManager');
 
 const Iterator = require('./Iterator');
@@ -39,6 +40,7 @@ class Manager extends AbstManager {
 
   /** Builder에서 요청 메소드 */
   setManager(config) {
+    /** @type {AbstController} */
     let deviceController = null;
     let controller = null;
 
@@ -74,9 +76,12 @@ class Manager extends AbstManager {
     } else {
       deviceController = new controller(config, config.connect_info);
     }
+    // Controller의 접속 정보를 ID로 함
+    this.id = deviceController.configInfo;
+
     // 해당 장치가 이미 존재하는지 체크
     let foundInstance = _.find(instanceList, instanceInfo => {
-      return _.isEqual(instanceInfo.id, deviceController.id);
+      return _.isEqual(instanceInfo.id, this.id);
     });
     // 장치가 존재하지 않는다면 instanceList에 삽입하고 deviceController에 등록
     if (_.isEmpty(foundInstance)) {
@@ -86,11 +91,10 @@ class Manager extends AbstManager {
       this.hasPerformCommand = false;
       // Manager에 Device 등록
       this.deviceController = deviceController;
-      this.id = deviceController.id;
       BU.CLI('@@@@@@@@@@@', this.id);
       // 신규 정의시 instanceList에 저장
       instanceList.push({
-        id: deviceController.id,
+        id: this.id,
         instance: this
       });
       this.retryChance = 3; // 데이터 유효성 검사가 실패, 데이터 수신 에러가 있을 경우 3회까지 ProcessCmd 재전송

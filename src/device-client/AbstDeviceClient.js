@@ -3,13 +3,21 @@
 const _ = require('lodash');
 const EventEmitter = require('events');
 
-const {BU} = require('base-util-jh');
+const {
+  BU
+} = require('base-util-jh');
 
 const Builder = require('../device-builder/Builder');
 const AbstCommander = require('../device-commander/AbstCommander');
 const AbstManager = require('../device-manager/AbstManager');
 
-const {definedCommanderResponse, definedCommandSetMessage, definedCommandSetRank, definedControlEvent, definedOperationError} = require('../format/moduleDefine');
+const {
+  definedCommanderResponse,
+  definedCommandSetMessage,
+  definedCommandSetRank,
+  definedControlEvent,
+  definedOperationError
+} = require('../format/moduleDefine');
 require('../format/define');
 
 class AbstDeviceClient extends EventEmitter {
@@ -32,7 +40,7 @@ class AbstDeviceClient extends EventEmitter {
    * Create 'Commander', 'Manager' And Set Property 'commander', 'manager'
    * @param {deviceClientConstructionInfo} config 
    */
-  setDeviceClient(config){
+  setDeviceClient(config) {
     try {
       const builder = new Builder();
       config.user = this;
@@ -40,7 +48,7 @@ class AbstDeviceClient extends EventEmitter {
       this.commander = deviceClientInfo.deviceCommander;
       this.manager = deviceClientInfo.deviceManager;
     } catch (error) {
-      throw error;      
+      throw error;
     }
   }
 
@@ -48,7 +56,7 @@ class AbstDeviceClient extends EventEmitter {
   /**
    * Device와 연결을 수립하고 제어하고자 하는 컨트롤러를 생성하기 위한 생성 설정 정보를 가져옴
    *  @return {deviceClientConstructionInfo} */
-  getDefaultCreateDeviceConfig(){
+  getDefaultCreateDeviceConfig() {
     /** @type {deviceClientConstructionInfo} */
     const generationConfigInfo = {
       target_id: '',
@@ -66,14 +74,14 @@ class AbstDeviceClient extends EventEmitter {
         hasTransferCommand: false
       }
     };
- 
+
     return generationConfigInfo;
   }
-  
+
   /**
    * Commander로 명령을 내릴 기본 형태를 가져옴 
    * @return {requestCommandSet} */
-  getDefaultCommandConfig(){
+  getDefaultCommandConfig() {
     /** @type {requestCommandSet} */
     const commandFormatInfo = {
       rank: 2,
@@ -95,14 +103,14 @@ class AbstDeviceClient extends EventEmitter {
   }
 
   /** 장치의 연결이 되어있는지 여부 @return {boolean} */
-  get hasConnectedDevice(){
+  get hasConnectedDevice() {
     return this.commander.hasConnectedDevice;
   }
 
   /** 현재 발생되고 있는 시스템 에러 리스트 
    * @return {Array.<{code: string, msg: string, occur_date: Date }>}
    */
-  get systemErrorList(){
+  get systemErrorList() {
     return this.commander.systemErrorList === undefined ? [] : this.commander.systemErrorList;
   }
 
@@ -120,7 +128,7 @@ class AbstDeviceClient extends EventEmitter {
     try {
       return this.commander.executeCommand(commandSet);
     } catch (error) {
-      throw error;      
+      throw error;
     }
   }
 
@@ -152,10 +160,10 @@ class AbstDeviceClient extends EventEmitter {
   }
 
   /**
-  * Manager에게 Msg를 보내어 명령 진행 의사 결정을 취함
-  * @param {string} key 요청 key
-  */
-  requestTakeAction(key){
+   * Manager에게 Msg를 보내어 명령 진행 의사 결정을 취함
+   * @param {string} key 요청 key
+   */
+  requestTakeAction(key) {
     try {
       return this.commander.requestTakeAction(key);
     } catch (error) {
@@ -171,8 +179,17 @@ class AbstDeviceClient extends EventEmitter {
    * @param {dcEvent} dcEvent 'dcConnect', 'dcClose', 'dcError'
    */
   updatedDcEventOnDevice(dcEvent) {
-    BU.CLIN(dcEvent.spreader);
-    BU.CLI(dcEvent.eventName, `commanderId: ${_.get(this.commander, 'id')}, controllerId: ${_.get(dcEvent.spreader, 'id')}`);
+    const managerIdInfo = _.get(dcEvent.spreader, 'id');
+
+    let strManagerInfo = '';
+    if (_.isObject(managerIdInfo)) {
+      _.forEach(managerIdInfo, (info, key) => {
+        strManagerInfo += `${key}: ${info}, `;
+      });
+    } else {
+      strManagerInfo = _.get(dcEvent.spreader, 'id');
+    }
+    BU.log(`${dcEvent.eventName} --> commander: ${_.get(this.commander, 'id')}, connInfo: ${strManagerInfo}`);
   }
 
 
@@ -181,7 +198,7 @@ class AbstDeviceClient extends EventEmitter {
    * 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트
    * @param {dcMessage} dcMessage 현재 장비에서 실행되고 있는 명령 객체
    */
-  onDcMessage(dcMessage){
+  onDcMessage(dcMessage) {
     BU.CLI(dcMessage.msgCode, `commanderId: ${_.get(dcMessage.commandSet.commander, 'id')}, commandSetId: ${_.get(dcMessage.commandSet, 'commandId')}`);
   }
 
@@ -190,7 +207,7 @@ class AbstDeviceClient extends EventEmitter {
    * @interface
    * @param {dcData} dcData 현재 장비에서 실행되고 있는 명령 객체
    */
-  onDcData(dcData){
+  onDcData(dcData) {
     BU.CLI(dcData.data, `commanderId: ${_.get(dcData.commandSet.commander, 'id')}, commandSetId: ${_.get(dcData.commandSet, 'commandId')}`);
   }
 
@@ -200,7 +217,7 @@ class AbstDeviceClient extends EventEmitter {
    * 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트
    * @param {dcError} dcError 현재 장비에서 실행되고 있는 명령 객체
    */
-  onDcError(dcError){
+  onDcError(dcError) {
     BU.CLI(dcError.errorInfo, `commanderId: ${_.get(dcError.commandSet.commander, 'id')}, commandSetId: ${_.get(dcError.commandSet, 'commandId')}`);
   }
 
