@@ -118,6 +118,8 @@ class Commander extends AbstCommander {
     // commandSet 형식을 따르지 않을 경우 자동으로 구성
     commandSet.rank = definedCommandSetRank.SECOND;
     commandSet.commandId = null;
+    commandSet.commandType = null;
+    commandSet.commandName = null;
     commandSet.currCmdIndex = 0;
     commandSet.cmdList = [];
     // 자동 생성

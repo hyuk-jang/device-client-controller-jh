@@ -2,7 +2,9 @@
 /**
  * @typedef {Object} requestCommandSet 요청 명령 자료 구조
  * @property {number} rank 우선순위 (0: 긴급 명령으로 현재 진행되고 있는 명령 무시하고 즉시 해당 명령 수행, 1: 1순위 명령, 2: 2순위 명령 ...) 기본 값 2
- * @property {string} commandId 해당 명령 통합 ID
+ * @property {string} commandId 해당 명령 집합 통합 ID
+ * @property {string} commandType 명령 통합의 요청, 삭제 (ADD, CANCEL)
+ * @property {string} commandName 해당 명령 집합 단위 이름
  * @property {number=} currCmdIndex cmdList Index => Default: 0
  * @property {Array.<commandInfo>} cmdList 명령을 보낼 배열
  */
@@ -11,6 +13,8 @@
  * @typedef {Object} commandSet 명령 수행 자료 구조
  * @property {number} rank 우선순위 (0: 긴급 명령으로 현재 진행되고 있는 명령 무시하고 즉시 해당 명령 수행, 1: 1순위 명령, 2: 2순위 명령 ...) 기본 값 2
  * @property {string} commandId 해당 명령 통합 ID
+ * @property {string} commandType 명령 통합의 요청, 삭제 (ADD, CANCEL)
+ * @property {string} commandName 해당 명령 집합 단위 이름
  * @property {Array.<commandInfo>} cmdList 명령을 보낼 배열
  * @property {number} currCmdIndex cmdList Index
  * @property {number} operationStatus 명령 수행 상태

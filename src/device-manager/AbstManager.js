@@ -17,6 +17,8 @@ class AbstManager extends EventEmitter {
     this.mediator;
     this.deviceController = null;
     this.id = '';
+    /** @type {commandStorage} */
+    this.commandStorage = {};
   }
 
   /** 초기화할 내용이 필요할 경우 */
