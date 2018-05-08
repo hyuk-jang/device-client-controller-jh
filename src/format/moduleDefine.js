@@ -5,6 +5,10 @@ exports.definedOperationStatus = {
    */
   WAIT: 'WAIT',
   /**
+   * @type {string} 에러가 발생하여 Commander의 처리 명령을 기다림.
+   */
+  WAIT_ERROR_HANDLING: 'WAIT_ERROR_HANDLING',
+  /**
    * @type {string} Request Command
    * @desc 명령 요청 상태 (진행 중)
    */
@@ -24,11 +28,6 @@ exports.definedOperationStatus = {
    * @desc 데이터 수신 기다림
    */
   RECEIVE_WAIT_MORE_DATA: 'RECEIVE_WAIT_MORE_DATA',
-  /**
-   * @type {string} Commander로부터 데이터가 오류라는 지시를 얻은 경우
-   * @desc 데이터 수신 기다림
-   */
-  RECEIVE_DATA_ERROR: 'RECEIVE_DATA_ERROR',
   /**
    * @type {string} Commander로부터 데이터의 승인을 얻은 경우
    * @desc 명령 요청 처리 성공

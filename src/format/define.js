@@ -15,6 +15,7 @@
  * @property {number} currCmdIndex cmdList Index
  * @property {number} operationStatus 명령 수행 상태
  * @property {AbstCommander} commander [Auto Made] 명령을 요청한 Commander
+ * @property {boolean} hasErrorHandling [Auto Made] 에러가 발생하였을 경우 다음 명령 진행을 멈출지 여부
  * @property {boolean} hasOneAndOne [Auto Made] 계속하여 연결을 수립할지 여부
  * @property {Timer=} commandExecutionTimer [Running Time Made] 명령 발송 후 응답까지 기다리는 SetTimeout
  * @property {Timer=} commandQueueReturnTimer [Running Time Made] 진행할 명령의 지연시간이 존재할 경우 standbyCommandSetList 대기열로 돌아오기까지의 SetTimeout

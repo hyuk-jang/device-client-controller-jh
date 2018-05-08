@@ -20,7 +20,7 @@ const SocketDeviceController = require('../src/device-controller/socket/Socket')
 // console.log(uuidv4());
 const DeviceManager = require('../src/device-manager/Manager');
 
-const {definedCommandSetRank, definedOperationStatus} = require('../src/format/moduleDefine');
+const {definedCommandSetRank, definedOperationStatus, definedCommanderResponse} = require('../src/format/moduleDefine');
 require('../src/format/define');
 const {initManager} =  require('../src/util/dcUtil');
 
@@ -40,7 +40,7 @@ describe('Device Manager Test', function() {
     updatedDcEventOnDevice: dcEvent => BU.CLI(dcEvent.eventName),
   };
 
-  const cmdInfo = {
+  let cmdInfo = {
     rank: 1,
     commandId: '',
     commander: null,
@@ -106,7 +106,10 @@ describe('Device Manager Test', function() {
 
   // 1. 명령 수행 도중 긴급 명령 추가(긴급 명령 추가에 따른 명령 교체 테스트)
   // 2. 명령 수행 도중 해당 명령 삭제 
+  // 3. Error Handling 처리
   it('Delete during command execution', async function(){
+    cmdInfo = _.cloneDeep(cmdInfo);
+    cmdInfo.hasErrorHandling = true;
     const deviceManager = new DeviceManager({
       target_id: 'Delete during command execution',
       target_name: '',
@@ -133,6 +136,7 @@ describe('Device Manager Test', function() {
     /** @type {commandSet} */
     let emergencyCmdInfo = {
       rank: definedCommandSetRank.EMERGENCY,
+      hasErrorHandling: true,
       commandId: '긴급 홍길동',
       cmdList: [{
         data:'긴급 명령 1'
@@ -146,18 +150,22 @@ describe('Device Manager Test', function() {
     await Promise.delay(500);
     // [Add] Rank{0} * 1,  Rank{2} * 3, Rank{3} * 1
     deviceManager.addCommandSet(emergencyCmdInfo);
-
+    BU.CLIN(deviceManager.commandStorage, 4);
+    
     // 긴급 명령이 추가됨
     let foundRankEmergency = deviceManager.iterator.findStandbyCommandSetList({rank: definedCommandSetRank.EMERGENCY});
     expect(foundRankEmergency.length).to.be.eq(1);
     let foundRank2 = deviceManager.iterator.findStandbyCommandSetList({rank: 2});
     // 명령 수행중이므로 0개
     expect(foundRank2.length).to.be.eq(0);
-          
+    
     // 긴급 명령 CmdList[0]이 진행 중
-    await Promise.delay(1000);
-
+    await Promise.delay(500);
+    deviceManager.requestTakeAction(deviceManager.iterator.currentCommandSet.commander, definedCommanderResponse.NEXT);
+    BU.CLIN(deviceManager.commandStorage, 4);
+    await Promise.delay(500);
     foundRank2 = deviceManager.iterator.findStandbyCommandSetList({rank: 2});
+    BU.CLIN(deviceManager.commandStorage, 4);
     // 명령 교체했으므로 1개
     expect(foundRank2.length).to.be.eq(1);
     // 첫 명령은 수행하였으로
@@ -167,18 +175,25 @@ describe('Device Manager Test', function() {
     expect(currentCommandSet.rank).to.be.eq(definedCommandSetRank.EMERGENCY);
     // 긴급 명령 CmdList[1]이 진행 중
     await Promise.delay(1000);
+    deviceManager.requestTakeAction(deviceManager.iterator.currentCommandSet.commander, definedCommanderResponse.NEXT);
+    BU.CLIN(deviceManager.commandStorage, 4);
     // 2번째 명령 수행중
     expect(currentCommandSet.currCmdIndex).to.be.eq(1);
-
+    
     // 리스트에서 Rank 2가 최우선이므로 해당 명령을 끄집어와 CmdList[1] 수행 중
     await Promise.delay(1000);
+    deviceManager.requestTakeAction(deviceManager.iterator.currentCommandSet.commander, definedCommanderResponse.NEXT);
+    BU.CLIN(deviceManager.commandStorage, 4);
     currentCommandSet = deviceManager.iterator.currentCommandSet;
     expect(currentCommandSet.commandId).to.eq('홍길동0');
     expect(currentCommandSet.rank).to.be.eq(2);
     expect(currentCommandSet.currCmdIndex).to.be.eq(1);
-
+    
     // Rank 3 끄집어와 CmdList[0] 수행 중
-    await Promise.delay(1000);
+    await Promise.delay(500);
+    BU.CLIN(deviceManager.commandStorage, 4);
+    deviceManager.requestTakeAction(deviceManager.iterator.currentCommandSet.commander, definedCommanderResponse.NEXT);
+    await Promise.delay(500);
     currentCommandSet = deviceManager.iterator.currentCommandSet;
     expect(currentCommandSet.rank).to.be.eq(3);
     expect(currentCommandSet.commandId).to.eq('홍길동1');
@@ -196,7 +211,7 @@ describe('Device Manager Test', function() {
   // 1. 지연 명령 수행 시 Delay 대기열로 이동
   // 2. Delay 시간 만큼 경과 시 Standby 대기열 선두에 배치되는지 테스트
   // 3. 선두에 배치된 명령이  processingCommandAtCenter()에 의해 다시 재가동 하는지 테스트
-  it('Add & Delete Delay Command', async function(){
+  it.skip('Add & Delete Delay Command', async function(){
     const deviceManager = new DeviceManager({
       target_id: 'Add & Delete Delay Command',
       target_name: '',

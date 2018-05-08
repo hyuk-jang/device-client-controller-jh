@@ -9,8 +9,17 @@ const AbstManager = require('../device-manager/AbstManager');
 const AbstDeviceClient = require('../device-client/AbstDeviceClient');
 
 require('../format/define');
-const {writeLogFile} = require('../util/dcUtil');
-const { definedCommandSetRank, definedOperationStatus, definedCommandSetMessage, definedCommanderResponse, definedControlEvent, definedOperationError } = require('../format/moduleDefine');
+const {
+  writeLogFile
+} = require('../util/dcUtil');
+const {
+  definedCommandSetRank,
+  definedOperationStatus,
+  definedCommandSetMessage,
+  definedCommanderResponse,
+  definedControlEvent,
+  definedOperationError
+} = require('../format/moduleDefine');
 
 const instanceList = [];
 
@@ -26,6 +35,7 @@ class Commander extends AbstCommander {
       this.id = config.target_id;
       this.category = config.target_category ? config.target_category : 'etc';
       this.hasOneAndOne = config.hasOneAndOne ? true : false;
+      this.hasErrorHandling = config.hasErrorHandling ? true : false;
       /** Commander를 명령하는 Client 객체 */
       /** @type {AbstDeviceClient} */
       this.user = config.user || null;
@@ -81,11 +91,11 @@ class Commander extends AbstCommander {
   executeCommand(commandSet) {
     try {
       // 오브젝트가 아니라면 자동으로 생성
-      if(_.isObject(commandSet)){
+      if (_.isObject(commandSet)) {
         let findSetKeyList = ['cmdList', 'commander', 'commandId', 'hasOneAndOne', 'rank', 'currCmdIndex'];
 
         let hasTypeCommandSet = _.eq(findSetKeyList.length, _.chain(commandSet).keys().intersection(findSetKeyList).value().length);
-        if(hasTypeCommandSet){
+        if (hasTypeCommandSet) {
           return this.manager.addCommandSet(commandSet);
         } else {
           throw new Error('명령 형식을 확인하십시오.');
@@ -114,6 +124,7 @@ class Commander extends AbstCommander {
     commandSet.operationStatus = definedOperationStatus.WAIT;
     commandSet.commander = this;
     commandSet.hasOneAndOne = this.hasOneAndOne;
+    commandSet.hasErrorHandling = this.hasErrorHandling;
 
     // 배열일 경우
     if (Array.isArray(cmd)) {
@@ -145,9 +156,9 @@ class Commander extends AbstCommander {
     try {
       /** @type {commandSet} */
       let commandInfo = this.generationAutoCommand();
-  
+
       _.forEach(commandSetInfo, (cmd, key) => {
-        if(_.has(commandInfo, key)){
+        if (_.has(commandInfo, key)) {
           commandInfo[key] = cmd;
         } else {
           throw new Error('The requested key does not exist:' + key);
@@ -162,13 +173,13 @@ class Commander extends AbstCommander {
       //     throw new Error('commandSetInfo 형식이 맞지 않습니다.');
       //   }
       // });
-  
+
       // 자동 생성
       commandInfo.operationStatus = definedOperationStatus.WAIT;
       commandInfo.commander = this;
       commandInfo.hasOneAndOne = this.hasOneAndOne;
       return commandInfo;
-      
+
     } catch (error) {
       throw error;
     }
@@ -189,6 +200,14 @@ class Commander extends AbstCommander {
   }
 
   /**
+   * 수행 명령 리스트에 등록된 명령을 취소
+   * @param {string} commandId 명령을 취소 할 command Id
+   */
+  deleteCommandSet(commandId) {
+    return this.manager.deleteCommandSet(commandId);
+  }
+
+  /**
    * Manager에게 Msg를 보내어 명령 진행 의사 결정을 취함
    * @param {string} key 요청 key
    * 
@@ -196,7 +215,7 @@ class Commander extends AbstCommander {
   requestTakeAction(key) {
     // BU.CLI('requestTakeAction', key);
     try {
-      if(_.has(definedCommanderResponse, key)){
+      if (_.has(definedCommanderResponse, key)) {
         this.manager.requestTakeAction(this, key);
       } else {
         throw new Error(`${key}는 유효한 제어 명령이 아닙니다.`);
@@ -265,13 +284,14 @@ class Commander extends AbstCommander {
 
 
 
+
   /** Device Manager에서 Event 발생 */
 
   /**
    * 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트
    * @param {dcError} dcError 현재 장비에서 실행되고 있는 명령 객체
    */
-  onDcError(dcError){
+  onDcError(dcError) {
     // BU.CLIN(dcError );
     writeLogFile(this, 'config.logOption.hasDcError', 'error', dcError.errorInfo.message, dcError.errorInfo.stack);
 
@@ -282,7 +302,7 @@ class Commander extends AbstCommander {
    * 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트
    * @param {dcMessage} dcMessage 현재 장비에서 실행되고 있는 명령 객체
    */
-  onDcMessage(dcMessage){
+  onDcMessage(dcMessage) {
     // BU.CLI(dcMessage);
     writeLogFile(this, 'config.logOption.hasDcMessage', 'message', dcMessage.msgCode, `commandId: ${dcMessage.commandSet.commandId}`);
     return this.user && this.user.onDcMessage(dcMessage);
@@ -292,7 +312,7 @@ class Commander extends AbstCommander {
    * 장치로부터 데이터 수신
    * @param {dcData} dcData 현재 장비에서 실행되고 있는 명령 객체
    */
-  onDcData(dcData){
+  onDcData(dcData) {
     return this.user && this.user.onDcData(dcData);
   }
 }

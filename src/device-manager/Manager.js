@@ -91,7 +91,7 @@ class Manager extends AbstManager {
       this.hasPerformCommand = false;
       // Manager에 Device 등록
       this.deviceController = deviceController;
-      BU.CLI('@@@@@@@@@@@', this.id);
+      // BU.CLI('@@@@@@@@@@@', this.id);
       // 신규 정의시 instanceList에 저장
       instanceList.push({
         id: this.id,
@@ -159,15 +159,10 @@ class Manager extends AbstManager {
         // BU.CLI('definedCommanderResponse.WAIT');
         this.updateOperationStatus(definedOperationStatus.RECEIVE_WAIT_MORE_DATA);
         break;
-        // 데이터에 문제가 있다.
+        // 다음 명령을 수행해라 (강제)
       case definedCommanderResponse.NEXT:
         // BU.CLI('definedCommanderResponse.NEXT');
         this.updateOperationStatus(definedOperationStatus.RECEIVE_NEXT_FORCE);
-        this.manageProcessingCommand();
-        break;
-      case definedCommanderResponse.ERROR:
-        // BU.CLI('definedCommanderResponse.ERROR');
-        this.updateOperationStatus(definedOperationStatus.RECEIVE_DATA_ERROR);
         this.manageProcessingCommand();
         break;
         // 명령을 재전송 해달라
@@ -207,7 +202,8 @@ class Manager extends AbstManager {
    * @return {commandStorage}
    */
   deleteCommandSet(commandId) {
-    return this.iterator.deleteCmd(commandId);
+    this.iterator.deleteCmd(commandId);
+    this.manageProcessingCommand();
   }
 
   /**
@@ -330,13 +326,13 @@ class Manager extends AbstManager {
 
   /** @private 명령 재전송 처리 */
   retryRequestProcessingCommand() {
-    BU.CLI('retryWrite');
+    BU.CLI('retryWrite', this.retryChance);
     this.retryChance -= 1;
     if (this.retryChance > 0) {
-      // 0.01 초 지연 시간을 둠
-      return Promise.delay(10).then(() => {
-        this.requestProcessingCommand();
-      });
+      // 0.01 초 지연 시간을 두지 않음
+      // return Promise.delay(10).then(() => {
+      this.requestProcessingCommand();
+      // });
     } else if (this.retryChance === 0) { // 3번 재도전 실패시 다음 명령 수행
       this.updateOperationStatus(definedOperationStatus.E_RETRY_MAX);
       return this.manageProcessingCommand();
@@ -407,14 +403,14 @@ class Manager extends AbstManager {
       switch (operationStatus) {
       case definedOperationStatus.WAIT: // Wait
         break;
+      case definedOperationStatus.WAIT_ERROR_HANDLING: // WAIT_ERROR_HANDLING
+        BU.CLI('WAIT_ERROR_HANDLING');
+        return false;
       case definedOperationStatus.REQUEST_CMD: // 명령을 요청중이라면 진행 X
       case definedOperationStatus.RECEIVE_WAIT_DATA: // 데이터 수신을 기다리는 중이라면 진행 X
       case definedOperationStatus.RECEIVE_WAIT_PROCESSING_DATA: // 데이터 수신이 이루어지고 처리를 기다리는 중이라면 진행 X
       case definedOperationStatus.RECEIVE_WAIT_MORE_DATA: // 더 많은 데이터 수신을 기다리는 중이라면 진행 X
         return false;
-      case definedOperationStatus.RECEIVE_DATA_ERROR: // 데이터에 오류가 있을 경우에는 Commander에서 이미 인지하고 있으므로 별도의 메시지를 보내지 않음
-        BU.CLI('dataError');
-        break;
       case definedOperationStatus.RECEIVE_DATA_DONE: // 데이터 처리 완료
         BU.CLI('RECEIVE_DATA_DONE');
         break;
@@ -465,15 +461,20 @@ class Manager extends AbstManager {
       // 에러가 있고 수신자가 있다면 메시지를 보냄
       // hasError && currentReceiver && currentReceiver.onDcError(dcErrorFormat);
       // NOTE 에러가 있다면 다음 명령은 처리 하지 않음
-      if(hasError && !currentCommandSet.hasOneAndOne){
+      if(hasError){
+        // BU.CLI(dcErrorFormat.errorInfo);
         currentReceiver && currentReceiver.onDcError(dcErrorFormat);
+        // 에러 핸들링을 필요로 한다면 시스템 대기
+        if(currentCommandSet.hasErrorHandling){
+          this.updateOperationStatus(definedOperationStatus.WAIT_ERROR_HANDLING);
+          return false;
+        }
         // this.iterator.clearCurrentCommandSet();
       }
 
       // 진행 중인 명령이 모두 수행되었을 경우
       if (this.iterator.isDone()) {
         let skipOperationStatus = [
-          definedOperationStatus.RECEIVE_DATA_ERROR,
           definedOperationStatus.PROCESSING_DELETE_COMMAND
         ];
         // Skip 요청 상태가 아니고 현재 명령 집합의 모든 명령을 수행했다면 발송
@@ -535,6 +536,7 @@ class Manager extends AbstManager {
       let nextCommandSet = this.iterator.nextCommandSet;
       // BU.CLI(currCmd);
       // 현재 아무런 명령이 존재하지 않을 경우
+      this.retryChance = 3;
       if (_.isEmpty(currentCommandSet)) {
         // 명령 집합 이동 
         this.iterator.changeNextCommandSet(nextCommandSet);
@@ -543,7 +545,6 @@ class Manager extends AbstManager {
         // 현재 수행할 명령 요청
         return this.requestProcessingCommand();
       } else { // 다음 명령이 존재할 경우
-        this.retryChance = 3;
         this.iterator.changeNextCommand();
         return this.requestProcessingCommand();
       }

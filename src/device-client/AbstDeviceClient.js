@@ -159,6 +159,15 @@ class AbstDeviceClient extends EventEmitter {
     }
   }
 
+
+  /**
+   * 수행 명령 리스트에 등록된 명령을 취소
+   * @param {string} commandId 명령을 취소 할 command Id
+   */
+  deleteCommandSet(commandId) {
+    return this.commander.deleteCommandSet(commandId);
+  }
+
   /**
    * Manager에게 Msg를 보내어 명령 진행 의사 결정을 취함
    * @param {string} key 요청 key

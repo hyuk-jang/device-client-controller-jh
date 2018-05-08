@@ -60,6 +60,12 @@ class AbstCommander {
   findCommandStorage(searchInfo) {}
 
   /**
+   * 수행 명령 리스트에 등록된 명령을 취소
+   * @param {string} commandId 명령을 취소 할 command Id
+   */
+  deleteCommandSet(commandId) {}
+
+  /**
    * Manager에게 Msg를 보내어 명령 진행 의사 결정을 취함
    * @param {string} key 요청 key
    */
@@ -74,7 +80,13 @@ class AbstCommander {
   updatedDcEventOnDevice(dcEvent) {}
 
 
-
+  /**
+   * 현재 진행 중인 명령 객체에 진행 할 명령이 존재하는 지
+   * @return {commandInfo} 다음 명령 존재시 : true, 없을 시: false
+   */
+  get currentCommand() {
+    return this.iterator.currentCommand;
+  }
 
 
   /** Device Manager에서 Event 발생 */
