@@ -50,7 +50,6 @@
  * @typedef {Object} deviceClientConstructionInfo Device Client 생성 자료 구조
  * @property {string} target_id device ID
  * @property {string} target_category inverter, connector, weather
- * @property {string} target_protocol s_hex, dm_v2, ...
  * @property {string} hasOneAndOne 계속하여 연결을 수립할지 여부
  * @property {logOption} logOption 일어나는 이벤트에 대해 FileSystem 처리할 항목
  * @property {connectInfo} connect_info

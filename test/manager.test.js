@@ -57,7 +57,6 @@ describe('Device Manager Test', function() {
       target_id: 'Add & Delete CMD Test',
       target_name: '',
       target_category: '',
-      target_protocol: '',
     });
     initManager(deviceManager);
 
@@ -114,7 +113,6 @@ describe('Device Manager Test', function() {
       target_id: 'Delete during command execution',
       target_name: '',
       target_category: '',
-      target_protocol: '',
     });
     initManager(deviceManager);
     deviceManager.commandStorage.currentCommandSet = {};
@@ -216,7 +214,6 @@ describe('Device Manager Test', function() {
       target_id: 'Add & Delete Delay Command',
       target_name: '',
       target_category: '',
-      target_protocol: '',
     });
     initManager(deviceManager);
     // [Add] Rank{2} * 1, Rank{3} * 1
@@ -338,7 +335,6 @@ describe.skip('DeviceController Test', () => {
       target_id: 'VantagePro_1',
       target_name: 'Davis Vantage Pro2',
       target_category: 'weathercast',
-      target_protocol: 'vantagepro2',
       connect_info: {
         hasOneAndOne: true,
         type: 'socket',
