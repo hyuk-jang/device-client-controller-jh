@@ -77,5 +77,18 @@ class Serial extends AbstController{
     this.client = client;
     return this.client;
   }
+
+  /**
+   * Close Connect
+   */
+  async disconnect(){
+    if(!_.isEmpty(this.client)){
+      this.client.close();
+      await eventToPromise.multi(this.client, ['close'], ['error', 'disconnectError']);
+      return this.client;
+    } else {
+      return this.client;
+    }
+  }
 }
 module.exports = Serial;

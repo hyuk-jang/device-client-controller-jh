@@ -329,9 +329,11 @@ class Iterator {
   clearCurrentCommandSet (dcError){
     let currentCommandSet = this.currentCommandSet;
 
+    BU.debugConsole();
+    BU.CLIN(dcError);
     if(!_.isEmpty(currentCommandSet)){
       // 에러가 존재하고 받을 대상이 있다면 전송
-      if(_.isObject(dcError) && dcError.errorName.length && this.currentReceiver){
+      if(_.isObject(dcError) && _.get(dcError, 'errorName') && this.currentReceiver){
         dcError.commandSet = currentCommandSet;
         this.currentReceiver.onDcError(dcError);
       }
@@ -394,7 +396,7 @@ class Iterator {
     // 명령 대기열에 존재하는 명령 삭제
     _.forEach(this.aggregate.standbyCommandSetList, item => {
       _.dropWhile(item.list, commandInfo => {
-        if(_.isObject(dcError) && dcError.errorName.length && commandInfo.commander){
+        if(_.isObject(dcError) && _.get(dcError, 'errorName')  && commandInfo.commander){
           dcError.commandSet = commandInfo;
           commandInfo.commander.onDcError(dcError);
         }

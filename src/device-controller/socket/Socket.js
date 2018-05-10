@@ -81,6 +81,20 @@ class Socket extends AbstController {
     this.client = client;
     return this.client;
   }
+
+  /**
+   * Close Connect
+   */
+  async disconnect(){
+    BU.CLI('????');
+    if(!_.isEmpty(this.client)){
+      this.client.destroy(err => {
+        return this.client;
+      });
+    } else {
+      return this.client;
+    }
+  }
 }
 
 module.exports = Socket;

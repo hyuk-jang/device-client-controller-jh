@@ -295,7 +295,7 @@ class Commander extends AbstCommander {
    */
   onDcError(dcError) {
     // BU.CLIN(dcError );
-    writeLogFile(this, 'config.logOption.hasDcError', 'error', dcError.errorInfo.message, dcError.errorInfo.stack);
+    writeLogFile(this, 'config.logOption.hasDcError', 'error', _.get(dcError.errorInfo, 'message'),  _.get(dcError.errorInfo, 'stack'));
 
     return this.user && this.user.onDcError(dcError);
   }
@@ -306,7 +306,7 @@ class Commander extends AbstCommander {
    */
   onDcMessage(dcMessage) {
     // BU.CLI(dcMessage);
-    writeLogFile(this, 'config.logOption.hasDcMessage', 'message', dcMessage.msgCode, `commandId: ${dcMessage.commandSet.commandId}`);
+    writeLogFile(this, 'config.logOption.hasDcMessage', 'message', dcMessage.msgCode, `commandId: ${_.get(dcMessage.commandSet, 'commandId')}`);
     return this.user && this.user.onDcMessage(dcMessage);
   }
 

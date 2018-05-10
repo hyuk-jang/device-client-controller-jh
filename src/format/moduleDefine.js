@@ -96,50 +96,32 @@ exports.definedOperationError = {
    * @type {string} Error Timeout
    * @desc RECEIVE_WAIT_DATA, RECEIVE_WAIT_MORE_DATA
    */
-  E_TIMEOUT: {
-    code: 'TIMEOUT',
-    msg: '장치 응답 없음'
-  },
+  E_TIMEOUT: 'E_TIMEOUT',
   /**
    * @type {string} 데이터가 수신 되었으나 Commander가 아무런 조치를 하지 않은 경우
    * @desc RECEIVE_WAIT_PROCESSING_DATA --> 데이터 미조치 에러
    */
-  E_UNHANDLING_DATA: {
-    code: 'UNHANDLING_DATA',
-    msg: '수신 데이터 미처리'
-  },
+  E_UNHANDLING_DATA: 'E_UNHANDLING_DATA',
   /**
    * @type {string} 데이터의 오류
    * @desc RECEIVE_DATA_ERROR 
    */
-  E_INCORRECT_DATA: {
-    code: 'INCORRECT_DATA',
-    msg: '데이터 이상'
-  },
+  E_INCORRECT_DATA: 'E_INCORRECT_DATA',
   /**
    * @type {string} Error Retry Count Full
    * @desc 명령 재시도 횟수 초과
    */
-  E_RETRY_MAX: {
-    code: 'RETRY_MAX',
-    msg: '재시도 횟수 초과'
-  },
+  E_RETRY_MAX: 'E_RETRY_MAX',
   /**
    * @type {string} Error Unexptected Error
    * @desc 예상치 못한 에러
    */
-  E_UNEXPECTED: {
-    code: 'UNEXPECTED',
-    msg: '예상치 못한 에러'
-  },
+  E_UNEXPECTED: 'E_UNEXPECTED',
   /**
    * @type {string} Error Non Cmd
    * @desc 유효한 명령 아님
    */
-  E_NON_CMD: {
-    code: '',
-    msg: ''
-  },
+  E_NON_CMD: 'E_NON_CMD',
 };
 
 

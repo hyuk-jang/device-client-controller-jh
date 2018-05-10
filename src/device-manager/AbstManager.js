@@ -44,7 +44,12 @@ class AbstManager extends EventEmitter {
 
   // TODO
   /** 장치와 연결을 해제하고자 할 경우 */
-  disconnect(){}
+  async disconnect(){
+    await this.deviceController.disconnect();
+
+    // await eventToPromise(this, 'dcConnect');
+    return true;
+  }
 
   setMediator() {}
   
@@ -92,7 +97,8 @@ class AbstManager extends EventEmitter {
     // BU.log(`AbstManager --> ${eventName}`);
     // this.emit(eventName, eventMsg);
     
-    // BU.CLIN(this.deviceController);
+    BU.CLIN(eventMsg);
+    BU.CLIN(this.deviceController.client);
     if(_.isEmpty(this.deviceController.client)){
       /** @type {dcError} */
       const returnDcError = {

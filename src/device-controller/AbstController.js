@@ -100,7 +100,7 @@ class AbstController {
   }
 
   notifyEvent(eventName){
-    // BU.CLI('notifyEvent', eventName);
+    BU.CLI('notifyEvent', eventName);
     this.observers.forEach(observer => {
       observer.onEvent(eventName);
     });
