@@ -264,6 +264,7 @@ class Manager extends AbstManager {
     // BU.CLIN(currentCommand.data, currentCommand.commandExecutionTimeoutMs);
     writeLogFile(this, 'config.logOption.hasTransferCommand', 'data', 'transferData', currentCommand.data);
 
+    // BU.CLI('transferCommandToDevice', currentCommand.data);
     await this.deviceController.write(currentCommand.data);
     // 명령 전송이 성공하였으므로 데이터 수신 상태로 변경
     this.updateOperationStatus(definedOperationStatus.RECEIVE_WAIT_DATA);
@@ -345,13 +346,17 @@ class Manager extends AbstManager {
    */
   updateOperationStatus(operationStatus) {
     // BU.CLI('updateOperationStatus', operationStatus);
+    
     let currentCommandSet = this.iterator.currentCommandSet;
-
+    
     // 진행 중인 명령이 없거나 명령 삭제 일 경우에는 업데이트 제외
     if(_.isEmpty(currentCommandSet) || currentCommandSet.operationStatus === definedOperationStatus.PROCESSING_DELETE_COMMAND){
       return false;
+    } else {
+      // BU.CLI('updateOperationStatus', operationStatus);
+      currentCommandSet.operationStatus = operationStatus;
+
     }
-    currentCommandSet.operationStatus = operationStatus;
   }
 
   /**
@@ -382,7 +387,6 @@ class Manager extends AbstManager {
    */
   manageProcessingCommand(error) {
     // BU.CLIN(this.commandStorage, 4);
-    // BU.CLI('this.hasPerformCommand', this.hasPerformCommand);
     const currentCommandSet = this.iterator.currentCommandSet;
     // BU.CLIN(this.commandStorage, 4);
     const nextCommandSet = this.iterator.nextCommandSet;
@@ -462,16 +466,17 @@ class Manager extends AbstManager {
       // hasError && currentReceiver && currentReceiver.onDcError(dcErrorFormat);
       // NOTE 에러가 있다면 다음 명령은 처리 하지 않음
       if(hasError){
+        // BU.CLI('hasError');
         // BU.CLI(dcErrorFormat.errorInfo);
         currentReceiver && currentReceiver.onDcError(dcErrorFormat);
         // 에러 핸들링을 필요로 한다면 시스템 대기
-        if(currentCommandSet.hasErrorHandling){
+        if(_.get(currentCommandSet.controlInfo, 'hasErrorHandling') === true){
           this.updateOperationStatus(definedOperationStatus.WAIT_ERROR_HANDLING);
           return false;
         }
         // this.iterator.clearCurrentCommandSet();
       }
-
+      
       // 진행 중인 명령이 모두 수행되었을 경우
       if (this.iterator.isDone()) {
         let skipOperationStatus = [
@@ -481,16 +486,18 @@ class Manager extends AbstManager {
         if (!skipOperationStatus.includes(operationStatus)) {
           this._sendMessageToCommander(definedCommandSetMessage.COMMANDSET_EXECUTION_TERMINATE);
         }
-
+        
         // Operation Status 초기화
         this.updateOperationStatus(definedOperationStatus.WAIT);
-
+        
         // 1:1 통신이라면 진행 X
-        if (currentCommandSet.hasOneAndOne && operationStatus !== definedOperationStatus.RECEIVE_NEXT_FORCE) {
+        // BU.CLI(_.get(currentCommandSet.controlInfo, 'hasOneAndOne'));
+        if (_.get(currentCommandSet.controlInfo, 'hasOneAndOne') === true && operationStatus !== definedOperationStatus.RECEIVE_NEXT_FORCE) {
+          BU.CLI('hasOneAndOne');
           this._sendMessageToCommander(definedCommandSetMessage.ONE_AND_ONE_COMUNICATION);
           return;
         }
-
+        
         // 모든 명령 수행 완료
         if (_.isEmpty(nextCommandSet)) {
           BU.CLI('모든 명령을 수행하였습니다.');
@@ -511,7 +518,7 @@ class Manager extends AbstManager {
       // 현재 진행중인 명령이 없고
       if (_.isEmpty(currentCommandSet)) {
         // OneAndOne이 아니고, Next CommandSet이 존재한다면
-        if (currentCommandSet.hasOneAndOne !== true && !_.isEmpty(nextCommandSet)) {
+        if (!_.isEmpty(nextCommandSet)) {
           // 명령 수행 중으로 교체
           this.hasPerformCommand = true;
           return this.nextCommand();

@@ -19,11 +19,12 @@
  * @property {number} currCmdIndex cmdList Index
  * @property {number} operationStatus 명령 수행 상태
  * @property {AbstCommander} commander [Auto Made] 명령을 요청한 Commander
- * @property {boolean} hasErrorHandling [Auto Made] 에러가 발생하였을 경우 다음 명령 진행을 멈출지 여부
- * @property {boolean} hasOneAndOne [Auto Made] 계속하여 연결을 수립할지 여부
+ * @property {controlInfo} controlInfo [Auto Made] DCC를 제어하는데 있어 운영상 필요한 boolean 값 모음
  * @property {Timer=} commandExecutionTimer [Running Time Made] 명령 발송 후 응답까지 기다리는 SetTimeout
  * @property {Timer=} commandQueueReturnTimer [Running Time Made] 진행할 명령의 지연시간이 존재할 경우 standbyCommandSetList 대기열로 돌아오기까지의 SetTimeout
  */
+//  * @property {boolean} hasErrorHandling [Auto Made] 에러가 발생하였을 경우 다음 명령 진행을 멈출지 여부
+//  * @property {boolean} hasOneAndOne [Auto Made] 계속하여 연결을 수립할지 여부
 
 
 /**
@@ -50,10 +51,19 @@
  * @typedef {Object} deviceClientConstructionInfo Device Client 생성 자료 구조
  * @property {string} target_id device ID
  * @property {string} target_category inverter, connector, weather
- * @property {string} hasOneAndOne 계속하여 연결을 수립할지 여부
- * @property {logOption} logOption 일어나는 이벤트에 대해 FileSystem 처리할 항목
- * @property {connectInfo} connect_info
+ * @property {logOption=} logOption 일어나는 이벤트에 대해 FileSystem 처리할 항목
+ * @property {controlInfo} controlInfo DCC를 제어하는데 있어 운영상 필요한 boolean 값 모음
+ * @property {connectInfo} connect_info 장치와의 접속 정보
  */
+// * @property {boolean} hasOneAndOne 계속하여 연결을 수립할지 여부
+// * @property {boolean} hasErrorHandling 에러가 발생하였을 경우 다음 명령 진행을 멈출지 여부
+
+/**
+ * @typedef {Object} controlInfo DCC를 제어하는데 있어 운영상 필요한 boolean 값 모음
+ * @prop {boolean} hasOneAndOne 계속하여 연결을 수립할지 여부
+ * @prop {boolean} hasErrorHandling 에러가 발생하였을 경우 다음 명령 진행을 멈출지 여부
+ * @prop {boolean} hasReconnect 장치의 연결이 끊겼을 경우 자동으로 재접속을 수행할지 여부
+ */ 
 
 /**
  * @typedef {Object} logOption 일어나는 이벤트에 대해 FileSystem 처리할 항목
@@ -69,7 +79,6 @@
 
 /**
  * @typedef {Object} connectInfo 장치와의 접속 정보
- * @property {bollean} hasOneAndOne 
  * @property {string} type 'socket', 'serial', 'zigbee', ...
  * @property {string=} subType 'parser', 'xbee', ....
  * @property {number=} baudRate 

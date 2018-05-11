@@ -61,7 +61,7 @@ class AbstDeviceClient extends EventEmitter {
     const generationConfigInfo = {
       target_id: '',
       target_category: '',
-      hasOneAndOne: false,
+      // hasOneAndOne: false,
       connect_info: {
         type: '',
       },
@@ -72,6 +72,11 @@ class AbstDeviceClient extends EventEmitter {
         hasReceiveData: false,
         hasDcMessage: false,
         hasTransferCommand: false
+      },
+      controlInfo: {
+        hasErrorHandling: false,
+        hasOneAndOne: false,
+        hasReconnect: false
       }
     };
 
@@ -118,8 +123,6 @@ class AbstDeviceClient extends EventEmitter {
 
   /**
    * 장치로 명령을 내림
-   * 아무런 명령을 내리지 않을 경우 해당 장치와의 연결고리를 끊지 않는다고 판단
-   * 명시적으로 hasOneAndOne을 True로 줄 해당 명령 리스트를 모두 수행하고 다음 CommandFormat으로 이동하지 않음
    * @param {commandSet} commandSet 
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */

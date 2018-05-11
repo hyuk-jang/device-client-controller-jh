@@ -48,12 +48,12 @@ class AbstController {
     } else {
       timer.pause();
       try {
-        BU.CLI('doConnect', this.configInfo);
+        BU.CLI('doConnect()', this.configInfo);
         // 장치 접속 관리 객체가 없다면 접속 수행
         if(_.isEmpty(this.client)){
           writeLogFile(this, 'mainConfig.logOption.hasDcEvent', 'event', 'doConnect()');
           await this.connect();
-  
+          
           // 장치 연결 요청이 완료됐으나 연결 객체가 없다면 예외 발생
           if(_.isEmpty(this.client)){
             throw new Error('Try Connect To Device Error');
@@ -63,12 +63,14 @@ class AbstController {
         return this.notifyConnect();
       } catch (error) {
         // 장치 접속 요청 실패 이벤트 발생
-        this.notifyError(error);
+        // this.notifyError(error);
         // 새로운 타이머 할당
-        this.connectTimer = new CU.Timer(() => {
-          _.isEmpty(this.client) ? this.doConnect() : this.notifyConnect();
-          // 장치 접속 시도 후 타이머 제거
-        }, this.connectIntervalTime);
+        if(_.get(this.mainConfig.controlInfo, 'hasReconnect') === true ){
+          this.connectTimer = new CU.Timer(() => {
+            _.isEmpty(this.client) ? this.doConnect() : this.notifyConnect();
+            // 장치 접속 시도 후 타이머 제거
+          }, this.connectIntervalTime);
+        }
       }
     }
   }
@@ -128,11 +130,14 @@ class AbstController {
       this.hasConnect = false;
       this.notifyEvent(definedControlEvent.DISCONNECT);
       // 이벤트 발송 및 약간의 장치와의 접속 딜레이를 1초 줌
-      Promise.delay(1000).then(() => {
-        if(_.isEmpty(this.client) && !this.connectTimer.getStateRunning()){
-          this.doConnect();
-        }
-      });
+      // 재접속 옵션이 있을 경우에만 자동 재접속 수행
+      if(_.get(this.mainConfig.controlInfo, 'hasReconnect') === true){
+        Promise.delay(1000).then(() => {
+          if(_.isEmpty(this.client) && !this.connectTimer.getStateRunning()){
+            this.doConnect();
+          }
+        });
+      }
     }
   }
 
@@ -141,7 +146,7 @@ class AbstController {
    * @param {Error} error 
    */
   notifyError(error) {
-    // BU.CLI('notifyError', error);
+    BU.CLI('notifyError', error);
     writeLogFile(this, 'mainConfig.logOption.hasDcEvent', 'event', 'notifyError', error);
     // 장치에서 이미 에러 내역을 발송한 상태라면 이벤트를 보내지 않음
     // this.notifyDisconnect();

@@ -97,8 +97,8 @@ class AbstManager extends EventEmitter {
     // BU.log(`AbstManager --> ${eventName}`);
     // this.emit(eventName, eventMsg);
     
-    BU.CLIN(eventMsg);
-    BU.CLIN(this.deviceController.client);
+    // BU.CLIN(eventName);
+    // BU.CLIN(this.deviceController.client);
     if(_.isEmpty(this.deviceController.client)){
       /** @type {dcError} */
       const returnDcError = {

@@ -40,9 +40,13 @@ describe('Device Manager Test', function() {
     updatedDcEventOnDevice: dcEvent => BU.CLI(dcEvent.eventName),
   };
 
-  let cmdInfo = {
+  let defaultCmdInfo = {
     rank: 1,
     commandId: '',
+    controlInfo:{
+      hasOneAndOne: false,
+      hasErrorHandling: false,
+    },
     commander: null,
     cmdList: [],
     currCmdIndex: 0,
@@ -52,7 +56,8 @@ describe('Device Manager Test', function() {
 
   
   // 명령 추가 및 삭제
-  it('Add & Delete CMD Test', function(done) {
+  it.skip('Add & Delete CMD Test', function(done) {
+    let cmdInfo = _.cloneDeep(defaultCmdInfo);
     const deviceManager = new DeviceManager({
       target_id: 'Add & Delete CMD Test',
       target_name: '',
@@ -62,7 +67,7 @@ describe('Device Manager Test', function() {
 
 
     // 명령 자동 진행을 막기 위하여 1:1 모드로 고정함
-    deviceManager.commandStorage.currentCommandSet = {test:'test', hasOneAndOne: true};
+    deviceManager.commandStorage.currentCommandSet = {test:'test', controlInfo:{hasOneAndOne: true}  };
     /** @type {commandSet} */
 
     // [Add] Rank{2} * 3, Rank{3} * 2
@@ -107,8 +112,9 @@ describe('Device Manager Test', function() {
   // 2. 명령 수행 도중 해당 명령 삭제 
   // 3. Error Handling 처리
   it('Delete during command execution', async function(){
-    cmdInfo = _.cloneDeep(cmdInfo);
-    cmdInfo.hasErrorHandling = true;
+    let cmdInfo = _.cloneDeep(defaultCmdInfo);
+    cmdInfo.controlInfo.hasErrorHandling = true;
+    cmdInfo.controlInfo.hasOneAndOne = true;
     const deviceManager = new DeviceManager({
       target_id: 'Delete during command execution',
       target_name: '',
@@ -134,7 +140,7 @@ describe('Device Manager Test', function() {
     /** @type {commandSet} */
     let emergencyCmdInfo = {
       rank: definedCommandSetRank.EMERGENCY,
-      hasErrorHandling: true,
+      controlInfo:{hasErrorHandling: true},
       commandId: '긴급 홍길동',
       cmdList: [{
         data:'긴급 명령 1'
@@ -209,12 +215,14 @@ describe('Device Manager Test', function() {
   // 1. 지연 명령 수행 시 Delay 대기열로 이동
   // 2. Delay 시간 만큼 경과 시 Standby 대기열 선두에 배치되는지 테스트
   // 3. 선두에 배치된 명령이  processingCommandAtCenter()에 의해 다시 재가동 하는지 테스트
-  it.skip('Add & Delete Delay Command', async function(){
+  it('Add & Delete Delay Command', async function(){
+    let cmdInfo = _.cloneDeep(defaultCmdInfo);
     const deviceManager = new DeviceManager({
       target_id: 'Add & Delete Delay Command',
       target_name: '',
       target_category: '',
     });
+
     initManager(deviceManager);
     // [Add] Rank{2} * 1, Rank{3} * 1
     for(let i = 0; i < 2; i += 1){
@@ -240,7 +248,7 @@ describe('Device Manager Test', function() {
         data:'지연 명령 1',
         delayExecutionTimeoutMs: 3000
       },{
-        data: '긴급 명령 2'
+        data: '지연 명령 2'
       }],
       currCmdIndex: 0
     };
@@ -252,12 +260,15 @@ describe('Device Manager Test', function() {
         deviceManager.addCommandSet(delayCmdInfo);
       });
 
+    BU.CLIN(deviceManager.commandStorage);
+    
     // 지연 명령이 추가됨
     let foundRankDelay = deviceManager.iterator.findStandbyCommandSetList({rank: definedCommandSetRank.SECOND});
     expect(foundRankDelay.length).to.be.eq(1);
     
     // Delay Rank 2 명령 교체 후 Rank3 CmdList[0] 수행 중 진행 중
     await Promise.delay(2000);
+    BU.CLIN(deviceManager.commandStorage, 4);
     let currentCommandSet = deviceManager.iterator.currentCommandSet;
     expect(currentCommandSet.commandId).to.eq('홍길동1');
     expect(currentCommandSet.currCmdIndex).to.eq(0);
@@ -301,7 +312,7 @@ describe('Device Manager Test', function() {
   // 3. 장치 접속 해제 'Disconnect' 발생 시 테스트 [addCommand(), 명렁 처리]
   it.skip('Behavior Operation Status', async function() {
     // 명령 자동 진행을 막기 위하여 1:1 모드로 고정함
-    deviceManager.commandStorage.currentCommandSet = {test:'test', hasOneAndOne: true};
+    deviceManager.commandStorage.currentCommandSet = {test:'test', controlInfo:{hasOneAndOne: true}};
 
 
     // [Add] Rank{2} * 1, Rank{3} * 1

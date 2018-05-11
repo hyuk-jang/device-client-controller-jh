@@ -34,8 +34,9 @@ class Commander extends AbstCommander {
       this.config = config;
       this.id = config.target_id;
       this.category = config.target_category ? config.target_category : 'etc';
-      this.hasOneAndOne = config.hasOneAndOne ? true : false;
-      this.hasErrorHandling = config.hasErrorHandling ? true : false;
+      // this.hasOneAndOne = config.hasOneAndOne ? true : false;
+      // this.hasErrorHandling = config.hasErrorHandling ? true : false;
+      this.controlInfo = config.controlInfo;
       /** Commander를 명령하는 Client 객체 */
       /** @type {AbstDeviceClient} */
       this.user = config.user || null;
@@ -83,8 +84,6 @@ class Commander extends AbstCommander {
 
   /**
    * 장치로 명령을 내림
-   * 아무런 명령을 내리지 않을 경우 해당 장치와의 연결고리를 끊지 않는다고 판단
-   * 명시적으로 hasOneAndOne을 True로 줄 해당 명령 리스트를 모두 수행하고 다음 CommandFormat으로 이동하지 않음
    * @param {commandSet} commandSet 
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */
@@ -92,7 +91,8 @@ class Commander extends AbstCommander {
     try {
       // 오브젝트가 아니라면 자동으로 생성
       if (_.isObject(commandSet)) {
-        let findSetKeyList = ['cmdList', 'commander', 'commandId', 'hasOneAndOne', 'rank', 'currCmdIndex'];
+        // let findSetKeyList = ['cmdList', 'commander', 'commandId', 'hasOneAndOne', 'rank', 'currCmdIndex'];
+        let findSetKeyList = ['cmdList', 'commander', 'commandId', 'rank', 'currCmdIndex'];
 
         let hasTypeCommandSet = _.eq(findSetKeyList.length, _.chain(commandSet).keys().intersection(findSetKeyList).value().length);
         if (hasTypeCommandSet) {
@@ -125,8 +125,9 @@ class Commander extends AbstCommander {
     // 자동 생성
     commandSet.operationStatus = definedOperationStatus.WAIT;
     commandSet.commander = this;
-    commandSet.hasOneAndOne = this.hasOneAndOne;
-    commandSet.hasErrorHandling = this.hasErrorHandling;
+    // commandSet.hasOneAndOne = this.hasOneAndOne;
+    // commandSet.hasErrorHandling = this.hasErrorHandling;
+    commandSet.controlInfo = this.controlInfo;
 
     // 배열일 경우
     if (Array.isArray(cmd)) {
@@ -179,7 +180,7 @@ class Commander extends AbstCommander {
       // 자동 생성
       commandInfo.operationStatus = definedOperationStatus.WAIT;
       commandInfo.commander = this;
-      commandInfo.hasOneAndOne = this.hasOneAndOne;
+      // commandInfo.hasOneAndOne = this.hasOneAndOne;
       return commandInfo;
 
     } catch (error) {

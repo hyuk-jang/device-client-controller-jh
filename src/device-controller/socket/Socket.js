@@ -54,12 +54,13 @@ class Socket extends AbstController {
 
   /** 장치 접속 시도 */
   async connect() {
-    BU.log('Try Connect', this.port);
+    BU.log('Try Connect : ', this.port);
     /** 접속 중인 상태라면 접속 시도하지 않음 */
     if(!_.isEmpty(this.client)){
       throw new Error(`이미 접속중입니다. ${this.port}`);
     }
 
+    BU.CLI('?');
     const client = net.createConnection(this.port, this.host);
     client.on('data', bufferData => {
       this.notifyData(bufferData);
@@ -77,7 +78,7 @@ class Socket extends AbstController {
     client.on('error', error => {
       this.notifyError(error);
     });
-    await eventToPromise.multi(client, ['connect', 'connection', 'open'], ['close, error']);
+    await eventToPromise.multi(client, ['connect', 'connection', 'open'], ['close', 'error']);
     this.client = client;
     return this.client;
   }

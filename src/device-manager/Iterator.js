@@ -329,8 +329,6 @@ class Iterator {
   clearCurrentCommandSet (dcError){
     let currentCommandSet = this.currentCommandSet;
 
-    BU.debugConsole();
-    BU.CLIN(dcError);
     if(!_.isEmpty(currentCommandSet)){
       // 에러가 존재하고 받을 대상이 있다면 전송
       if(_.isObject(dcError) && _.get(dcError, 'errorName') && this.currentReceiver){
