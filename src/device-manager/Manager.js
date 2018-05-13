@@ -33,6 +33,7 @@ class Manager extends AbstManager {
   constructor() {
     super();
 
+    this.operationTimer;
   }
 
   /** Manager를 초기화 처리 */
@@ -162,6 +163,7 @@ class Manager extends AbstManager {
         // 다음 명령을 수행해라 (강제)
       case definedCommanderResponse.NEXT:
         // BU.CLI('definedCommanderResponse.NEXT');
+        currentCommandSet.commandExecutionTimer && currentCommandSet.commandExecutionTimer.pause();
         this.updateOperationStatus(definedOperationStatus.RECEIVE_NEXT_FORCE);
         this.manageProcessingCommand();
         break;
@@ -252,6 +254,10 @@ class Manager extends AbstManager {
    * 명령 전송 실패 에러가 발생할 경우 requestProcessingCommand()로 이동
    */
   async transferCommandToDevice() {
+    // 타이머가 동작 중이라면 이전 명령 타이머 해제
+    if(_.get(this.operationTimer, 'getStateRunning') === true){
+      this.operationTimer.pause();
+    }
     // BU.log('Device write');
     // BU.CLI(this.sendMsgTimeOutSec);
     const currentCommandSet = this.iterator.currentCommandSet;
@@ -271,7 +277,8 @@ class Manager extends AbstManager {
 
     // BU.CLI('명령 요청', this.iterator.currentReceiver.id, processItem.commandExecutionTimeoutMs);
     // console.time(`timeout ${testId}`);
-    currentCommandSet.commandExecutionTimer = new CU.Timer(() => {
+    this.operationTimer = currentCommandSet.commandExecutionTimer = new CU.Timer(() => {
+      let error;
       switch (currentCommandSet.operationStatus) {
       case definedOperationStatus.REQUEST_CMD:
       case definedOperationStatus.RECEIVE_WAIT_DATA:
@@ -284,10 +291,11 @@ class Manager extends AbstManager {
         this.updateOperationStatus(definedOperationStatus.E_DATA_PART);
         break;
       default:
+        error = new Error(currentCommandSet.operationStatus);
         this.updateOperationStatus(definedOperationStatus.E_UNEXPECTED);
         break;
       }
-      return this.manageProcessingCommand();
+      return this.manageProcessingCommand(error);
     }, currentCommand.commandExecutionTimeoutMs || 1000);
   }
 
@@ -454,13 +462,15 @@ class Manager extends AbstManager {
         break;
       case definedOperationStatus.E_UNEXPECTED:
         hasError = true;
-        dcErrorFormat.errorInfo = error;
+        dcErrorFormat.errorInfo = _.isError(error) ? error : new Error(definedOperationStatus.E_UNEXPECTED);
         break;
       case definedOperationStatus.E_NON_CMD: // NOTE 현재 수행 명령이 없는 경우는 의도적인 것으로 판단하고 별다른 처리하지 않음
         break;
       default:
         break;
       }
+
+      
 
       // 에러가 있고 수신자가 있다면 메시지를 보냄
       // hasError && currentReceiver && currentReceiver.onDcError(dcErrorFormat);

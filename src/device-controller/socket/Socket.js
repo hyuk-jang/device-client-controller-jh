@@ -60,7 +60,6 @@ class Socket extends AbstController {
       throw new Error(`이미 접속중입니다. ${this.port}`);
     }
 
-    BU.CLI('?');
     const client = net.createConnection(this.port, this.host);
     client.on('data', bufferData => {
       this.notifyData(bufferData);
