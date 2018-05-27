@@ -102,7 +102,7 @@ class AbstController {
   }
 
   notifyEvent(eventName){
-    BU.CLI('notifyEvent', eventName);
+    // BU.CLI('notifyEvent', eventName);
     this.observers.forEach(observer => {
       observer.onEvent(eventName);
     });
@@ -146,7 +146,7 @@ class AbstController {
    * @param {Error} error 
    */
   notifyError(error) {
-    BU.CLI('notifyError', error);
+    // BU.CLI('notifyError', error);
     writeLogFile(this, 'mainConfig.logOption.hasDcEvent', 'event', 'notifyError', error);
     // 장치에서 이미 에러 내역을 발송한 상태라면 이벤트를 보내지 않음
     // this.notifyDisconnect();

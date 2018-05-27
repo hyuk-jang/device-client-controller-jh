@@ -116,6 +116,7 @@ class AbstDeviceClient extends EventEmitter {
    * @return {Array.<{code: string, msg: string, occur_date: Date }>}
    */
   get systemErrorList() {
+    // BU.CLI(this.commander.systemErrorList);
     return this.commander.systemErrorList === undefined ? [] : this.commander.systemErrorList;
   }
 

@@ -416,7 +416,7 @@ class Manager extends AbstManager {
       case definedOperationStatus.WAIT: // Wait
         break;
       case definedOperationStatus.WAIT_ERROR_HANDLING: // WAIT_ERROR_HANDLING
-        BU.CLI('WAIT_ERROR_HANDLING');
+        // BU.CLI('WAIT_ERROR_HANDLING');
         return false;
       case definedOperationStatus.REQUEST_CMD: // 명령을 요청중이라면 진행 X
       case definedOperationStatus.RECEIVE_WAIT_DATA: // 데이터 수신을 기다리는 중이라면 진행 X
@@ -424,10 +424,10 @@ class Manager extends AbstManager {
       case definedOperationStatus.RECEIVE_WAIT_MORE_DATA: // 더 많은 데이터 수신을 기다리는 중이라면 진행 X
         return false;
       case definedOperationStatus.RECEIVE_DATA_DONE: // 데이터 처리 완료
-        BU.CLI('RECEIVE_DATA_DONE');
+        // BU.CLI('RECEIVE_DATA_DONE');
         break;
       case definedOperationStatus.RECEIVE_NEXT_FORCE: // 강제 진행
-        BU.CLI('RECEIVE_NEXT_FORCE');
+        // BU.CLI('RECEIVE_NEXT_FORCE');
         break;
       case definedOperationStatus.PROCESSING_DELEAY_COMMAND: // 현재 명령이 Delay가 필요하다면 명령 교체
         this._sendMessageToCommander(definedCommandSetMessage.COMMANDSET_MOVE_DELAYSET);
@@ -438,8 +438,9 @@ class Manager extends AbstManager {
         this.iterator.clearCurrentCommandSet();
         break;
       case definedOperationStatus.E_DISCONNECTED_DEVICE: // 장치와의 연결이 해제될 경우에는 반복기에 처리 의뢰. AbstManager에서 이미 해당 메소드를 호출함
-        BU.CLI('E_DISCONNECTED_DEVICE');
-        return this.iterator.clearAllCommandSetStorage();
+        // BU.CLI('E_DISCONNECTED_DEVICE');
+        // return this.iterator.clearAllCommandSetStorage();
+        return false;
       case definedOperationStatus.E_TIMEOUT:
         hasError = true;
         dcErrorFormat.errorInfo = new Error(definedOperationStatus.E_TIMEOUT);

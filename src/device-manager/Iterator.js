@@ -327,12 +327,16 @@ class Iterator {
    * @return {void}
    */
   clearCurrentCommandSet (dcError){
+    BU.CLI('clearCurrentCommandSet');
     let currentCommandSet = this.currentCommandSet;
+
+    BU.CLI(currentCommandSet.commandId);
 
     if(!_.isEmpty(currentCommandSet)){
       // 에러가 존재하고 받을 대상이 있다면 전송
-      if(_.isError(_.get(dcError, 'errorInfo')) && _.get(dcError, 'errorName') && this.currentReceiver){
+      if(_.isError(_.get(dcError, 'errorInfo')) && this.currentReceiver){
         dcError.commandSet = currentCommandSet;
+        BU.CLI(this.currentReceiver.id);
         this.currentReceiver.onDcError(dcError);
       }
       currentCommandSet.commandExecutionTimer && currentCommandSet.commandExecutionTimer.pause();
@@ -388,13 +392,15 @@ class Iterator {
    * @param {dcError} dcError
    */
   clearAllCommandSetStorage(dcError) {
+    // BU.CLI('clearAllCommandSetStorage');
     // 현재 수행중인 명령 삭제
     this.clearCurrentCommandSet(dcError);
 
     // 명령 대기열에 존재하는 명령 삭제
     _.forEach(this.aggregate.standbyCommandSetList, item => {
       _.dropWhile(item.list, commandInfo => {
-        if(_.isObject(dcError) && _.get(dcError, 'errorName')  && commandInfo.commander){
+        // BU.CLIN(commandInfo);
+        if(_.isError(_.get(dcError, 'errorInfo')) && commandInfo.commander){
           dcError.commandSet = commandInfo;
           commandInfo.commander.onDcError(dcError);
         }
@@ -405,7 +411,7 @@ class Iterator {
     // 지연 명령 대기열에 존재하는 명령 삭제
     _.dropWhile(this.aggregate.delayCommandSetList, commandInfo => {
       commandInfo.commandQueueReturnTimer && commandInfo.commandQueueReturnTimer.pause();
-      if(dcError.errorName.length && commandInfo.commander){
+      if(_.isError(_.get(dcError, 'errorInfo')) && commandInfo.commander){
         dcError.commandSet = commandInfo;
         commandInfo.commander.onDcError(dcError);
       }

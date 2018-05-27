@@ -91,30 +91,28 @@ class AbstManager extends EventEmitter {
   /**
    * Device Controller에서 새로운 이벤트가 발생되었을 경우 알림
    * @param {string} eventName 'dcConnect' 연결, 'dcClose' 닫힘, 'dcError' 에러
-   * @param {*=} eventMsg 
    */
-  onEvent(eventName, eventMsg){
+  onEvent(eventName){
     // BU.log(`AbstManager --> ${eventName}`);
-    // this.emit(eventName, eventMsg);
-    
+    // Event 발송부터 처리 (systemErrorList를 처리하기 위함)    
+    /** @type {dcEvent} */
+    const returnDcEvent = {
+      eventName,
+      spreader: this
+    };
+    this.mediator.updatedDcEventOnDevice(returnDcEvent);
+
     // BU.CLIN(eventName);
     // BU.CLIN(this.deviceController.client);
+    // 연결 해제시 명령 해제 처리
     if(_.isEmpty(this.deviceController.client)){
       /** @type {dcError} */
       const returnDcError = {
-        errorInfo: eventMsg,
+        errorInfo: new Error(eventName),
         spreader: this
       };
       this.iterator.clearAllCommandSetStorage(returnDcError);
     } 
-    
-    /** @type {dcEvent} */
-    const returnDcEvent = {
-      eventName,
-      eventMsg,
-      spreader: this
-    };
-    this.mediator.updatedDcEventOnDevice(returnDcEvent);
   }
 
   /**
