@@ -156,7 +156,7 @@ class Iterator {
             this.manager.manageProcessingCommand();
           }
         } else {
-          BU.CLI('해당 명령은 삭제되었습니다.', currentCommandSet.commandId);
+          BU.CLI('The command has been removed.', currentCommandSet.commandId);
         }
       }, currentCommand.delayExecutionTimeoutMs);
       // 지연 복귀 명령 집합으로 이동
@@ -164,7 +164,7 @@ class Iterator {
       // 진행 중인 명령 집합 초기화
       this.aggregate.currentCommandSet = {};
     } else {
-      throw new Error(currentCommandSet.commandId + '는 delayMs를 가지고 있지 않습니다.');
+      throw new Error(currentCommandSet.commandId + 'Does not have delayMs.');
     }
   }
 
@@ -275,7 +275,7 @@ class Iterator {
         let nextCommandSet = this.nextCommandSet;
         // 다음 수행할 Rank가 없다면 false 반환
         if(_.isEmpty(nextCommandSet)){
-          throw new ReferenceError('다음 명령이 존재하지 않습니다.');
+          throw new ReferenceError('The following command does not exist.');
         } else {
           return this.changeNextCommandSet(nextCommandSet);
         }
@@ -315,7 +315,7 @@ class Iterator {
     // 명령이 존재하지 않을 경우
     if(_.isEmpty(standbyCommandSetList)){
       this.clearCurrentCommandSet();
-      throw new ReferenceError('다음 명령이 존재하지 않습니다.');
+      throw new ReferenceError('The following command does not exist.');
     } else {  // 명령 집합에서 첫번째 목록을 process로 가져오고 해당 배열에서 제거
       this.aggregate.currentCommandSet = standbyCommandSetList.list.shift();
     }

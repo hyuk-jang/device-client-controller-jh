@@ -48,7 +48,7 @@ class Commander extends AbstCommander {
 
       // BU.CLI(this);
     } else {
-      throw new Error(`같은 ID를 가진 장치가 있습니다.${config.target_id}`);
+      throw new Error(`I have a device with the same id. ${config.target_id}`);
       // return foundInstance.instance;
     }
 
@@ -98,10 +98,10 @@ class Commander extends AbstCommander {
         if (hasTypeCommandSet) {
           return this.manager.addCommandSet(commandSet);
         } else {
-          throw new Error('명령 형식을 확인하십시오.');
+          throw new Error('Please check the command format.');
         }
       } else {
-        throw new Error('명령 형식을 확인하십시오.');
+        throw new Error('Please check the command format.');
       }
     } catch (error) {
       throw error;
@@ -221,7 +221,7 @@ class Commander extends AbstCommander {
       if (_.has(definedCommanderResponse, key)) {
         this.manager.requestTakeAction(this, key);
       } else {
-        throw new Error(`${key}는 유효한 제어 명령이 아닙니다.`);
+        throw new Error(`${key} is not a valid control command.`);
       }
     } catch (error) {
       throw error;
@@ -267,7 +267,7 @@ class Commander extends AbstCommander {
       code: troubleCode
     });
     if (_.isEmpty(troubleObj)) {
-      throw ReferenceError('해당 Trouble Msg는 없습니다' + troubleCode);
+      throw ReferenceError('There is no such trouble message.' + troubleCode);
     }
 
     const findObj = _.find(this.systemErrorList, {

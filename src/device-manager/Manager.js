@@ -73,7 +73,7 @@ class Manager extends AbstManager {
     }
 
     if (_.isNull(controller)) {
-      throw new Error('해당 장치는 없습니다.');
+      throw new Error('There is no such device.');
     } else {
       deviceController = new controller(config, config.connect_info);
     }
@@ -140,7 +140,7 @@ class Manager extends AbstManager {
     let currentCommandSet = this.iterator.currentCommandSet;
 
     if (_.isEmpty(currentCommandSet)) {
-      throw new Error('현재 진행중인 명령은 없습니다.');
+      throw new Error('No commands are currently in progress.');
     }
 
     // 현재 진행중인 명령 객체와 일치해야지만 가능
@@ -178,7 +178,7 @@ class Manager extends AbstManager {
         break;
       }
     } else {
-      throw new Error('현재 진행중인 명령의 Commander와 일치하지 않습니다.');
+      throw new Error('It does not match the commander of the current command.');
     }
   }
 
@@ -191,7 +191,7 @@ class Manager extends AbstManager {
     // BU.CLIN(cmdInfo);
     // DeviceController 의 client가 빈 객체라면 연결이 해제된걸로 판단
     if (_.isEmpty(this.deviceController.client)) {
-      throw new Error('Device Controller가 연결되지 않았습니다.');
+      throw new Error('The device is not connected.');
     }
     this.iterator.addCmd(commandSet);
     return this.manageProcessingCommand();
@@ -511,7 +511,7 @@ class Manager extends AbstManager {
         
         // 모든 명령 수행 완료
         if (_.isEmpty(nextCommandSet)) {
-          BU.CLI('모든 명령을 수행하였습니다.');
+          BU.CLI('Complate All Command');
           // BU.CLIN(this.iterator.currentCommandSet);
           this.iterator.clearCurrentCommandSet();
           this.hasPerformCommand = false;
@@ -525,7 +525,7 @@ class Manager extends AbstManager {
         return this.nextCommand();
       }
     } else { // 현재 명령이 진행중이 아니라면
-      BU.CLI('명령 재진행 체크', );
+      BU.CLI('Command Check');
       // 현재 진행중인 명령이 없고
       if (_.isEmpty(currentCommandSet)) {
         // OneAndOne이 아니고, Next CommandSet이 존재한다면

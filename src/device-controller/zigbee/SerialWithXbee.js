@@ -50,7 +50,7 @@ class SerialWithXbee extends AbstController{
       if (frameObj.type === 0x8B) {
         if(frameObj.id !== this.currentFrameId){
           // This frame is definitely the response!
-          this.notifyError(new Error(`요청한 frameId가 맞지 않습니다. 요청 Id: ${this.currentFrameId}, 응답 Id: ${frameObj.id}`));
+          this.notifyError(new Error(`The frameId is not correct. Request Id: ${this.currentFrameId}, Response Id: ${frameObj.id}`));
         }
         // console.log('Node identifier:', String.fromCharCode(frameObj.commandData));
       } else {
@@ -67,7 +67,7 @@ class SerialWithXbee extends AbstController{
    */
   async write(frame_obj) {
     if(_.isEmpty(this.client)){
-      throw new Error(`장치와 접속이 수행되지 않았습니다. ${this.port}`);
+      throw new Error(`The device is not connected. ${this.port}`);
     }
 
     this.currentFrameId = frame_obj.id;
@@ -78,7 +78,7 @@ class SerialWithXbee extends AbstController{
     /** @type {xbeeApi_0x8B} */
     let frameData = await eventToPromise(this.client, 'data');
     if(frameData.deliveryStatus === 0 ){
-      throw new Error('데이터 전송 실패');
+      throw new Error('Data transfer failed');
     }
     return true;
   }
@@ -86,7 +86,7 @@ class SerialWithXbee extends AbstController{
   async connect() {
     /** 접속 중인 상태라면 접속 시도하지 않음 */
     if(!_.isEmpty(this.client)){
-      throw new Error(`이미 접속중입니다. ${this.port}`);
+      throw new Error(`Already connected. ${this.port}`);
     }
     const client = new serialport(this.port, {
       baudRate: this.baud_rate,

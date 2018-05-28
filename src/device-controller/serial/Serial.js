@@ -48,7 +48,7 @@ class Serial extends AbstController{
   async connect() {
     /** 접속 중인 상태라면 접속 시도하지 않음 */
     if(!_.isEmpty(this.client)){
-      throw new Error(`이미 접속중입니다. ${this.port}`);
+      throw new Error(`Already connected. ${this.port}`);
     }
     
     const client = new serialport(this.port, {

@@ -94,7 +94,7 @@ class Mediator extends AbstMediator {
     // BU.CLIN(deviceCommander)
     let foundIt = _.find(this.relationList, {commander: deviceCommander});
     if(_.isEmpty(foundIt)){
-      throw new Error(`해당 Commander(${deviceCommander.id})는 장치를 가지고 있지 않습니다.`);
+      throw new Error(`The Commander(${deviceCommander.id}) does not have a device.`);
     }
     return foundIt.manager;
   }
@@ -153,7 +153,7 @@ class Mediator extends AbstMediator {
   getDeviceCommander(deviceManager){
     const foundIt = _.filter(this.relationList, {manager: deviceManager});
     if(_.isEmpty(foundIt)){
-      throw new Error(`해당 Manager(${deviceManager.deviceController})는 Commander를 가지고 있지 않습니다.`);
+      throw new Error(`The Manager(${deviceManager.deviceController}) does not have a command`);
     }
     const commanderList = _.map(foundIt, 'commander');
     return commanderList;

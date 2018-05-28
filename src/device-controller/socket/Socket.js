@@ -57,7 +57,7 @@ class Socket extends AbstController {
     BU.log('Try Connect : ', this.port);
     /** 접속 중인 상태라면 접속 시도하지 않음 */
     if(!_.isEmpty(this.client)){
-      throw new Error(`이미 접속중입니다. ${this.port}`);
+      throw new Error(`Already connected. ${this.port}`);
     }
 
     const client = net.createConnection(this.port, this.host);
@@ -86,7 +86,6 @@ class Socket extends AbstController {
    * Close Connect
    */
   async disconnect(){
-    BU.CLI('????');
     if(!_.isEmpty(this.client)){
       this.client.destroy(err => {
         return this.client;
