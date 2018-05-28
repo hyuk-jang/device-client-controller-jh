@@ -200,7 +200,7 @@ class AbstDeviceClient extends EventEmitter {
         strManagerInfo += `${key}: ${info}, `;
       });
     } else {
-      strManagerInfo = _.get(dcEvent.spreader, 'id');
+      strManagerInfo = _.get(dcEvent.spreader, 'configInfo');
     }
     BU.log(`${dcEvent.eventName} --> commander: ${_.get(this.commander, 'id')}, connInfo: ${strManagerInfo}`);
   }
