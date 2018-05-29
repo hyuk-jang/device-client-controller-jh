@@ -10,7 +10,7 @@ const AbstDeviceClient = require('../device-client/AbstDeviceClient');
 
 require('../format/define');
 const {
-  writeLogFile
+  writeLogFile, getDefaultControlInfo, getDefaultLogOption
 } = require('../util/dcUtil');
 const {
   definedCommandSetRank,
@@ -33,14 +33,12 @@ class Commander extends AbstCommander {
     if (_.isEmpty(foundInstance)) {
       this.config = config;
       this.id = config.target_id;
-      this.category = config.target_category ? config.target_category : 'etc';
-      // this.hasOneAndOne = config.hasOneAndOne ? true : false;
-      // this.hasErrorHandling = config.hasErrorHandling ? true : false;
-      this.controlInfo = config.controlInfo;
+      this.category = config.target_category || 'etc';
+      this.controlInfo = config.controlInfo || getDefaultControlInfo();
       /** Commander를 명령하는 Client 객체 */
       /** @type {AbstDeviceClient} */
       this.user = config.user || null;
-      this.logOption = config.logOption;
+      this.logOption = config.logOption || getDefaultLogOption();
       instanceList.push({
         id: config.target_id,
         instance: this

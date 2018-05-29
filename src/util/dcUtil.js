@@ -6,14 +6,7 @@ const AbstManager = require('../device-manager/AbstManager');
 const {BU} = require('base-util-jh');
 
 
-
-/**
- * @typedef {Object} logOption
- * @param {Object} logObj data, event, error, ...
- * @param {string} eventType event, data, error
- * @param {string=} dataTitle log event Type
- * @param {*=} data 
- */
+require('../format/define');
 // @param {logObj: Object, path: string, eventType: string, dataTitle: string, data:*=} logInfo
 
 /**
@@ -87,3 +80,30 @@ function initManager(manager, commander){
   manager.iterator.clearAllCommandSetStorage();
 }
 exports.initManager = initManager;
+
+/**
+ * @return {controlInfo}
+ */
+function getDefaultControlInfo(){
+  return {
+    hasOneAndOne: false,
+    hasReconnect: false,
+    hasErrorHandling: false
+  };
+}
+exports.getDefaultControlInfo = getDefaultControlInfo;
+
+/**
+ * @return {logOption}
+ */
+function getDefaultLogOption(){
+  return {
+    hasCommanderResponse: false,
+    hasDcError: false,
+    hasDcEvent: false,
+    hasDcMessage: false,
+    hasReceiveData: false,
+    hasTransferCommand: false
+  };
+}
+exports.getDefaultLogOption = getDefaultLogOption;
