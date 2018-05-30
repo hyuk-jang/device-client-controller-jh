@@ -327,16 +327,13 @@ class Iterator {
    * @return {void}
    */
   clearCurrentCommandSet (dcError){
-    BU.CLI('clearCurrentCommandSet');
+    // BU.CLI('clearCurrentCommandSet');
     let currentCommandSet = this.currentCommandSet;
-
-    BU.CLI(currentCommandSet.commandId);
 
     if(!_.isEmpty(currentCommandSet)){
       // 에러가 존재하고 받을 대상이 있다면 전송
       if(_.isError(_.get(dcError, 'errorInfo')) && this.currentReceiver){
         dcError.commandSet = currentCommandSet;
-        BU.CLI(this.currentReceiver.id);
         this.currentReceiver.onDcError(dcError);
       }
       currentCommandSet.commandExecutionTimer && currentCommandSet.commandExecutionTimer.pause();
