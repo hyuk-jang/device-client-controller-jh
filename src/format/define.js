@@ -51,9 +51,10 @@
  * @typedef {Object} deviceClientConstructionInfo Device Client 생성 자료 구조
  * @property {string} target_id device ID
  * @property {string} target_category inverter, connector, weather
+ * @property {string=} target_name IVT_001, IVT_002, 인버터 1, alias
  * @property {logOption=} logOption 일어나는 이벤트에 대해 FileSystem 처리할 항목
  * @property {controlInfo} controlInfo DCC를 제어하는데 있어 운영상 필요한 boolean 값 모음
- * @property {connectInfo} connect_info 장치와의 접속 정보
+ * @property {connect_info} connect_info 장치와의 접속 정보
  */
 // * @property {boolean} hasOneAndOne 계속하여 연결을 수립할지 여부
 // * @property {boolean} hasErrorHandling 에러가 발생하였을 경우 다음 명령 진행을 멈출지 여부
@@ -78,7 +79,7 @@
 
 
 /**
- * @typedef {Object} connectInfo 장치와의 접속 정보
+ * @typedef {Object} connect_info 장치와의 접속 정보
  * @property {string} type 'socket', 'serial', 'zigbee', ...
  * @property {string=} subType 'parser', 'xbee', ....
  * @property {number=} baudRate 

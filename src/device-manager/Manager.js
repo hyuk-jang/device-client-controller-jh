@@ -45,6 +45,7 @@ class Manager extends AbstManager {
     let deviceController = null;
     let controller = null;
 
+    // BU.CLI(config);
     switch (config.connect_info.type) {
     case 'serial':
       switch (config.connect_info.subType) {
