@@ -35,6 +35,16 @@ class AbstDeviceClient extends EventEmitter {
     this.definedOperationError = definedOperationError;
   }
 
+  /**
+   * 접속되어 있는 SerialPort List를 반환
+   * @return {Promise.<{comName: string, serialNumber: Buffer, pnpId: string}[]>}}
+   */
+  async getSerialList() {
+    const serialport = require('serialport');
+    const serialList = await serialport.list();
+    return serialList;
+  }
+
   // Builder
   /**
    * Create 'Commander', 'Manager' And Set Property 'commander', 'manager'
