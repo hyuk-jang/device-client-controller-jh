@@ -47,3 +47,5 @@
                                                 //   when sending A LOT of packets, you might want to decrease
                                                 //   this to a smaller value (but typically not less than 128)
  */
+
+module;

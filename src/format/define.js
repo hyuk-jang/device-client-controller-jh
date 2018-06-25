@@ -133,3 +133,5 @@
  * @property {Timer=} connectTimer 장치와의 접속 수립을 위한 타이머
  */ 
   
+
+module;
