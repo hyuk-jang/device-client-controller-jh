@@ -213,6 +213,23 @@ class AbstDeviceClient extends EventEmitter {
       strManagerInfo = _.get(dcEvent.spreader, 'configInfo');
     }
     BU.log(`${dcEvent.eventName} --> commander: ${_.get(this.commander, 'id')}, connInfo: ${strManagerInfo}`);
+
+    try {
+      switch (dcEvent.eventName) {
+      case this.definedControlEvent.CONNECT:
+        break;
+      case this.definedControlEvent.DISCONNECT:
+        break;
+      case this.definedControlEvent.DATA:
+        break;
+      case this.definedControlEvent.DEVICE_ERROR:
+        break;
+      default:
+        break;
+      }
+    } catch (error) {
+      BU.CLI(error.message);
+    }
   }
 
 
@@ -223,6 +240,27 @@ class AbstDeviceClient extends EventEmitter {
    */
   onDcMessage(dcMessage) {
     BU.CLI(dcMessage.msgCode, `commanderId: ${_.get(dcMessage.commandSet.commander, 'id')}, commandSetId: ${_.get(dcMessage.commandSet, 'commandId')}`);
+
+    const message = _.get(dcMessage, 'msgCode');
+    switch (message) {
+    // 명령 요청 시작
+    case this.definedCommandSetMessage.COMMANDSET_EXECUTION_START:
+      break;
+      // 계측이 완료되면 Observer에게 알림
+    case this.definedCommandSetMessage.COMMANDSET_EXECUTION_TERMINATE:
+      break;
+      // 지연 명령으로 이동
+    case this.definedCommandSetMessage.COMMANDSET_MOVE_DELAYSET:
+      break;
+      // 1:1 통신
+    case this.definedCommandSetMessage.ONE_AND_ONE_COMUNICATION:
+      break;
+      // 명령 삭제됨
+    case this.definedCommandSetMessage.COMMANDSET_DELETE:
+      break;
+    default:
+      break;
+    }
   }
 
   /**
@@ -242,6 +280,24 @@ class AbstDeviceClient extends EventEmitter {
    */
   onDcError(dcError) {
     BU.CLI(dcError.errorInfo, `commanderId: ${_.get(dcError.commandSet.commander, 'id')}, commandSetId: ${_.get(dcError.commandSet, 'commandId')}`);
+
+    const message = _.get(dcError, 'errorInfo.message');
+
+    switch (message) {
+    case this.definedOperationError.E_TIMEOUT:
+      break;
+    case this.definedOperationError.E_RETRY_MAX:
+      break;
+    case this.definedOperationError.E_UNHANDLING_DATA:
+      break;
+    case this.definedOperationError.E_UNEXPECTED:
+      break;
+    case this.definedOperationError.E_NON_CMD:
+      break;
+    default:
+      break;
+    }
+
   }
 
 
