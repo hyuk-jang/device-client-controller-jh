@@ -198,8 +198,11 @@ class AbstDeviceClient extends EventEmitter {
 
   /**
    * Device Controller 변화가 생겨 관련된 전체 Commander에게 뿌리는 Event
-   * @interface
+   * @abstract 
    * @param {dcEvent} dcEvent 'dcConnect', 'dcClose', 'dcError'
+   * @example 보통 장치 연결, 해제에서 발생
+   * dcConnect --> 장치 연결, 
+   * dcDisconnect --> 장치 연결 해제
    */
   updatedDcEventOnDevice(dcEvent) {
     const managerIdInfo = _.get(dcEvent.spreader, 'id');
@@ -235,6 +238,7 @@ class AbstDeviceClient extends EventEmitter {
 
 
   /**
+   * @abstract 
    * 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트
    * @param {dcMessage} dcMessage 현재 장비에서 실행되고 있는 명령 객체
    */
@@ -265,7 +269,7 @@ class AbstDeviceClient extends EventEmitter {
 
   /**
    * 장치로부터 데이터 수신
-   * @interface
+   * @abstract 
    * @param {dcData} dcData 현재 장비에서 실행되고 있는 명령 객체
    */
   onDcData(dcData) {
@@ -275,6 +279,7 @@ class AbstDeviceClient extends EventEmitter {
 
 
   /**
+   * @abstract 
    * 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트
    * @param {dcError} dcError 현재 장비에서 실행되고 있는 명령 객체
    */
