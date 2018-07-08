@@ -22,7 +22,7 @@
     "mocha": "^5.0.4"
   },
   "dependencies": {
-    "base-util-jh": "^1.1.6",
+    "base-util-jh": "^1.1.7",
     "bluebird": "^3.5.1",
     "event-to-promise": "^0.8.0",
     "lodash": "^4.17.10",
