@@ -20,6 +20,9 @@ function writeLogFile(logObj, path, eventType, dataTitle, data){
   // BU.CLIS(path, eventType, dataTitle, data, _.get(logObj, path));
   if(_.get(logObj, path)){
     let id = _.get(logObj, 'id', 'etc');
+    if(_.isObject(id)){
+      id = _.get(logObj, 'iterator.currentReceiver.id', '');
+    }
     if(data === undefined){
       BU.appendFile(`./log/device-client/${eventType}/${BU.convertDateToText(new Date(), '', 2)}.txt`, `${id} : ${dataTitle}`);
     } else {

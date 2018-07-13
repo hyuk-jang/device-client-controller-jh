@@ -83,7 +83,7 @@
  * @property {string} type 'socket', 'serial', 'zigbee', ...
  * @property {string=} subType 'parser', 'xbee', ....
  * @property {number=} baudRate 
- * @property {string=|number=} port 
+ * @property {string|number=} port 
  * @property {string=} host 접속 경로(socket 일 경우 사용)
  * @property {Object=} addConfigInfo type, subType의 Contoller에서 요구하는 추가 접속 정보
  */
