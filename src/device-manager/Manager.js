@@ -3,10 +3,8 @@
 const _ = require('lodash');
 const Promise = require('bluebird');
 
-const {
-  BU,
-  CU
-} = require('base-util-jh');
+// const {BU, CU} = require('base-util-jh');
+const {BU, CU} = require('../../../base-util-jh');
 
 const AbstCommander = require('../device-commander/AbstCommander');
 const AbstMediator = require('../device-mediator/AbstMediator');
@@ -24,6 +22,8 @@ const {
 const {
   writeLogFile
 } = require('../util/dcUtil');
+
+const Socket = require('../device-controller/socket/Socket');
 
 require('../format/define');
 // DeviceManager는 DeviceController와 1:1 매칭.
@@ -67,7 +67,7 @@ class Manager extends AbstManager {
       }
       break;
     case 'socket':
-      controller = require('../device-controller/socket/Socket');
+      controller = Socket;
       break;
     default:
       break;
@@ -235,6 +235,20 @@ class Manager extends AbstManager {
     if (receiver === null) {
       BU.log('Not set Responder --> Completed Data', data);
     } else {
+      // Socket 통신이고 데이터가 Object 형태라면 변환하여 반환
+      if(this.deviceController instanceof Socket){
+        const strData = data.toString();
+        if(BU.IsJsonString(strData)){
+          const jsonData = JSON.parse(strData);
+          _.forEach(jsonData, (v, k) => {
+            if(_.get(v, 'type') === 'Buffer'){
+              jsonData[k] = Buffer.from(v);
+            }
+          });
+          data = jsonData;
+        }
+      }
+      
       /** @type {dcData} */
       const returnValue = {
         data,
@@ -272,6 +286,10 @@ class Manager extends AbstManager {
     writeLogFile(this, 'config.logOption.hasTransferCommand', 'data', 'transferData', currentCommand.data);
 
     // BU.CLI('transferCommandToDevice', currentCommand.data);
+    // Socket 통신이고 데이터가 Object 형태라면 Buffer로 변환. TEST 코드에 사용됨.
+    if(this.deviceController instanceof Socket && typeof currentCommand.data === 'object'){
+      currentCommand.data = JSON.stringify(currentCommand.data);
+    }
     await this.deviceController.write(currentCommand.data);
     // 명령 전송이 성공하였으므로 데이터 수신 상태로 변경
     this.updateOperationStatus(definedOperationStatus.RECEIVE_WAIT_DATA);

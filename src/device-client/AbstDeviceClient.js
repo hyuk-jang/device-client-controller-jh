@@ -243,7 +243,7 @@ class AbstDeviceClient extends EventEmitter {
    * @param {dcMessage} dcMessage 현재 장비에서 실행되고 있는 명령 객체
    */
   onDcMessage(dcMessage) {
-    BU.CLI(dcMessage.msgCode, `commanderId: ${_.get(dcMessage.commandSet.commander, 'id')}, commandSetId: ${_.get(dcMessage.commandSet, 'commandId')}`);
+    BU.CLIS(`commanderId: ${_.get(dcMessage.commandSet.commander, 'id')}, commandSetId: ${_.get(dcMessage.commandSet, 'commandId')}`, dcMessage.msgCode);
 
     const message = _.get(dcMessage, 'msgCode');
     switch (message) {
@@ -273,7 +273,7 @@ class AbstDeviceClient extends EventEmitter {
    * @param {dcData} dcData 현재 장비에서 실행되고 있는 명령 객체
    */
   onDcData(dcData) {
-    BU.CLI(dcData.data, `commanderId: ${_.get(dcData.commandSet.commander, 'id')}, commandSetId: ${_.get(dcData.commandSet, 'commandId')}`);
+    BU.CLIS(`commanderId: ${_.get(dcData.commandSet.commander, 'id')}, commandSetId: ${_.get(dcData.commandSet, 'commandId')}`, dcData.data);
   }
 
 
@@ -284,7 +284,7 @@ class AbstDeviceClient extends EventEmitter {
    * @param {dcError} dcError 현재 장비에서 실행되고 있는 명령 객체
    */
   onDcError(dcError) {
-    BU.CLI(dcError.errorInfo, `commanderId: ${_.get(dcError.commandSet.commander, 'id')}, commandSetId: ${_.get(dcError.commandSet, 'commandId')}`);
+    BU.CLIS(`commanderId: ${_.get(dcError.commandSet.commander, 'id')}, commandSetId: ${_.get(dcError.commandSet, 'commandId')}`, dcError.errorInfo);
 
     const message = _.get(dcError, 'errorInfo.message');
 

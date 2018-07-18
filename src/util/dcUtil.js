@@ -28,7 +28,13 @@ function writeLogFile(logObj, path, eventType, dataTitle, data){
     } else {
       let realData = '';
       if(Buffer.isBuffer(data)){
-        realData = data.toString('hex');
+        // FIXME: Hex 파일 형태로 저장할 경우 보완
+        // if(eventType === 'data' && dataTitle === 'onData'){
+        //   let bufData = Buffer.concat([Buffer.from(BU.convertDateToText(new Date(), null, 2)), Buffer.from(`${id}>`), data, Buffer.from('<')]);
+        //   BU.writeFile(`./log/device-client/${eventType}/${BU.convertDateToText(new Date(), '', 2)}.hex`, bufData);
+        // }
+        // realData = data.toString('hex');
+        realData = data.toString();
       } else if(data instanceof Error){
         realData = data;
       } else if(_.isObject(data)){
