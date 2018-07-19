@@ -6,8 +6,10 @@ const {BU, CU} = require('base-util-jh');
 const Manager = require('./Manager');
 const AbstCommander = require('../device-commander/AbstCommander');
 
-const {definedOperationStatus, definedCommandSetRank} = require('../format/moduleDefine');
-require('../format/define');
+const {
+  definedCommandSetRank,
+  definedOperationStatus
+} = require('../../../default-intelligence').dccFlagModel;
 
 class Iterator {
   /** @param {Manager} deviceManager */

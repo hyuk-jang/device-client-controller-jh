@@ -17,8 +17,7 @@ global.BU = BU;
 
 const {
   definedControlEvent
-} = require('../src/format/moduleDefine');
-require('../src/format/define');
+} = require('../../default-intelligence').dccFlagModel;
 
 const EventEmitter = require('events');
 

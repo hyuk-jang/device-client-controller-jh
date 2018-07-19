@@ -8,13 +8,12 @@ const AbstManager = require('../device-manager/AbstManager');
 
 const {writeLogFile} = require('../util/dcUtil');
 
-require('../format/define');
-const {definedControlEvent} = require('../format/moduleDefine');
+const {definedControlEvent} = require('../../../default-intelligence').dccFlagModel;
 
 class AbstController {
   /**
    * Device Controller 객체를 생성하기 위한 설정 정보
-   * @param {deviceClientConstructionInfo} mainConfig
+   * @param {deviceInfo} mainConfig
    */
   constructor(mainConfig) {
     this.mainConfig = mainConfig;

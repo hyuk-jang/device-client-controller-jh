@@ -6,8 +6,6 @@ const AbstMediator = require('./AbstMediator');
 const AbstCommander = require('../device-commander/AbstCommander');
 const AbstManager = require('../device-manager/AbstManager');
 
-require('../format/define');
-
 
 let instance;
 class Mediator extends AbstMediator {

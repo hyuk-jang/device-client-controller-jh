@@ -3,7 +3,7 @@
 const AbstCommander = require('../device-commander/AbstCommander');
 const AbstManager = require('../device-manager/AbstManager');
 const AbstMediator  = require('../device-mediator/AbstMediator');
-require('../format/define');
+require('../../../default-intelligence');
 
 /** @abstract */
 class AbstBuilder {
@@ -13,7 +13,7 @@ class AbstBuilder {
 
   /**
    * Create 'Commander', 'Manager'
-   * @param {deviceClientConstructionInfo} config 
+   * @param {deviceInfo} config 
    * @return {{deviceCommander: AbstCommander, deviceManager: AbstManager}}
    */
   setDeviceClient(config){
@@ -23,7 +23,7 @@ class AbstBuilder {
 
   // /**
   //  * Create 'Multi Commander', 'Manager'
-  //  * @param {deviceClientConstructionInfo} config 
+  //  * @param {deviceInfo} config 
   //  * @param {string} idList 
   //  * @return {{commanderList: Array.<AbstCommander>, deviceManager: AbstManager}}
   //  */
@@ -38,7 +38,7 @@ class AbstBuilder {
 
   // /**
   //  * Create 'Commander'
-  //  * @param {deviceClientConstructionInfo} config 
+  //  * @param {deviceInfo} config 
   //  * @return {AbstCommander}
   //  */
   // addCommander(){
@@ -47,7 +47,7 @@ class AbstBuilder {
 
   // /**
   //  * Create 'Manager'
-  //  * @param {deviceClientConstructionInfo} config 
+  //  * @param {deviceInfo} config 
   //  * @return {AbstManager}
   //  */
   // addManager(){

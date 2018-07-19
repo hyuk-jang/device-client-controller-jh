@@ -4,8 +4,6 @@ const AbstMediator = require('../device-mediator/AbstMediator');
 const AbstManager = require('../device-manager/AbstManager');
 const AbstDeviceClient = require('../device-client/AbstDeviceClient');
 
-require('../format/define');
-
 class AbstCommander {
   constructor() {
     this.protocolConverter = {};

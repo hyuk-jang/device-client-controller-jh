@@ -16,10 +16,8 @@ const {
   definedCommandSetMessage,
   definedCommandSetRank,
   definedControlEvent,
-  definedOperationError
-} = require('../format/moduleDefine');
-require('../format/define');
-
+  definedOperationError,
+} = require('../../../default-intelligence').dccFlagModel;
 class AbstDeviceClient extends EventEmitter {
   constructor() {
     super();
@@ -48,7 +46,7 @@ class AbstDeviceClient extends EventEmitter {
   // Builder
   /**
    * Create 'Commander', 'Manager' And Set Property 'commander', 'manager'
-   * @param {deviceClientConstructionInfo} config 
+   * @param {deviceInfo} config 
    */
   setDeviceClient(config) {
     try {
@@ -65,9 +63,9 @@ class AbstDeviceClient extends EventEmitter {
   // Default
   /**
    * Device와 연결을 수립하고 제어하고자 하는 컨트롤러를 생성하기 위한 생성 설정 정보를 가져옴
-   *  @return {deviceClientConstructionInfo} */
+   *  @return {deviceInfo} */
   getDefaultCreateDeviceConfig() {
-    /** @type {deviceClientConstructionInfo} */
+    /** @type {deviceInfo} */
     const generationConfigInfo = {
       target_id: '',
       target_category: '',

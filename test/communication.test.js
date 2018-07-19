@@ -11,12 +11,10 @@ global.BU = BU;
 // console.log(uuidv4());
 const Builder = require('../src/device-builder/Builder');
 
-require('../src/format/define');
-
 let config = [];
   
 for(let i = 0; i < 1; i += 1){
-  /** @type {deviceClientConstructionInfo} */
+  /** @type {deviceInfo} */
   let addObj = {};
   addObj.target_id = `device_${i}`;
   addObj.connect_type = 'socket';

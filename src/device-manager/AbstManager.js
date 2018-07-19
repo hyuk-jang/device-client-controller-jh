@@ -6,8 +6,6 @@ const eventToPromise = require('event-to-promise');
 const AbstCommander = require('../device-commander/AbstCommander');
 const AbstMediator = require('../device-mediator/AbstMediator');
 
-require('../format/define');
-
 const EventEmitter = require('events');
 
 class AbstManager extends EventEmitter {

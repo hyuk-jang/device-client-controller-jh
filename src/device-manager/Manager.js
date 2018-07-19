@@ -1,8 +1,6 @@
 'use strict';
 
 const _ = require('lodash');
-const Promise = require('bluebird');
-
 // const {BU, CU} = require('base-util-jh');
 const {BU, CU} = require('../../../base-util-jh');
 
@@ -13,11 +11,13 @@ const AbstManager = require('./AbstManager');
 
 const Iterator = require('./Iterator');
 
+
 const {
-  definedOperationStatus,
+  definedCommanderResponse,
   definedCommandSetMessage,
-  definedCommanderResponse
-} = require('../format/moduleDefine');
+  definedOperationStatus
+} = require('../../../default-intelligence').dccFlagModel;
+
 
 const {
   writeLogFile
@@ -25,7 +25,8 @@ const {
 
 const Socket = require('../device-controller/socket/Socket');
 
-require('../format/define');
+require('../../../default-intelligence');
+
 // DeviceManager는 DeviceController와 1:1 매칭.
 const instanceList = [];
 /** @class DeviceManager */
@@ -37,9 +38,8 @@ class Manager extends AbstManager {
   }
 
   /** Manager를 초기화 처리 */
-  /** @param {deviceClientConstructionInfo} config */
-
   /** Builder에서 요청 메소드 */
+  /** @param {deviceInfo} config */
   setManager(config) {
     /** @type {AbstController} */
     let deviceController = null;

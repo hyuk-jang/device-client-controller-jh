@@ -1,7 +1,7 @@
 
 const AbstDeviceClient = require('./src/device-client/AbstDeviceClient');
-// require('./src/format/define');
-// require('./src/format/controllerConstructor');
+
+require('../default-intelligence');
 module.exports = AbstDeviceClient;
 
 // if __main process

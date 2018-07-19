@@ -5,8 +5,6 @@ const AbstManager = require('../device-manager/AbstManager');
 
 const {BU} = require('base-util-jh');
 
-
-require('../format/define');
 // @param {logObj: Object, path: string, eventType: string, dataTitle: string, data:*=} logInfo
 
 /**
@@ -71,7 +69,7 @@ function initManager(manager, commander){
     },
     id: {port:3000}
   };
-  /** @type {deviceClientConstructionInfo} */
+  /** @type {deviceInfo} */
   manager.config = {};
   manager.config.logOption = {
     hasCommanderResponse: true,

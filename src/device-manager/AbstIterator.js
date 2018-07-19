@@ -1,5 +1,4 @@
 'use strict';
-require('../format/define');
 class AbstIterator {
   constructor() {
   }

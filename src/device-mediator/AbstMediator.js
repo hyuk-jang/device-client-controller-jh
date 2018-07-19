@@ -3,8 +3,6 @@ const AbstCommander = require('../device-commander/AbstCommander');
 const AbstController = require('../device-controller/AbstController');
 const AbstManager = require('../device-manager/AbstManager');
 
-require('../format/define');
-
 class AbstMediator {
   constructor() {
   }

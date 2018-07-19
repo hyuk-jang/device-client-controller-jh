@@ -13,8 +13,6 @@ const Manager = require('../device-manager/Manager');
 const AbstBuilder = require('./AbstBuilder');
  
 
-require('../format/define');
-
 class Builder extends AbstBuilder {
   constructor() {
     super();
@@ -24,7 +22,7 @@ class Builder extends AbstBuilder {
 
   /**
    * Create 'Commander', 'Manager'
-   * @param {deviceClientConstructionInfo} config 
+   * @param {deviceInfo} config 
    * @return {{deviceCommander: AbstCommander, deviceManager: AbstManager}}
    */
   setDeviceClient(config){
@@ -45,7 +43,7 @@ class Builder extends AbstBuilder {
   
   // /**
   //  * Create 'Multi Commander', 'Manager'
-  //  * @param {deviceClientConstructionInfo} config 
+  //  * @param {deviceInfo} config 
   //  * @param {string} idList 
   //  * @return {{commanderList: Array.<AbstCommander>, deviceManager: AbstManager}}
   //  */
@@ -77,7 +75,7 @@ class Builder extends AbstBuilder {
 
     
   /**
-   * @param {deviceClientConstructionInfo} config 
+   * @param {deviceInfo} config 
    * @return {AbstCommander}
    */
   setDeviceCommnader(config) {
@@ -93,7 +91,7 @@ class Builder extends AbstBuilder {
   }
 
   /**
-   * @param {deviceClientConstructionInfo} config 
+   * @param {deviceInfo} config 
    * @return {AbstManager}
    */
   setDeviceManager(config) {
@@ -106,7 +104,7 @@ class Builder extends AbstBuilder {
 
   // /**
   //  * Create 'Commander'
-  //  * @param {deviceClientConstructionInfo} config 
+  //  * @param {deviceInfo} config 
   //  * @return {AbstCommander}
   //  */
   // addCommander(config){
@@ -122,7 +120,7 @@ class Builder extends AbstBuilder {
 
   // /**
   //  * Create 'Manager'
-  //  * @param {deviceClientConstructionInfo} config 
+  //  * @param {deviceInfo} config 
   //  * @return {AbstManager}
   //  */
   // addManager(){

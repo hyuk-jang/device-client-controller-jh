@@ -27,12 +27,17 @@ const SocketDeviceController = require('../src/device-controller/socket/Socket')
 const Manager = require('../src/device-manager/Manager');
 
 
-const {definedCommandSetRank, definedCommandSetMessage, definedCommanderResponse} = require('../src/format/moduleDefine');
-require('../src/format/define');
+const {
+  definedCommanderResponse,
+  definedCommandSetMessage,
+  definedCommandSetRank,
+} = require('../../default-intelligence').dccFlagModel;
+
+
 const {initManager} =  require('../src/util/dcUtil');
 
 
-/** @type {deviceClientConstructionInfo} config */
+/** @type {deviceInfo} config */
 const constructorInfo = {
   target_id: 'test1',
   target_category: 'sub_test1',

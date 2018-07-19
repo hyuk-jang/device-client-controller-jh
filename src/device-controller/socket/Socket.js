@@ -3,7 +3,7 @@ const _ = require('lodash');
 const net = require('net');
 const eventToPromise = require('event-to-promise');
 
-const {BU, CU} = require('base-util-jh');
+const {BU} = require('base-util-jh');
 
 const AbstController = require('../AbstController');
 require('../../format/controllerConstructor');
@@ -14,7 +14,7 @@ let instanceList = [];
 class Socket extends AbstController {
   /**
    * Socket Client 접속 설정 정보
-   * @param {deviceClientConstructionInfo} mainConfig
+   * @param {deviceInfo} mainConfig
    * @param {constructorSocket} connectInfo Socket Port
    */
   constructor(mainConfig, connectInfo) {
@@ -87,7 +87,7 @@ class Socket extends AbstController {
    */
   async disconnect(){
     if(!_.isEmpty(this.client)){
-      this.client.destroy(err => {
+      this.client.destroy(() => {
         return this.client;
       });
     } else {

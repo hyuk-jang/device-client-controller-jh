@@ -8,23 +8,23 @@ const AbstMediator = require('../device-mediator/AbstMediator');
 const AbstManager = require('../device-manager/AbstManager');
 const AbstDeviceClient = require('../device-client/AbstDeviceClient');
 
-require('../format/define');
 const {
   writeLogFile, getDefaultControlInfo, getDefaultLogOption
 } = require('../util/dcUtil');
+
 const {
-  definedCommandSetRank,
-  definedOperationStatus,
-  definedCommandSetMessage,
   definedCommanderResponse,
+  definedCommandSetMessage,
+  definedCommandSetRank,
   definedControlEvent,
-  definedOperationError
-} = require('../format/moduleDefine');
+  definedOperationError,
+  definedOperationStatus
+} = require('../../../default-intelligence').dccFlagModel;
 
 const instanceList = [];
 
 class Commander extends AbstCommander {
-  /** @param {deviceClientConstructionInfo} config */
+  /** @param {deviceInfo} config */
   constructor(config) {
     super();
     let foundInstance = _.find(instanceList, {

@@ -20,8 +20,13 @@ const SocketDeviceController = require('../src/device-controller/socket/Socket')
 // console.log(uuidv4());
 const DeviceManager = require('../src/device-manager/Manager');
 
-const {definedCommandSetRank, definedOperationStatus, definedCommanderResponse} = require('../src/format/moduleDefine');
-require('../src/format/define');
+const {
+  definedCommandSetRank,
+  definedCommanderResponse,
+  definedOperationStatus
+} = require('../../default-intelligence').dccFlagModel;
+
+
 const {initManager} =  require('../src/util/dcUtil');
 
 
