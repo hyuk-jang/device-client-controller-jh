@@ -112,61 +112,62 @@ class Commander extends AbstCommander {
    */
   generationAutoCommand(cmd) {
     /** @type {commandSet} */
-    let commandSet = {};
-    // commandSet 형식을 따르지 않을 경우 자동으로 구성
-    commandSet.rank = definedCommandSetRank.SECOND;
-    commandSet.commandId = null;
-    commandSet.commandType = null;
-    commandSet.commandName = null;
-    commandSet.currCmdIndex = 0;
-    commandSet.cmdList = [];
-    // 자동 생성
-    commandSet.operationStatus = definedOperationStatus.WAIT;
-    commandSet.commander = this;
+    let commandSetInfo = {
+      rank: definedCommandSetRank.SECOND,
+      commandId: null,
+      commandType: null,
+      commandName: null,
+      currCmdIndex: 0,
+      cmdList: [],
+      operationStatus: definedOperationStatus.WAIT,
+      uuid: '',
+      // 자동 생성
+      commander: this,
+      controlInfo: this.controlInfo,
+    };
     // commandSet.hasOneAndOne = this.hasOneAndOne;
     // commandSet.hasErrorHandling = this.hasErrorHandling;
-    commandSet.controlInfo = this.controlInfo;
 
     // 배열일 경우
     if (Array.isArray(cmd)) {
       cmd.forEach(cmd => {
-        commandSet.cmdList.push({
+        commandSetInfo.cmdList.push({
           data: cmd,
           commandExecutionTimeoutMs: 1000
         });
       });
     } else if (cmd === undefined || cmd === null || cmd === '') {
       // 아무런 명령도 내리지 않음.
-      commandSet.cmdList = [];
+      commandSetInfo.cmdList = [];
     } else {
-      commandSet.cmdList.push({
+      commandSetInfo.cmdList.push({
         data: cmd,
         commandExecutionTimeoutMs: 1000
       });
     }
 
     // BU.CLI(commandSet);
-    return commandSet;
+    return commandSetInfo;
   }
 
   /**
    * 명령 제어에 필요한 항목을 작성할 경우 사용
-   * @param {requestCommandSet} commandSetInfo 자동완성 기능을 사용할 경우
+   * @param {requestCommandSet} requestCommandSet 자동완성 기능을 사용할 경우
    */
-  generationManualCommand(commandSetInfo) {
+  generationManualCommand(requestCommandSet) {
     try {
       /** @type {commandSet} */
-      let commandInfo = this.generationAutoCommand();
+      let commandSetInfo = this.generationAutoCommand();
 
-      _.forEach(commandSetInfo, (cmd, key) => {
-        if (_.has(commandInfo, key)) {
-          commandInfo[key] = cmd;
+      _.forEach(requestCommandSet, (cmd, key) => {
+        if (_.has(commandSetInfo, key)) {
+          commandSetInfo[key] = cmd;
         } else {
           throw new Error('The requested key does not exist:' + key);
         }
       });
 
-      commandInfo.cmdList = commandSetInfo.cmdList;
+      commandSetInfo.cmdList = requestCommandSet.cmdList;
       // _.forEach(commandSetInfo.cmdList, cmdInfo => {
       //   if(_.has(cmdInfo, 'data') &&  _.has(cmdInfo, 'commandExecutionTimeoutMs')){
       //     commandInfo.cmdList.push(cmdInfo);
@@ -176,10 +177,10 @@ class Commander extends AbstCommander {
       // });
 
       // 자동 생성
-      commandInfo.operationStatus = definedOperationStatus.WAIT;
-      commandInfo.commander = this;
+      commandSetInfo.operationStatus = definedOperationStatus.WAIT;
+      commandSetInfo.commander = this;
       // commandInfo.hasOneAndOne = this.hasOneAndOne;
-      return commandInfo;
+      return commandSetInfo;
 
     } catch (error) {
       throw error;

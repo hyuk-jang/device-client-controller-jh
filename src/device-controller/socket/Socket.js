@@ -6,7 +6,6 @@ const eventToPromise = require('event-to-promise');
 const {BU} = require('base-util-jh');
 
 const AbstController = require('../AbstController');
-require('../../format/controllerConstructor');
 
 /** @type {Array.<{id: constructorSocket, instance: Socket}>} */
 let instanceList = [];
