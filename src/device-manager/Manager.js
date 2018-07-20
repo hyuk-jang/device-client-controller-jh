@@ -413,7 +413,9 @@ class Manager extends AbstManager {
    * @param {Error} error 에러
    */
   manageProcessingCommand(error) {
-    // BU.CLIN(this.commandStorage, 4);
+    // BU.CLIN(this.commandStorage);
+    // BU.CLIN(this.deviceController.configInfo);
+    
     const currentCommandSet = this.iterator.currentCommandSet;
     // BU.CLIN(this.commandStorage, 4);
     const nextCommandSet = this.iterator.nextCommandSet;
@@ -544,7 +546,7 @@ class Manager extends AbstManager {
         return this.nextCommand();
       }
     } else { // 현재 명령이 진행중이 아니라면
-      BU.CLI('Command Check');
+      // BU.CLI('Command Check');
       // 현재 진행중인 명령이 없고
       if (_.isEmpty(currentCommandSet)) {
         // OneAndOne이 아니고, Next CommandSet이 존재한다면
@@ -566,7 +568,7 @@ class Manager extends AbstManager {
    */
   nextCommand() {
     // BU.CLI('nextCommand');
-    // BU.CLI(this.commandStorage);
+    // BU.CLIN(this.commandStorage);
     try {
       let currentCommandSet = this.iterator.currentCommandSet;
       // BU.CLIN(currProcessCmdInfo);
@@ -574,11 +576,12 @@ class Manager extends AbstManager {
       // BU.CLI(currCmd);
       // 현재 아무런 명령이 존재하지 않을 경우
       this.retryChance = 3;
+      // BU.CLIN(currentCommandSet);
       if (_.isEmpty(currentCommandSet)) {
         // 명령 집합 이동 
         this.iterator.changeNextCommandSet(nextCommandSet);
         this._sendMessageToCommander(definedCommandSetMessage.COMMANDSET_EXECUTION_START);
-        // BU.CLI(this.commandStorage);
+        // BU.CLIN(this.commandStorage);
         // 현재 수행할 명령 요청
         return this.requestProcessingCommand();
       } else { // 다음 명령이 존재할 경우
@@ -587,8 +590,10 @@ class Manager extends AbstManager {
       }
     } catch (error) { // 다음 명령이 존재하지 않을 경우
       // BU.CLI(error);
+      // writeLogFile(this, 'config.logOption.hasDcError', 'error', _.get(error, 'message'),  _.get(error, 'stack'));
       this.iterator.clearCurrentCommandSet();
       this.hasPerformCommand = false;
+      throw error;
     }
   }
 }
