@@ -9,7 +9,9 @@ const AbstManager = require('../device-manager/AbstManager');
 const AbstDeviceClient = require('../device-client/AbstDeviceClient');
 
 const {
-  writeLogFile, getDefaultControlInfo, getDefaultLogOption
+  writeLogFile,
+  getDefaultControlInfo,
+  getDefaultLogOption
 } = require('../util/dcUtil');
 
 const {
@@ -53,9 +55,9 @@ class Commander extends AbstCommander {
     /** @type {AbstManager} */
     this.manager;
 
-    /** 
+    /**
      * 현재 발생되고 있는 시스템 에러 리스트
-     * @type {Array.<{deviceError}>} 
+     * @type {Array.<{deviceError}>}
      * */
     this.systemErrorList = [];
   }
@@ -63,26 +65,29 @@ class Commander extends AbstCommander {
   /* Mediator에서 Set 함 */
   /**
    * deviceMediator 을 정의
-   * @param {AbstMediator} deviceMediator 
+   * @param {AbstMediator} deviceMediator
    * @return {undefined}
    */
   setMediator(deviceMediator) {
     this.mediator = deviceMediator;
   }
 
-
   /** Device Client에서 요청하는 부분 */
 
   /** 장치의 연결이 되어있는지 여부 @return {boolean} */
   get hasConnectedDevice() {
-    let hasDisConnected = _.chain(this.manager).get('deviceController.client').isEmpty().value();
+    let hasDisConnected = _
+      .chain(this.manager)
+      .get('deviceController.client')
+      .isEmpty()
+      .value();
 
     return !hasDisConnected;
   }
 
   /**
    * 장치로 명령을 내림
-   * @param {commandSet} commandSet 
+   * @param {commandSet} commandSet
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */
   executeCommand(commandSet) {
@@ -90,9 +95,22 @@ class Commander extends AbstCommander {
       // 오브젝트가 아니라면 자동으로 생성
       if (_.isObject(commandSet)) {
         // let findSetKeyList = ['cmdList', 'commander', 'commandId', 'hasOneAndOne', 'rank', 'currCmdIndex'];
-        let findSetKeyList = ['cmdList', 'commander', 'commandId', 'rank', 'currCmdIndex'];
+        let findSetKeyList = [
+          'cmdList',
+          'commander',
+          'commandId',
+          'rank',
+          'currCmdIndex'
+        ];
 
-        let hasTypeCommandSet = _.eq(findSetKeyList.length, _.chain(commandSet).keys().intersection(findSetKeyList).value().length);
+        let hasTypeCommandSet = _.eq(
+          findSetKeyList.length,
+          _
+            .chain(commandSet)
+            .keys()
+            .intersection(findSetKeyList)
+            .value().length
+        );
         if (hasTypeCommandSet) {
           return this.manager.addCommandSet(commandSet);
         } else {
@@ -123,7 +141,7 @@ class Commander extends AbstCommander {
       uuid: '',
       // 자동 생성
       commander: this,
-      controlInfo: this.controlInfo,
+      controlInfo: this.controlInfo
     };
     // commandSet.hasOneAndOne = this.hasOneAndOne;
     // commandSet.hasErrorHandling = this.hasErrorHandling;
@@ -181,15 +199,14 @@ class Commander extends AbstCommander {
       commandSetInfo.commander = this;
       // commandInfo.hasOneAndOne = this.hasOneAndOne;
       return commandSetInfo;
-
     } catch (error) {
       throw error;
     }
   }
 
   /**
-   * Commander와 연결된 장비에서 진행중인 저장소의 모든 명령을 가지고 옴 
-   * @param {{commander: AbstCommander, commandId: string=}} searchInfo 
+   * Commander와 연결된 장비에서 진행중인 저장소의 모든 명령을 가지고 옴
+   * @param {{commander: AbstCommander, commandId: string=}} searchInfo
    * @return {commandStorage}
    */
   findCommandStorage(searchInfo) {
@@ -212,13 +229,14 @@ class Commander extends AbstCommander {
   /**
    * Manager에게 Msg를 보내어 명령 진행 의사 결정을 취함
    * @param {string} key 요청 key
-   * 
+   *
    */
   requestTakeAction(key) {
     // BU.CLI('requestTakeAction', key);
     try {
       if (_.has(definedCommanderResponse, key)) {
         this.manager.requestTakeAction(this, key);
+        return true;
       } else {
         throw new Error(`${key} is not a valid control command.`);
       }
@@ -226,9 +244,6 @@ class Commander extends AbstCommander {
       throw error;
     }
   }
-
-
-
 
   /* Device Controller에서 수신 --> 장치에서 일괄 이벤트 발생 */
   /**
@@ -276,16 +291,14 @@ class Commander extends AbstCommander {
     if (hasOccur && _.isEmpty(findObj)) {
       troubleObj.occur_date = new Date();
       this.systemErrorList.push(troubleObj);
-    } else if (!hasOccur && !_.isEmpty(findObj)) { // 에러 해제하였고 해당 에러가 존재한다면 삭제
+    } else if (!hasOccur && !_.isEmpty(findObj)) {
+      // 에러 해제하였고 해당 에러가 존재한다면 삭제
       this.systemErrorList = _.reject(this.systemErrorList, systemError => {
         return systemError.code === troubleCode;
       });
     }
     return this.systemErrorList;
   }
-
-
-
 
   /** Device Manager에서 Event 발생 */
 
@@ -295,7 +308,13 @@ class Commander extends AbstCommander {
    */
   onDcError(dcError) {
     // BU.CLIN(dcError );
-    writeLogFile(this, 'config.logOption.hasDcError', 'error', _.get(dcError.errorInfo, 'message'),  _.get(dcError.errorInfo, 'stack'));
+    writeLogFile(
+      this,
+      'config.logOption.hasDcError',
+      'error',
+      _.get(dcError.errorInfo, 'message'),
+      _.get(dcError.errorInfo, 'stack')
+    );
 
     return this.user && this.user.onDcError(dcError);
   }
@@ -306,7 +325,13 @@ class Commander extends AbstCommander {
    */
   onDcMessage(dcMessage) {
     // BU.CLI(dcMessage);
-    writeLogFile(this, 'config.logOption.hasDcMessage', 'message', dcMessage.msgCode, `commandId: ${_.get(dcMessage.commandSet, 'commandId')}`);
+    writeLogFile(
+      this,
+      'config.logOption.hasDcMessage',
+      'message',
+      dcMessage.msgCode,
+      `commandId: ${_.get(dcMessage.commandSet, 'commandId')}`
+    );
     return this.user && this.user.onDcMessage(dcMessage);
   }
 
@@ -322,7 +347,9 @@ class Commander extends AbstCommander {
 module.exports = Commander;
 
 // 시스템 에러는 2개로 정해둠.
-let troubleList = [{
-  code: 'Disconnect',
-  msg: '장치 연결 해제'
-}];
+let troubleList = [
+  {
+    code: 'Disconnect',
+    msg: '장치 연결 해제'
+  }
+];
