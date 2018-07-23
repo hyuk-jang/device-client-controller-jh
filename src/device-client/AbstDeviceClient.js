@@ -1,11 +1,8 @@
-'use strict';
-
 const _ = require('lodash');
+const serialport = require('serialport');
 const EventEmitter = require('events');
 
-const {
-  BU
-} = require('base-util-jh');
+const {BU} = require('base-util-jh');
 
 const Builder = require('../device-builder/Builder');
 const AbstCommander = require('../device-commander/AbstCommander');
@@ -18,6 +15,7 @@ const {
   definedControlEvent,
   definedOperationError,
 } = require('../../../default-intelligence').dccFlagModel;
+
 class AbstDeviceClient extends EventEmitter {
   constructor() {
     super();
@@ -38,7 +36,6 @@ class AbstDeviceClient extends EventEmitter {
    * @return {Promise.<{comName: string, serialNumber: Buffer, pnpId: string}[]>}}
    */
   async getSerialList() {
-    const serialport = require('serialport');
     const serialList = await serialport.list();
     return serialList;
   }
@@ -46,7 +43,7 @@ class AbstDeviceClient extends EventEmitter {
   // Builder
   /**
    * Create 'Commander', 'Manager' And Set Property 'commander', 'manager'
-   * @param {deviceInfo} config 
+   * @param {deviceInfo} config
    */
   setDeviceClient(config) {
     try {
@@ -79,20 +76,20 @@ class AbstDeviceClient extends EventEmitter {
         hasDcEvent: false,
         hasReceiveData: false,
         hasDcMessage: false,
-        hasTransferCommand: false
+        hasTransferCommand: false,
       },
       controlInfo: {
         hasErrorHandling: false,
         hasOneAndOne: false,
-        hasReconnect: false
-      }
+        hasReconnect: false,
+      },
     };
 
     return generationConfigInfo;
   }
 
   /**
-   * Commander로 명령을 내릴 기본 형태를 가져옴 
+   * Commander로 명령을 내릴 기본 형태를 가져옴
    * @return {requestCommandSet} */
   getDefaultCommandConfig() {
     /** @type {requestCommandSet} */
@@ -100,15 +97,14 @@ class AbstDeviceClient extends EventEmitter {
       rank: 2,
       commandId: '',
       currCmdIndex: 0,
-      cmdList: []
+      cmdList: [],
     };
     return commandFormatInfo;
   }
 
-
   /**
-   * Commander와 연결된 장비에서 진행중인 저장소의 모든 명령을 가지고 옴 
-   * @param {{commander: AbstCommander, commandId: string=}} searchInfo 
+   * Commander와 연결된 장비에서 진행중인 저장소의 모든 명령을 가지고 옴
+   * @param {{commander: AbstCommander, commandId: string=}} searchInfo
    * @return {commandStorage}
    */
   findCommandStorage(searchInfo) {
@@ -120,7 +116,7 @@ class AbstDeviceClient extends EventEmitter {
     return this.commander.hasConnectedDevice;
   }
 
-  /** 현재 발생되고 있는 시스템 에러 리스트 
+  /** 현재 발생되고 있는 시스템 에러 리스트
    * @return {Array.<{code: string, msg: string, occur_date: Date }>}
    */
   get systemErrorList() {
@@ -132,7 +128,7 @@ class AbstDeviceClient extends EventEmitter {
 
   /**
    * 장치로 명령을 내림
-   * @param {commandSet} commandSet 
+   * @param {commandSet} commandSet
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */
   executeCommand(commandSet) {
@@ -143,7 +139,6 @@ class AbstDeviceClient extends EventEmitter {
       throw error;
     }
   }
-
 
   /**
    * 장치를 제어하는 실제 명령만을 가지고 요청할 경우
@@ -171,7 +166,6 @@ class AbstDeviceClient extends EventEmitter {
     }
   }
 
-
   /**
    * 수행 명령 리스트에 등록된 명령을 취소
    * @param {string} commandId 명령을 취소 할 command Id
@@ -192,14 +186,12 @@ class AbstDeviceClient extends EventEmitter {
     }
   }
 
-
-
   /**
    * Device Controller 변화가 생겨 관련된 전체 Commander에게 뿌리는 Event
-   * @abstract 
+   * @abstract
    * @param {dcEvent} dcEvent 'dcConnect', 'dcClose', 'dcError'
    * @example 보통 장치 연결, 해제에서 발생
-   * dcConnect --> 장치 연결, 
+   * dcConnect --> 장치 연결,
    * dcDisconnect --> 장치 연결 해제
    */
   updatedDcEventOnDevice(dcEvent) {
@@ -213,97 +205,113 @@ class AbstDeviceClient extends EventEmitter {
     } else {
       strManagerInfo = _.get(dcEvent.spreader, 'configInfo');
     }
-    BU.log(`${dcEvent.eventName} --> commander: ${_.get(this.commander, 'id')}, connInfo: ${strManagerInfo}`);
+    BU.log(
+      `${dcEvent.eventName} --> commander: ${_.get(
+        this.commander,
+        'id',
+      )}, connInfo: ${strManagerInfo}`,
+    );
 
     try {
       switch (dcEvent.eventName) {
-      case this.definedControlEvent.CONNECT:
-        break;
-      case this.definedControlEvent.DISCONNECT:
-        break;
-      case this.definedControlEvent.DATA:
-        break;
-      case this.definedControlEvent.DEVICE_ERROR:
-        break;
-      default:
-        break;
+        case this.definedControlEvent.CONNECT:
+          break;
+        case this.definedControlEvent.DISCONNECT:
+          break;
+        case this.definedControlEvent.DATA:
+          break;
+        case this.definedControlEvent.DEVICE_ERROR:
+          break;
+        default:
+          break;
       }
     } catch (error) {
       BU.CLI(error.message);
     }
   }
 
-
-
   /**
-   * @abstract 
+   * @abstract
    * 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트
    * @param {dcMessage} dcMessage 현재 장비에서 실행되고 있는 명령 객체
    */
   onDcMessage(dcMessage) {
-    BU.CLIS(`commanderId: ${_.get(dcMessage.commandSet.commander, 'id')}, commandSetId: ${_.get(dcMessage.commandSet, 'commandId')}`, dcMessage.msgCode);
+    BU.CLIS(
+      dcMessage.msgCode,
+      `commanderId: ${_.get(dcMessage.commandSet.commander, 'id')}, commandSetId: ${_.get(
+        dcMessage.commandSet,
+        'commandId',
+      )}`,
+    );
 
     const message = _.get(dcMessage, 'msgCode');
     switch (message) {
-    // 명령 요청 시작
-    case this.definedCommandSetMessage.COMMANDSET_EXECUTION_START:
-      break;
+      // 명령 요청 시작
+      case this.definedCommandSetMessage.COMMANDSET_EXECUTION_START:
+        break;
       // 계측이 완료되면 Observer에게 알림
-    case this.definedCommandSetMessage.COMMANDSET_EXECUTION_TERMINATE:
-      break;
+      case this.definedCommandSetMessage.COMMANDSET_EXECUTION_TERMINATE:
+        break;
       // 지연 명령으로 이동
-    case this.definedCommandSetMessage.COMMANDSET_MOVE_DELAYSET:
-      break;
+      case this.definedCommandSetMessage.COMMANDSET_MOVE_DELAYSET:
+        break;
       // 1:1 통신
-    case this.definedCommandSetMessage.ONE_AND_ONE_COMUNICATION:
-      break;
+      case this.definedCommandSetMessage.ONE_AND_ONE_COMUNICATION:
+        break;
       // 명령 삭제됨
-    case this.definedCommandSetMessage.COMMANDSET_DELETE:
-      break;
-    default:
-      break;
+      case this.definedCommandSetMessage.COMMANDSET_DELETE:
+        break;
+      default:
+        break;
     }
   }
 
   /**
    * 장치로부터 데이터 수신
-   * @abstract 
+   * @abstract
    * @param {dcData} dcData 현재 장비에서 실행되고 있는 명령 객체
    */
   onDcData(dcData) {
-    BU.CLIS(`commanderId: ${_.get(dcData.commandSet.commander, 'id')}, commandSetId: ${_.get(dcData.commandSet, 'commandId')}`, dcData.data);
+    BU.CLIS(
+      `commanderId: ${_.get(dcData.commandSet.commander, 'id')}, commandSetId: ${_.get(
+        dcData.commandSet,
+        'commandId',
+      )}`,
+      dcData.data,
+    );
   }
 
-
-
   /**
-   * @abstract 
+   * @abstract
    * 장치에서 명령을 수행하는 과정에서 생기는 1:1 이벤트
    * @param {dcError} dcError 현재 장비에서 실행되고 있는 명령 객체
    */
   onDcError(dcError) {
-    BU.CLIS(`commanderId: ${_.get(dcError.commandSet.commander, 'id')}, commandSetId: ${_.get(dcError.commandSet, 'commandId')}`, dcError.errorInfo);
+    BU.CLIS(
+      `commanderId: ${_.get(dcError.commandSet.commander, 'id')}, commandSetId: ${_.get(
+        dcError.commandSet,
+        'commandId',
+      )}`,
+      dcError.errorInfo,
+    );
 
     const message = _.get(dcError, 'errorInfo.message');
 
     switch (message) {
-    case this.definedOperationError.E_TIMEOUT:
-      break;
-    case this.definedOperationError.E_RETRY_MAX:
-      break;
-    case this.definedOperationError.E_UNHANDLING_DATA:
-      break;
-    case this.definedOperationError.E_UNEXPECTED:
-      break;
-    case this.definedOperationError.E_NON_CMD:
-      break;
-    default:
-      break;
+      case this.definedOperationError.E_TIMEOUT:
+        break;
+      case this.definedOperationError.E_RETRY_MAX:
+        break;
+      case this.definedOperationError.E_UNHANDLING_DATA:
+        break;
+      case this.definedOperationError.E_UNEXPECTED:
+        break;
+      case this.definedOperationError.E_NON_CMD:
+        break;
+      default:
+        break;
     }
-
   }
-
-
 }
 
 module.exports = AbstDeviceClient;

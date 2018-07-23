@@ -1,16 +1,14 @@
-
 const BU = require('base-util-jh').baseUtil;
 
-
 const Controller = require('./Controller.test');
+
 const controller = new Controller();
 
-
-let defaultConfig = controller.getDefaultCreateDeviceConfig();
+const defaultConfig = controller.getDefaultCreateDeviceConfig();
 BU.CLI(defaultConfig);
 
-let connectType = 'serial';
-if(connectType === 'serial'){
+const connectType = 'serial';
+if (connectType === 'serial') {
   defaultConfig.connect_type = 'serial';
   defaultConfig.target_id = 'davis_vantagepro2';
   defaultConfig.baud_rate = 19200;
@@ -26,22 +24,21 @@ if(connectType === 'serial'){
 
 controller.setDeviceClient(defaultConfig);
 
-
-let defaultCommandFormat = controller.getDefaultCommandConfig();
+const defaultCommandFormat = controller.getDefaultCommandConfig();
 // defaultCommandFormat.cmdList = ['sss'];
 // defaultCommandFormat.hasOneAndOne = true;
 // BU.CLIN(controller.manager.hasConnected());
 
-if(controller.manager.hasConnected){
-  let hasExecTrue = controller.executeCommand(defaultCommandFormat);
+if (controller.manager.hasConnected) {
+  const hasExecTrue = controller.executeCommand(defaultCommandFormat);
   BU.CLI(hasExecTrue);
 } else {
   BU.CLI('뭐냐');
   setTimeout(() => {
     BU.CLI(controller.manager.hasConnected);
-    if(controller.manager.hasConnected){
+    if (controller.manager.hasConnected) {
       BU.CLI('명령 전송 준비');
-      let commandInfo = controller.getDefaultCommandConfig();
+      const commandInfo = controller.getDefaultCommandConfig();
       commandInfo.hasOneAndOne = true;
       commandInfo.cmdList = ['LOOP\n'];
       controller.executeCommand(commandInfo);

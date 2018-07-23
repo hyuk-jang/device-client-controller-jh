@@ -1,14 +1,13 @@
-'use strict';
 const _ = require('lodash');
-const serialport = require('serialport');
+const Serialport = require('serialport');
 const eventToPromise = require('event-to-promise');
 
 const AbstController = require('../AbstController');
 
 /** @type {Array.<{id: string, instance: Serial}>} */
-let instanceList = [];
+const instanceList = [];
 
-class Serial extends AbstController{
+class Serial extends AbstController {
   /**
    * Serial Port 객체를 생성하기 위한 설정 정보
    * @param {deviceInfo} mainConfig
@@ -18,9 +17,9 @@ class Serial extends AbstController{
     super(mainConfig);
     this.port = connectInfo.port;
     this.baud_rate = connectInfo.baudRate;
-    
-    let foundInstance = _.find(instanceList, {id: this.port});
-    if(_.isEmpty(foundInstance)){
+
+    const foundInstance = _.find(instanceList, {id: this.port});
+    if (_.isEmpty(foundInstance)) {
       this.configInfo = {port: this.port, baud_rate: this.baud_rate};
       instanceList.push({id: this.port, instance: this});
       this.setInit();
@@ -43,15 +42,14 @@ class Serial extends AbstController{
     });
   }
 
-
   /** 장치 접속 시도 */
   async connect() {
     /** 접속 중인 상태라면 접속 시도하지 않음 */
-    if(!_.isEmpty(this.client)){
+    if (!_.isEmpty(this.client)) {
       throw new Error(`Already connected. ${this.port}`);
     }
-    
-    const client = new serialport(this.port, {
+
+    const client = new Serialport(this.port, {
       baudRate: this.baud_rate,
     });
 
@@ -81,14 +79,13 @@ class Serial extends AbstController{
   /**
    * Close Connect
    */
-  async disconnect(){
-    if(!_.isEmpty(this.client)){
+  async disconnect() {
+    if (!_.isEmpty(this.client)) {
       this.client.close();
       await eventToPromise.multi(this.client, ['close'], ['error', 'disconnectError']);
       return this.client;
-    } else {
-      return this.client;
     }
+    return this.client;
   }
 }
 module.exports = Serial;

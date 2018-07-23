@@ -11,25 +11,26 @@ const net = require('net');
 // });
 
 // grab an arbitrary unused port.
-for(let i = 0; i < 3; i += 1){
-  const server = net.createServer((socket) => {
-    // socket.end('goodbye\n');
-    let port = Number(`900${i}`);
-    console.log(`client is Connected ${port}`);
+for (let i = 0; i < 3; i += 1) {
+  const server = net
+    .createServer(socket => {
+      // socket.end('goodbye\n');
+      const port = Number(`900${i}`);
+      console.log(`client is Connected ${port}`);
 
-    // socket.write('18?');
-    
-    socket.on('data', data => {
-      console.log(`P: ${port} --> Received Data: ${data} `);
-      return socket.write('this.is.my.socket\r\ngogogogo' + port);
+      // socket.write('18?');
+
+      socket.on('data', data => {
+        console.log(`P: ${port} --> Received Data: ${data} `);
+        return socket.write(`this.is.my.socket\r\ngogogogo${port}`);
+      });
+    })
+    .on('error', err => {
+      // handle errors here
+      console.error('@@@@', err, server.address());
+      // throw err;
     });
 
-  }).on('error', (err) => {
-    // handle errors here
-    console.error('@@@@', err, server.address());
-    // throw err;
-  });
-  
   // grab an arbitrary unused port.
   server.listen(Number(`900${i}`), () => {
     console.log('opened server on', server.address());
@@ -39,13 +40,12 @@ for(let i = 0; i < 3; i += 1){
     console.log('clonse');
   });
 
-  server.on('error', (err) => {
+  server.on('error', err => {
     console.error(err);
   });
-    
 }
 
-process.on('uncaughtException', function (err) {
+process.on('uncaughtException', err => {
   console.error(err.stack);
   console.log(err.message);
   console.log('Node NOT Exiting...');

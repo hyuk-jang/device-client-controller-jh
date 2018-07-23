@@ -1,4 +1,3 @@
-'use strict';
 const _ = require('lodash');
 const net = require('net');
 const eventToPromise = require('event-to-promise');
@@ -8,7 +7,7 @@ const {BU} = require('base-util-jh');
 const AbstController = require('../AbstController');
 
 /** @type {Array.<{id: constructorSocket, instance: Socket}>} */
-let instanceList = [];
+const instanceList = [];
 /** Class Socket 접속 클라이언트 클래스 */
 class Socket extends AbstController {
   /**
@@ -20,20 +19,19 @@ class Socket extends AbstController {
     super(mainConfig);
     this.port = connectInfo.port;
     this.host = connectInfo.host || 'localhost';
-    
+
     this.configInfo = {host: this.host, port: this.port};
 
-    let foundInstance = _.find(instanceList, instanceInfo => {
-      return _.isEqual(instanceInfo.id, this.configInfo);
-    });
-    
-    if(_.isEmpty(foundInstance)){
+    const foundInstance = _.find(instanceList, instanceInfo =>
+      _.isEqual(instanceInfo.id, this.configInfo),
+    );
+
+    if (_.isEmpty(foundInstance)) {
       instanceList.push({id: this.configInfo, instance: this});
       this.setInit();
     } else {
       return foundInstance.instance;
     }
-
   }
 
   /**
@@ -43,19 +41,18 @@ class Socket extends AbstController {
    */
   write(msg) {
     // BU.CLI(msg);
-    let res = this.client.write(msg);
-    if(res){
+    const res = this.client.write(msg);
+    if (res) {
       return Promise.resolve();
-    } else {
-      return Promise.reject(res);
     }
+    return Promise.reject(res);
   }
 
   /** 장치 접속 시도 */
   async connect() {
     BU.log('Try Connect : ', this.port);
     /** 접속 중인 상태라면 접속 시도하지 않음 */
-    if(!_.isEmpty(this.client)){
+    if (!_.isEmpty(this.client)) {
       throw new Error(`Already connected. ${this.port}`);
     }
 
@@ -63,7 +60,7 @@ class Socket extends AbstController {
     client.on('data', bufferData => {
       this.notifyData(bufferData);
     });
-    
+
     client.on('close', err => {
       this.client = {};
       this.notifyDisconnect(err);
@@ -84,11 +81,9 @@ class Socket extends AbstController {
   /**
    * Close Connect
    */
-  async disconnect(){
-    if(!_.isEmpty(this.client)){
-      this.client.destroy(() => {
-        return this.client;
-      });
+  async disconnect() {
+    if (!_.isEmpty(this.client)) {
+      this.client.destroy(() => this.client);
     } else {
       return this.client;
     }

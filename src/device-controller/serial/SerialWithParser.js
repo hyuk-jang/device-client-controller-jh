@@ -1,13 +1,12 @@
-'use strict';
 const _ = require('lodash');
-const serialport = require('serialport');
+const Serialport = require('serialport');
 const eventToPromise = require('event-to-promise');
 
 const AbstController = require('../AbstController');
 
 /** @type {Array.<{id: string, instance: SerialWithParser}>} */
-let instanceList = [];
-class SerialWithParser extends AbstController{
+const instanceList = [];
+class SerialWithParser extends AbstController {
   /**
    * Serial Port 객체를 생성하기 위한 설정 정보
    * @param {deviceInfo} mainConfig
@@ -19,9 +18,9 @@ class SerialWithParser extends AbstController{
     this.baud_rate = connectInfo.baudRate;
     this.parserInfo = connectInfo.addConfigInfo;
 
-    let foundInstance = _.find(instanceList, {id: this.port});
-    if(_.isEmpty(foundInstance)){
-      this.configInfo = {port: this.port, baud_rate: this.baud_rate, parser: this.parserInfo };
+    const foundInstance = _.find(instanceList, {id: this.port});
+    if (_.isEmpty(foundInstance)) {
+      this.configInfo = {port: this.port, baud_rate: this.baud_rate, parser: this.parserInfo};
       instanceList.push({id: this.port, instance: this});
       this.setInit();
     } else {
@@ -33,48 +32,52 @@ class SerialWithParser extends AbstController{
    * Parser Pipe 를 붙임
    * @param {Object} client SerialPort Client
    */
-  settingParser(client){
+  settingParser(client) {
     let parser = null;
     if (this.parserInfo !== undefined && this.parserInfo.parser !== undefined) {
       switch (this.parserInfo.parser) {
-      case 'delimiterParser':
-        var Delimiter = serialport.parsers.Delimiter;
-        parser = client.pipe(new Delimiter({
-          delimiter: this.parserInfo.option
-        }));
-        parser.on('data', data => {
-          this.notifyData(Buffer.concat([data, this.parserInfo.option]));
-        });
-        break;
-      case 'byteLengthParser':
-        var ByteLength = serialport.parsers.ByteLength;
-        parser = client.pipe(new ByteLength({
-          length: this.parserInfo.option
-        }));
-        parser.on('data', data => {
-          this.notifyData(data);
-        });
-        break;
-      case 'readLineParser':
-        var Readline = serialport.parsers.Readline;
-        parser = client.pipe(new Readline({
-          delimiter: this.parserInfo.option
-        }));
-        parser.on('data', data => {
-          this.notifyData(Buffer.from(data));
-        });
-        break;
-      case 'readyParser':
-        var Ready = serialport.parsers.Ready;
-        parser = client.pipe(new Ready({
-          delimiter: this.parserInfo.option
-        }));
-        parser.on('data', data => {
-          this.notifyData(data);
-        });
-        break;
-      default:
-        break;
+        case 'delimiterParser':
+          parser = client.pipe(
+            new Serialport.parsers.Delimiter({
+              delimiter: this.parserInfo.option,
+            }),
+          );
+          parser.on('data', data => {
+            this.notifyData(Buffer.concat([data, this.parserInfo.option]));
+          });
+          break;
+        case 'byteLengthParser':
+          parser = client.pipe(
+            new Serialport.parsers.ByteLength({
+              length: this.parserInfo.option,
+            }),
+          );
+          parser.on('data', data => {
+            this.notifyData(data);
+          });
+          break;
+        case 'readLineParser':
+          parser = client.pipe(
+            new Serialport.parsers.Readline({
+              delimiter: this.parserInfo.option,
+            }),
+          );
+          parser.on('data', data => {
+            this.notifyData(Buffer.from(data));
+          });
+          break;
+        case 'readyParser':
+          parser = client.pipe(
+            new Serialport.parsers.Ready({
+              delimiter: this.parserInfo.option,
+            }),
+          );
+          parser.on('data', data => {
+            this.notifyData(data);
+          });
+          break;
+        default:
+          break;
       }
     }
   }
@@ -96,10 +99,10 @@ class SerialWithParser extends AbstController{
   async connect() {
     // BU.CLI('connect');
     /** 접속 중인 상태라면 접속 시도하지 않음 */
-    if(!_.isEmpty(this.client)){
+    if (!_.isEmpty(this.client)) {
       throw new Error(`Already connected. ${this.port}`);
     }
-    const client = new serialport(this.port, {
+    const client = new Serialport(this.port, {
       baudRate: this.baud_rate,
     });
 
@@ -122,14 +125,13 @@ class SerialWithParser extends AbstController{
   /**
    * Close Connect
    */
-  async disconnect(){
-    if(!_.isEmpty(this.client)){
+  async disconnect() {
+    if (!_.isEmpty(this.client)) {
       this.client.close();
       await eventToPromise.multi(this.client, ['close'], ['error', 'disconnectError']);
       return this.client;
-    } else {
-      return this.client;
     }
+    return this.client;
   }
 }
 module.exports = SerialWithParser;

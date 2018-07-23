@@ -1,8 +1,6 @@
-'use strict';
 
-const {
-  expect
-} = require('chai');
+
+const {expect} = require('chai');
 const _ = require('lodash');
 const Promise = require('bluebird');
 const eventToPromise = require('event-to-promise');
@@ -13,11 +11,9 @@ global._ = _;
 global.BU = BU;
 global.CU = CU;
 
-
 const AbstDeviceClient = require('../src/device-client/AbstDeviceClient');
 
 const Commander = require('../src/device-commander/Commander');
-
 
 const SerialDeviceController = require('../src/device-controller/serial/Serial');
 const SerialDeviceControllerWithParser = require('../src/device-controller/serial/SerialWithParser');
@@ -26,16 +22,13 @@ const SocketDeviceController = require('../src/device-controller/socket/Socket')
 // console.log(uuidv4());
 const Manager = require('../src/device-manager/Manager');
 
-
 const {
   definedCommanderResponse,
   definedCommandSetMessage,
   definedCommandSetRank,
 } = require('../../default-intelligence').dccFlagModel;
 
-
-const {initManager} =  require('../src/util/dcUtil');
-
+const {initManager} = require('../src/util/dcUtil');
 
 /** @type {deviceInfo} config */
 const constructorInfo = {
@@ -47,16 +40,15 @@ const constructorInfo = {
     hasTransferCommand: true,
     hasDcError: true,
     hasDcEvent: true,
-    hasReceiveData: true
-  }
+    hasReceiveData: true,
+  },
 };
 
-
-describe('Request Execution Command', function(){
+describe('Request Execution Command', function() {
   this.timeout(10000);
   // 1. Builder를 이용하여 Commnader, Mediator, Manager 생성
   // 2. Mnager 객체 생성
-  it.skip('Commander Constuction', function(done) {
+  it.skip('Commander Constuction', (done) => {
     let con_1 = _.cloneDeep(constructorInfo);
     let con_2 = _.cloneDeep(constructorInfo);
 
@@ -75,9 +67,9 @@ describe('Request Execution Command', function(){
   // 1. 수동 명령 생성 (Rank:3, CmdList: 2, timeout:1000)
   // 2. 딜레이 명령(Rank: 2, CmdList: 2, CurrIndex: 1, timeout:1000)
   // 3. 긴급 명령 * 2 (Rank:0, timeout:1000)
-  // 시나리오 : 명령 1, 2 추가 후 0.5초 후 명령 3 추가 
+  // 시나리오 : 명령 1, 2 추가 후 0.5초 후 명령 3 추가
   // 예상: 1[0] -> 3[0] -> 3[1] -> 2[0] -> 1[1] -> 2[1]
-  it('Manual Execution', async function(){
+  it('Manual Execution', async () => {
     const commandExecutionTimeoutMs = 100; // 장치에서의 타임아웃 시간은 1초로
     const delayExecutionTimeoutMs = 300; // 지연 시간 3초
     let construct = _.cloneDeep(constructorInfo);
@@ -131,7 +123,7 @@ describe('Request Execution Command', function(){
   // 1. 자동명령 생성 수행 테스트(Rank:2, CmdList: 3, timeout:1000)
   // 2. 자동명령 생성 수행 테스트(Rank:2, CmdList: 1, timeout:1000)
   // 3. 명령 수행 findCommandStorage() 검증 테스트
-  it('Automation Execution', async function(){
+  it('Automation Execution', async () => {
     let construct = _.cloneDeep(constructorInfo);
     construct.target_id = '홍길동 2';
 
@@ -208,7 +200,7 @@ describe('Request Execution Command', function(){
   });
 });
 
-describe('Handling Receive Data', function(){
+describe('Handling Receive Data', function() {
   this.timeout(5000);
   // 0. Test Commander, Test Controller를 선언
   // 1. Controller는 timeout/10 딜레이를 가지고 데이터 응답
@@ -216,8 +208,8 @@ describe('Handling Receive Data', function(){
   // 3. Manager부터 수신받은 Message Code에 마다 Count 값 증가
   // *** 사용 시나리오는 'Manual Execution' 사용
   // 시나리오 : 명령 1, 2 추가 후 0.5초 후 명령 3 추가 (동작: 1[0] -> 3[0] -> 3[1] -> 2[0] -> 1[1] -> 2[1]  )
-  // 예상: 
-  it.skip('DONE', async function() {
+  // 예상:
+  it.skip('DONE', async () => {
     const commandExecutionTimeoutMs = 100; // 장치에서의 타임아웃 시간은 1초로
     const delayExecutionTimeoutMs = 300; // 지연 시간 3초
     let construct = _.cloneDeep(constructorInfo);
@@ -306,25 +298,21 @@ describe('Handling Receive Data', function(){
     expect(commandSetMessageCount.COMMANDSET_MOVE_DELAYSET).to.eq(1);
     expect(commandSetMessageCount.ONE_AND_ONE_COMUNICATION).to.eq(0);
   });
+});
+
+describe('Manage System Error', () => {
   
 });
 
-describe('Manage System Error', function(){
-  
-});
 
 
 
-
-process.on('unhandledRejection', function (reason, p) {
+process.on('unhandledRejection', (reason, p) => {
   console.trace('Possibly Unhandled Rejection at: Promise ', p, ' \nreason: ', reason);
   // application specific logging here
 });
 
-process.on('uncaughtException', function (event) {
+process.on('uncaughtException', (event) => {
   console.trace('Possibly uncaughtException Rejection at: Promise ', event);
   // application specific logging here
 });
-
-
-

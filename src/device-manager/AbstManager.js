@@ -1,12 +1,10 @@
-'use strict';
 const _ = require('lodash');
 const {BU} = require('base-util-jh');
 const eventToPromise = require('event-to-promise');
 
+const EventEmitter = require('events');
 const AbstCommander = require('../device-commander/AbstCommander');
 const AbstMediator = require('../device-mediator/AbstMediator');
-
-const EventEmitter = require('events');
 
 class AbstManager extends EventEmitter {
   constructor() {
@@ -20,10 +18,10 @@ class AbstManager extends EventEmitter {
   }
 
   /** 초기화할 내용이 필요할 경우 */
-  setInit(){}
+  setInit() {}
 
   /** 장치와 연결을 하고자 할 경우 */
-  async connect(){
+  async connect() {
     await this.deviceController.connect();
 
     // await eventToPromise(this, 'dcConnect');
@@ -32,17 +30,15 @@ class AbstManager extends EventEmitter {
 
   /**
    * Device가 접속되어 있는지 체크
-   * @return {boolean} 
+   * @return {boolean}
    */
   get hasConnected() {
-    return _.isEmpty(this.deviceController.client) ? false : true;
+    return !_.isEmpty(this.deviceController.client);
   }
-
-
 
   // TODO
   /** 장치와 연결을 해제하고자 할 경우 */
-  async disconnect(){
+  async disconnect() {
     await this.deviceController.disconnect();
 
     // await eventToPromise(this, 'dcConnect');
@@ -50,88 +46,84 @@ class AbstManager extends EventEmitter {
   }
 
   setMediator() {}
-  
-  /** 장치에 메시지를 보내고자 할 경우 */
-  async transferCommandToDevice(){}
 
+  /** 장치에 메시지를 보내고자 할 경우 */
+  async transferCommandToDevice() {}
 
   /**
    * Manager에게 Msg를 보내어 명령 진행 의사 결정을 취함
    * @param {string} key 요청 key
-   * 
+   *
    */
   requestTakeAction(key) {}
 
   /**
    * 명령 추가
-   * @param {commandSet} cmdInfo 
+   * @param {commandSet} cmdInfo
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */
   addCommandSet(cmdInfo) {}
-
 
   /**
    * 수행 명령 리스트에 등록된 명령을 취소
    * @param {string} commandId 명령을 취소 할 command Id
    * @return {commandStorage}
    */
-  deleteCommandSet(commandId){}
+  deleteCommandSet(commandId) {}
 
   /**
-   * 찾고자 하는 정보 AND 연산 
-   * @param {{commander: AbstCommander, commandId: string=}} searchInfo 
+   * 찾고자 하는 정보 AND 연산
+   * @param {{commander: AbstCommander, commandId: string=}} searchInfo
    * @return {commandStorage}
    */
-  findCommandStorage(searchInfo){}
-
-
+  findCommandStorage(searchInfo) {}
 
   /**
    * Device Controller에서 새로운 이벤트가 발생되었을 경우 알림
    * @param {string} eventName 'dcConnect' 연결, 'dcClose' 닫힘, 'dcError' 에러
    */
-  onEvent(eventName){
+  onEvent(eventName) {
     // BU.log(`AbstManager --> ${eventName}`);
-    // Event 발송부터 처리 (systemErrorList를 처리하기 위함)    
+    // Event 발송부터 처리 (systemErrorList를 처리하기 위함)
     /** @type {dcEvent} */
     const returnDcEvent = {
       eventName,
-      spreader: this
+      spreader: this,
     };
     this.mediator.updatedDcEventOnDevice(returnDcEvent);
 
     // BU.CLIN(eventName);
     // BU.CLIN(this.deviceController.client);
     // 연결 해제시 명령 해제 처리
-    if(_.isEmpty(this.deviceController.client)){
+    if (_.isEmpty(this.deviceController.client)) {
       /** @type {dcError} */
       const returnDcError = {
         errorInfo: new Error(eventName),
-        spreader: this
+        spreader: this,
       };
       this.iterator.clearAllCommandSetStorage(returnDcError);
-    } 
+    }
   }
 
   /**
    * 장치에서 데이터가 수신되었을 경우 해당 장치의 데이터를 수신할 Commander에게 전송
-   * @param {*} data 
+   * @param {*} data
    */
-  onData(data){
+  onData(data) {
     // BU.CLI('AbstManager --> onDcData', data);
     // BU.CLIN(this.iterator.currentItem);
-    let receiver = this.iterator.currentReceiver;
+    const receiver = this.iterator.currentReceiver;
     // BU.CLI(receiver);
-    if(receiver === null){
+    if (receiver === null) {
       BU.log('Not set Responder --> Completed Data', data);
     } else {
       /** @type {dcData} */
       const returnValue = {
         data,
         commandSet: this.iterator.currentCommandSet,
-        spreader: this
+        spreader: this,
       };
-      receiver.receiveDcData(returnValue); 
+      receiver.receiveDcData(returnValue);
     }
   }
 }

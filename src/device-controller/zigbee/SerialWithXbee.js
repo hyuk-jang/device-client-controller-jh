@@ -1,21 +1,17 @@
-'use strict';
 const _ = require('lodash');
-const serialport = require('serialport');
+const Serialport = require('serialport');
 const eventToPromise = require('event-to-promise');
 
+const xbeeApi = require('xbee-api');
 const AbstController = require('../AbstController');
 
-const xbee_api = require('xbee-api');
-
-require('../../format/controller/xbee');
-
 /** @type {Array.<{id: string, instance: SerialWithXbee}>} */
-let instanceList = [];
-class SerialWithXbee extends AbstController{
+const instanceList = [];
+class SerialWithXbee extends AbstController {
   /**
    * Serial Port 객체를 생성하기 위한 설정 정보
    * @param {deviceInfo} mainConfig
-   * @param {constructorXbee} connectInfo 
+   * @param {constructorXbee} connectInfo
    */
   constructor(mainConfig, connectInfo) {
     super(mainConfig);
@@ -24,10 +20,10 @@ class SerialWithXbee extends AbstController{
     this.xbeeConfig = connectInfo.addConfigInfo;
     this.xbeeAPI = null;
 
-    let foundInstance = _.find(instanceList, {id: this.port});
-    if(_.isEmpty(foundInstance)){
-      this.xbeeAPI = new xbee_api.XBeeAPI(this.xbeeConfig);
-      this.configInfo = {port: this.port, baud_rate: this.baud_rate, xbeeConfig: this.xbeeConfig };
+    const foundInstance = _.find(instanceList, {id: this.port});
+    if (_.isEmpty(foundInstance)) {
+      this.xbeeAPI = new xbeeApi.XBeeAPI(this.xbeeConfig);
+      this.configInfo = {port: this.port, baud_rate: this.baud_rate, xbeeConfig: this.xbeeConfig};
       instanceList.push({id: this.port, instance: this});
       this.setInit();
     } else {
@@ -39,7 +35,7 @@ class SerialWithXbee extends AbstController{
    * Parser Pipe 를 붙임
    * @param {Object} client SerialPort Client
    */
-  settingXbee(client){
+  settingXbee(client) {
     client.pipe(this.xbeeAPI.parser);
     this.xbeeAPI.builder.pipe(client);
 
@@ -47,10 +43,16 @@ class SerialWithXbee extends AbstController{
     this.xbeeAPI.parser.on('data', frame => {
       /** @type {xbeeApi_0x88|xbeeApi_0x8B|xbeeApi_0x90} */
       const frameObj = frame;
-      if (frameObj.type === 0x8B) {
-        if(frameObj.id !== this.currentFrameId){
+      if (frameObj.type === 0x8b) {
+        if (frameObj.id !== this.currentFrameId) {
           // This frame is definitely the response!
-          this.notifyError(new Error(`The frameId is not correct. Request Id: ${this.currentFrameId}, Response Id: ${frameObj.id}`));
+          this.notifyError(
+            new Error(
+              `The frameId is not correct. Request Id: ${this.currentFrameId}, Response Id: ${
+                frameObj.id
+              }`,
+            ),
+          );
         }
         // console.log('Node identifier:', String.fromCharCode(frameObj.commandData));
       } else {
@@ -62,22 +64,21 @@ class SerialWithXbee extends AbstController{
 
   /**
    * Serial Device로 메시지 전송
-   * @param {xbeeApi_0x10} frame_obj 전송 데이터
+   * @param {xbeeApi_0x10} frameObj 전송 데이터
    * @return {Promise} Promise 반환 객체
    */
-  async write(frame_obj) {
-    if(_.isEmpty(this.client)){
+  async write(frameObj) {
+    if (_.isEmpty(this.client)) {
       throw new Error(`The device is not connected. ${this.port}`);
     }
 
-    this.currentFrameId = frame_obj.id;
+    this.currentFrameId = frameObj.id;
 
-    this.xbeeAPI.builder.write(frame_obj);
-
+    this.xbeeAPI.builder.write(frameObj);
 
     /** @type {xbeeApi_0x8B} */
-    let frameData = await eventToPromise(this.client, 'data');
-    if(frameData.deliveryStatus === 0 ){
+    const frameData = await eventToPromise(this.client, 'data');
+    if (frameData.deliveryStatus === 0) {
       throw new Error('Data transfer failed');
     }
     return true;
@@ -85,10 +86,10 @@ class SerialWithXbee extends AbstController{
 
   async connect() {
     /** 접속 중인 상태라면 접속 시도하지 않음 */
-    if(!_.isEmpty(this.client)){
+    if (!_.isEmpty(this.client)) {
       throw new Error(`Already connected. ${this.port}`);
     }
-    const client = new serialport(this.port, {
+    const client = new Serialport(this.port, {
       baudRate: this.baud_rate,
     });
 
@@ -103,8 +104,6 @@ class SerialWithXbee extends AbstController{
       this.notifyError(error);
     });
 
-    
-
     await eventToPromise.multi(client, ['open'], ['error', 'close']);
     this.client = client;
     return this.client;
@@ -113,14 +112,13 @@ class SerialWithXbee extends AbstController{
   /**
    * Close Connect
    */
-  async disconnect(){
-    if(!_.isEmpty(this.client)){
+  async disconnect() {
+    if (!_.isEmpty(this.client)) {
       this.client.close();
       await eventToPromise.multi(this.client, ['close'], ['error', 'disconnectError']);
       return this.client;
-    } else {
-      return this.client;
     }
+    return this.client;
   }
 }
 module.exports = SerialWithXbee;

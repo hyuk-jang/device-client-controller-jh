@@ -1,5 +1,3 @@
-'use strict';
-
 const _ = require('lodash');
 const BU = require('base-util-jh').baseUtil;
 
@@ -8,11 +6,7 @@ const AbstMediator = require('../device-mediator/AbstMediator');
 const AbstManager = require('../device-manager/AbstManager');
 const AbstDeviceClient = require('../device-client/AbstDeviceClient');
 
-const {
-  writeLogFile,
-  getDefaultControlInfo,
-  getDefaultLogOption
-} = require('../util/dcUtil');
+const {writeLogFile, getDefaultControlInfo, getDefaultLogOption} = require('../util/dcUtil');
 
 const {
   definedCommanderResponse,
@@ -20,17 +14,25 @@ const {
   definedCommandSetRank,
   definedControlEvent,
   definedOperationError,
-  definedOperationStatus
+  definedOperationStatus,
 } = require('../../../default-intelligence').dccFlagModel;
 
 const instanceList = [];
+
+// 시스템 에러는 2개로 정해둠.
+const troubleList = [
+  {
+    code: 'Disconnect',
+    msg: '장치 연결 해제',
+  },
+];
 
 class Commander extends AbstCommander {
   /** @param {deviceInfo} config */
   constructor(config) {
     super();
-    let foundInstance = _.find(instanceList, {
-      id: config.target_id
+    const foundInstance = _.find(instanceList, {
+      id: config.target_id,
     });
     if (_.isEmpty(foundInstance)) {
       this.config = config;
@@ -43,7 +45,7 @@ class Commander extends AbstCommander {
       this.logOption = config.logOption || getDefaultLogOption();
       instanceList.push({
         id: config.target_id,
-        instance: this
+        instance: this,
       });
 
       // BU.CLI(this);
@@ -53,7 +55,7 @@ class Commander extends AbstCommander {
     }
 
     /** @type {AbstManager} */
-    this.manager;
+    this.manager = {};
 
     /**
      * 현재 발생되고 있는 시스템 에러 리스트
@@ -76,8 +78,7 @@ class Commander extends AbstCommander {
 
   /** 장치의 연결이 되어있는지 여부 @return {boolean} */
   get hasConnectedDevice() {
-    let hasDisConnected = _
-      .chain(this.manager)
+    const hasDisConnected = _.chain(this.manager)
       .get('deviceController.client')
       .isEmpty()
       .value();
@@ -95,27 +96,19 @@ class Commander extends AbstCommander {
       // 오브젝트가 아니라면 자동으로 생성
       if (_.isObject(commandSet)) {
         // let findSetKeyList = ['cmdList', 'commander', 'commandId', 'hasOneAndOne', 'rank', 'currCmdIndex'];
-        let findSetKeyList = [
-          'cmdList',
-          'commander',
-          'commandId',
-          'rank',
-          'currCmdIndex'
-        ];
+        const findSetKeyList = ['cmdList', 'commander', 'commandId', 'rank', 'currCmdIndex'];
 
-        let hasTypeCommandSet = _.eq(
+        const hasTypeCommandSet = _.eq(
           findSetKeyList.length,
-          _
-            .chain(commandSet)
+          _.chain(commandSet)
             .keys()
             .intersection(findSetKeyList)
-            .value().length
+            .value().length,
         );
         if (hasTypeCommandSet) {
           return this.manager.addCommandSet(commandSet);
-        } else {
-          throw new Error('Please check the command format.');
         }
+        throw new Error('Please check the command format.');
       } else {
         throw new Error('Please check the command format.');
       }
@@ -130,7 +123,7 @@ class Commander extends AbstCommander {
    */
   generationAutoCommand(cmd) {
     /** @type {commandSet} */
-    let commandSetInfo = {
+    const commandSetInfo = {
       rank: definedCommandSetRank.SECOND,
       commandId: null,
       commandType: null,
@@ -138,20 +131,21 @@ class Commander extends AbstCommander {
       currCmdIndex: 0,
       cmdList: [],
       operationStatus: definedOperationStatus.WAIT,
+      nodeId: '',
       uuid: '',
       // 자동 생성
       commander: this,
-      controlInfo: this.controlInfo
+      controlInfo: this.controlInfo,
     };
     // commandSet.hasOneAndOne = this.hasOneAndOne;
     // commandSet.hasErrorHandling = this.hasErrorHandling;
 
     // 배열일 경우
     if (Array.isArray(cmd)) {
-      cmd.forEach(cmd => {
+      cmd.forEach(c => {
         commandSetInfo.cmdList.push({
-          data: cmd,
-          commandExecutionTimeoutMs: 1000
+          data: c,
+          commandExecutionTimeoutMs: 1000,
         });
       });
     } else if (cmd === undefined || cmd === null || cmd === '') {
@@ -160,7 +154,7 @@ class Commander extends AbstCommander {
     } else {
       commandSetInfo.cmdList.push({
         data: cmd,
-        commandExecutionTimeoutMs: 1000
+        commandExecutionTimeoutMs: 1000,
       });
     }
 
@@ -175,13 +169,13 @@ class Commander extends AbstCommander {
   generationManualCommand(requestCommandSet) {
     try {
       /** @type {commandSet} */
-      let commandSetInfo = this.generationAutoCommand();
+      const commandSetInfo = this.generationAutoCommand();
 
       _.forEach(requestCommandSet, (cmd, key) => {
         if (_.has(commandSetInfo, key)) {
           commandSetInfo[key] = cmd;
         } else {
-          throw new Error('The requested key does not exist:' + key);
+          throw new Error(`The requested key does not exist:${key}`);
         }
       });
 
@@ -237,9 +231,8 @@ class Commander extends AbstCommander {
       if (_.has(definedCommanderResponse, key)) {
         this.manager.requestTakeAction(this, key);
         return true;
-      } else {
-        throw new Error(`${key} is not a valid control command.`);
       }
+      throw new Error(`${key} is not a valid control command.`);
     } catch (error) {
       throw error;
     }
@@ -252,14 +245,14 @@ class Commander extends AbstCommander {
    */
   updatedDcEventOnDevice(dcEvent) {
     switch (dcEvent.eventName) {
-    case definedControlEvent.CONNECT:
-      this._onSystemError('Disconnect', false);
-      break;
-    case definedControlEvent.DISCONNECT:
-      this._onSystemError('Disconnect', true);
-      break;
-    default:
-      break;
+      case definedControlEvent.CONNECT:
+        this.onSystemError('Disconnect', false);
+        break;
+      case definedControlEvent.DISCONNECT:
+        this.onSystemError('Disconnect', true);
+        break;
+      default:
+        break;
     }
 
     return this.user && this.user.updatedDcEventOnDevice(dcEvent);
@@ -271,21 +264,21 @@ class Commander extends AbstCommander {
    * @param {Boolean} hasOccur 발생 or 해결
    * @return {Object}
    */
-  _onSystemError(troubleCode, hasOccur) {
+  onSystemError(troubleCode, hasOccur) {
     // BU.CLIS(this.systemErrorList, troubleCode, hasOccur, msg);
     if (troubleCode === undefined) {
       this.systemErrorList = [];
       return this.systemErrorList;
     }
     const troubleObj = _.find(troubleList, {
-      code: troubleCode
+      code: troubleCode,
     });
     if (_.isEmpty(troubleObj)) {
-      throw ReferenceError('There is no such trouble message.' + troubleCode);
+      throw ReferenceError(`There is no such trouble message.${troubleCode}`);
     }
 
     const findObj = _.find(this.systemErrorList, {
-      code: troubleCode
+      code: troubleCode,
     });
     // 에러가 발생하였고 systemErrorList에 없다면 삽입
     if (hasOccur && _.isEmpty(findObj)) {
@@ -293,9 +286,10 @@ class Commander extends AbstCommander {
       this.systemErrorList.push(troubleObj);
     } else if (!hasOccur && !_.isEmpty(findObj)) {
       // 에러 해제하였고 해당 에러가 존재한다면 삭제
-      this.systemErrorList = _.reject(this.systemErrorList, systemError => {
-        return systemError.code === troubleCode;
-      });
+      this.systemErrorList = _.reject(
+        this.systemErrorList,
+        systemError => systemError.code === troubleCode,
+      );
     }
     return this.systemErrorList;
   }
@@ -313,7 +307,7 @@ class Commander extends AbstCommander {
       'config.logOption.hasDcError',
       'error',
       _.get(dcError.errorInfo, 'message'),
-      _.get(dcError.errorInfo, 'stack')
+      _.get(dcError.errorInfo, 'stack'),
     );
 
     return this.user && this.user.onDcError(dcError);
@@ -330,7 +324,7 @@ class Commander extends AbstCommander {
       'config.logOption.hasDcMessage',
       'message',
       dcMessage.msgCode,
-      `commandId: ${_.get(dcMessage.commandSet, 'commandId')}`
+      `commandId: ${_.get(dcMessage.commandSet, 'commandId')}`,
     );
     return this.user && this.user.onDcMessage(dcMessage);
   }
@@ -345,11 +339,3 @@ class Commander extends AbstCommander {
 }
 
 module.exports = Commander;
-
-// 시스템 에러는 2개로 정해둠.
-let troubleList = [
-  {
-    code: 'Disconnect',
-    msg: '장치 연결 해제'
-  }
-];
