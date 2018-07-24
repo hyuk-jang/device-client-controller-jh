@@ -437,9 +437,8 @@ class Manager extends AbstManager {
     // BU.CLIN(this.commandStorage);
     // BU.CLIN(this.deviceController.configInfo);
 
-    const {currentCommandSet} = this.iterator;
+    const {currentCommandSet, currentReceiver} = this.iterator;
     // BU.CLIN(this.commandStorage, 4);
-    const {nextCommandSet, currentReceiver} = this.iterator;
     const {operationStatus} = currentCommandSet;
     // 현재 명령이 수행 중일 경우 (currentCommandSet이 설정 되어 있음)
     if (this.hasPerformCommand) {
@@ -554,8 +553,7 @@ class Manager extends AbstManager {
 
         // 모든 명령 수행 완료
         if (_.isEmpty(this.iterator.nextCommandSet)) {
-          BU.CLI('Complate All Command');
-          BU.CLI('모든 명령 수행 완료', _.get(this.iterator.currentCommandSet, 'nodeId'));
+          BU.CLI('Complete All Standby CommandList', _.get(currentCommandSet, 'nodeId'));
           // BU.CLIN(this.iterator.currentCommandSet);
           this.iterator.clearCurrentCommandSet();
           this.hasPerformCommand = false;

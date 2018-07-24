@@ -41,7 +41,7 @@ class Commander extends AbstCommander {
       this.controlInfo = config.controlInfo || getDefaultControlInfo();
       /** Commander를 명령하는 Client 객체 */
       /** @type {AbstDeviceClient} */
-      this.user = config.user || null;
+      this.user = config.getUser() || null;
       this.logOption = config.logOption || getDefaultLogOption();
       instanceList.push({
         id: config.target_id,

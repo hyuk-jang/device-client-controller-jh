@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const {BU} = require('base-util-jh');
+const {BU, CU} = require('base-util-jh');
 
 const AbstManager = require('../device-manager/AbstManager');
 
@@ -27,16 +27,26 @@ function writeLogFile(logObj, path, eventType, dataTitle, data) {
     } else {
       let realData = '';
       if (Buffer.isBuffer(data)) {
-        // FIXME: Hex 파일 형태로 저장할 경우 보완
+        // // FIXME: Hex 파일 형태로 저장할 경우 보완
         // if(eventType === 'data' && dataTitle === 'onData'){
         //   let bufData = Buffer.concat([Buffer.from(BU.convertDateToText(new Date(), null, 2)), Buffer.from(`${id}>`), data, Buffer.from('<')]);
         //   BU.writeFile(`./log/device-client/${eventType}/${BU.convertDateToText(new Date(), '', 2)}.hex`, bufData);
         // }
         // realData = data.toString('hex');
+
         realData = data.toString();
+        // xbee 저장
+        if (eventType === 'data' && dataTitle === 'onData' && BU.IsJsonString(realData)) {
+          const parseData = JSON.parse(realData);
+          if (_.get(parseData, 'data.type') === 'Buffer') {
+            parseData.data = Buffer.from(parseData.data).toString();
+            realData = JSON.stringify(parseData);
+          }
+        }
       } else if (data instanceof Error) {
         realData = data;
       } else if (_.isObject(data)) {
+        // if(_.get(realData, 'data.type') === 'Buffer') {}
         realData = JSON.stringify(data);
       } else {
         realData = data;

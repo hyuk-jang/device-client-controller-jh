@@ -47,8 +47,9 @@ class AbstDeviceClient extends EventEmitter {
    */
   setDeviceClient(config) {
     try {
+      BU.CLI(config);
       const builder = new Builder();
-      config.user = this;
+      config.getUser = () => this;
       const deviceClientInfo = builder.setDeviceClient(config);
       this.commander = deviceClientInfo.deviceCommander;
       this.manager = deviceClientInfo.deviceManager;
@@ -132,7 +133,7 @@ class AbstDeviceClient extends EventEmitter {
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */
   executeCommand(commandSet) {
-    // BU.CLI(commandSet);
+    // BU.CLIN(commandSet);
     try {
       return this.commander.executeCommand(commandSet);
     } catch (error) {
@@ -237,11 +238,11 @@ class AbstDeviceClient extends EventEmitter {
    */
   onDcMessage(dcMessage) {
     BU.CLIS(
-      dcMessage.msgCode,
       `commanderId: ${_.get(dcMessage.commandSet.commander, 'id')}, commandSetId: ${_.get(
         dcMessage.commandSet,
         'commandId',
-      )}`,
+      )}, nodeId: ${_.get(dcMessage.commandSet, 'nodeId')},`,
+      dcMessage.msgCode,
     );
 
     const message = _.get(dcMessage, 'msgCode');
@@ -276,7 +277,7 @@ class AbstDeviceClient extends EventEmitter {
       `commanderId: ${_.get(dcData.commandSet.commander, 'id')}, commandSetId: ${_.get(
         dcData.commandSet,
         'commandId',
-      )}`,
+      )}, nodeId: ${_.get(dcData.commandSet, 'nodeId')},`,
       dcData.data,
     );
   }
@@ -291,7 +292,8 @@ class AbstDeviceClient extends EventEmitter {
       `commanderId: ${_.get(dcError.commandSet.commander, 'id')}, commandSetId: ${_.get(
         dcError.commandSet,
         'commandId',
-      )}`,
+      )}, nodeId: ${_.get(dcError.commandSet, 'nodeId')},
+      `,
       dcError.errorInfo,
     );
 

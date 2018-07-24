@@ -18,17 +18,25 @@
     "chai": "^4.1.2",
     "docdash": "^0.4.0",
     "dotenv": "^6.0.0",
-    "eslint": "^4.19.1",
+    "eslint": "^5.2.0",
+    "eslint-config-airbnb": "^17.0.0",
+    "eslint-config-prettier": "^2.9.0",
+    "eslint-plugin-import": "^2.13.0",
+    "eslint-plugin-jsx-a11y": "^6.1.1",
+    "eslint-plugin-prettier": "^2.6.2",
+    "eslint-plugin-react": "^7.10.0",
     "jsdoc": "^3.5.5",
-    "mocha": "^4.1.0"
+    "mocha": "^5.2.0",
+    "prettier": "^1.13.7"
   },
   "dependencies": {
-    "base-util-jh": "^1.1.7",
+    "base-util-jh": "^1.1.8",
     "bluebird": "^3.5.1",
     "event-to-promise": "^0.8.0",
     "lodash": "^4.17.10",
     "serialport": "^6.2.0",
-    "uuid": "^3.2.1",
+    "split": "^1.0.1",
+    "uuid": "^3.3.2",
     "xbee-api": "^0.6.0"
   }
 }
