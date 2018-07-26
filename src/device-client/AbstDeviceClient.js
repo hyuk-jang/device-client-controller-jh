@@ -47,7 +47,7 @@ class AbstDeviceClient extends EventEmitter {
    */
   setDeviceClient(config) {
     try {
-      BU.CLI(config);
+      // BU.CLI(config);
       const builder = new Builder();
       config.getUser = () => this;
       const deviceClientInfo = builder.setDeviceClient(config);
