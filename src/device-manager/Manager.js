@@ -291,8 +291,12 @@ class Manager extends AbstManager {
     );
 
     // BU.CLI('transferCommandToDevice', currentCommand.data);
-    // Socket 통신이고 데이터가 Object 형태라면 Buffer로 변환. TEST 코드에 사용됨.
-    if (this.deviceController instanceof Socket && typeof currentCommand.data === 'object') {
+    // Socket 통신이고 데이터가 Json 형태라면 Buffer로 변환. TEST 코드에 사용됨.
+    if (
+      this.deviceController instanceof Socket &&
+      !Buffer.isBuffer(currentCommand.data) &&
+      typeof currentCommand.data === 'object'
+    ) {
       currentCommand.data = JSON.stringify(currentCommand.data);
     }
     await this.deviceController.write(currentCommand.data);

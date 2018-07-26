@@ -278,7 +278,7 @@ class AbstDeviceClient extends EventEmitter {
         dcData.commandSet,
         'commandId',
       )}, nodeId: ${_.get(dcData.commandSet, 'nodeId')},`,
-      dcData.data,
+      _.get(dcData, 'data.type') === 'Buffer' ? Buffer.from(dcData.data).toString() : dcData.data,
     );
   }
 
