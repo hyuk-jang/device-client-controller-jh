@@ -40,6 +40,7 @@ class SocketWithParser extends AbstController {
    * @param {Object} client SerialPort Client
    */
   settingParser(client) {
+    // BU.CLI('settingParser');
     if (this.parserInfo !== undefined && this.parserInfo.parser !== undefined) {
       let stream = null;
       switch (this.parserInfo.parser) {

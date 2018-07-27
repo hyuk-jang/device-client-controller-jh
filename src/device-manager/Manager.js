@@ -61,7 +61,14 @@ class Manager extends AbstManager {
         }
         break;
       case 'socket':
-        Controller = Socket;
+        switch (config.connect_info.subType) {
+          case 'parser':
+            Controller = require('../device-controller/socket/SocketWithParser');
+            break;
+          default:
+            Controller = require('../device-controller/socket/Socket');
+            break;
+        }
         break;
       default:
         break;
@@ -145,7 +152,7 @@ class Manager extends AbstManager {
 
       switch (commanderResponse) {
         case definedCommanderResponse.DONE:
-          // BU.CLI('isOk', this.iterator.currentReceiver.id);
+          BU.CLIN(this.commandStorage);
           // 타이머가 붙어있다면 타이머 해제
           currentCommandSet.commandExecutionTimer &&
             currentCommandSet.commandExecutionTimer.pause();
@@ -544,15 +551,19 @@ class Manager extends AbstManager {
         // Operation Status 초기화
         this.updateOperationStatus(definedOperationStatus.WAIT);
 
-        // 1:1 통신이라면 진행 X
-        // BU.CLI(_.get(currentCommandSet.controlInfo, 'hasOneAndOne'));
-        if (
-          _.get(this.iterator.currentCommandSet.controlInfo, 'hasOneAndOne') === true &&
-          operationStatus !== definedOperationStatus.RECEIVE_NEXT_FORCE
-        ) {
-          BU.CLI('hasOneAndOne');
-          this.sendMessageToCommander(definedCommandSetMessage.ONE_AND_ONE_COMUNICATION);
-          return;
+        // 1:1 통신 일 경우는 다음 Step으로 넘어가지 않고 현재 if 문 안에서 끝냄.
+        if (_.get(this.iterator.currentCommandSet.controlInfo, 'hasOneAndOne') === true) {
+          // 포커스를 움직이고자 요청할 경우
+          if (operationStatus === definedOperationStatus.RECEIVE_NEXT_FORCE) {
+            // 다음 진행할 명령이 존재한다면 바로 수행
+            if (!_.isEmpty(this.iterator.nextCommandSet)) {
+              return this.nextCommand();
+            }
+            // 아닐 경우 현재 명령 수행 중 여부를 false 바꿈 (addCommandSet 메소드에서의 명령 추가를 위함)
+            this.hasPerformCommand = false;
+          }
+          // 명령이 모두 수행되었고 1:1 통신을 하고 있다는 메시지를 보냄
+          return this.sendMessageToCommander(definedCommandSetMessage.ONE_AND_ONE_COMUNICATION);
         }
 
         // 모든 명령 수행 완료

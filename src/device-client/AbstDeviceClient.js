@@ -206,7 +206,7 @@ class AbstDeviceClient extends EventEmitter {
     } else {
       strManagerInfo = _.get(dcEvent.spreader, 'configInfo');
     }
-    BU.log(
+    BU.CLIS(
       `${dcEvent.eventName} --> commander: ${_.get(
         this.commander,
         'id',
@@ -273,12 +273,20 @@ class AbstDeviceClient extends EventEmitter {
    * @param {dcData} dcData 현재 장비에서 실행되고 있는 명령 객체
    */
   onDcData(dcData) {
+    let realData;
+    if (_.get(dcData, 'data.type') === 'Buffer') {
+      realData = Buffer.from(dcData.data).toString();
+    } else if (Buffer.isBuffer(dcData.data)) {
+      realData = dcData.data.toString();
+    } else {
+      realData = dcData.data;
+    }
     BU.CLIS(
       `commanderId: ${_.get(dcData.commandSet.commander, 'id')}, commandSetId: ${_.get(
         dcData.commandSet,
         'commandId',
       )}, nodeId: ${_.get(dcData.commandSet, 'nodeId')},`,
-      _.get(dcData, 'data.type') === 'Buffer' ? Buffer.from(dcData.data).toString() : dcData.data,
+      realData,
     );
   }
 

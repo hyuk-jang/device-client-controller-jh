@@ -15,14 +15,14 @@ for (let i = 0; i < 3; i += 1) {
   const server = net
     .createServer(socket => {
       // socket.end('goodbye\n');
-      const port = Number(`900${i}`);
+      const port = Number(`751${i}`);
       console.log(`client is Connected ${port}`);
 
       // socket.write('18?');
 
       socket.on('data', data => {
         console.log(`P: ${port} --> Received Data: ${data} `);
-        return socket.write(`this.is.my.socket\r\ngogogogo${port}`);
+        // return socket.write(`this.is.my.socket\r\ngogogogo${port}`);
       });
     })
     .on('error', err => {
@@ -32,7 +32,7 @@ for (let i = 0; i < 3; i += 1) {
     });
 
   // grab an arbitrary unused port.
-  server.listen(Number(`900${i}`), () => {
+  server.listen(Number(`751${i}`), () => {
     console.log('opened server on', server.address());
   });
 
