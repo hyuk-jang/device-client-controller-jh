@@ -152,7 +152,7 @@ class Manager extends AbstManager {
 
       switch (commanderResponse) {
         case definedCommanderResponse.DONE:
-          BU.CLIN(this.commandStorage);
+          // BU.CLIN(this.commandStorage);
           // 타이머가 붙어있다면 타이머 해제
           currentCommandSet.commandExecutionTimer &&
             currentCommandSet.commandExecutionTimer.pause();
