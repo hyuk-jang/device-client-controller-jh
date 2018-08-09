@@ -34,6 +34,7 @@
     "bluebird": "^3.5.1",
     "event-to-promise": "^0.8.0",
     "lodash": "^4.17.10",
+    "modbus-serial": "^7.3.0",
     "serialport": "^6.2.2",
     "split": "^1.0.1",
     "uuid": "^3.3.2",

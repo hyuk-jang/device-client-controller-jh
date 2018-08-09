@@ -9,6 +9,7 @@ const AbstCommander = require('../device-commander/AbstCommander');
 const AbstManager = require('../device-manager/AbstManager');
 
 const {
+  MODBUS,
   definedCommanderResponse,
   definedCommandSetMessage,
   definedCommandSetRank,
@@ -24,6 +25,7 @@ class AbstDeviceClient extends EventEmitter {
     /** @type {AbstManager} @private */
     this.manager = {};
 
+    this.MODBUS = MODBUS;
     this.definedCommanderResponse = definedCommanderResponse;
     this.definedCommandSetMessage = definedCommandSetMessage;
     this.definedCommandSetRank = definedCommandSetRank;

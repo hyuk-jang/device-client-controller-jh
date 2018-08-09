@@ -70,6 +70,18 @@ class Manager extends AbstManager {
             break;
         }
         break;
+      case 'modbus':
+        switch (config.connect_info.subType) {
+          case 'rtu':
+            Controller = require('../device-controller/modbus/ModbusRTU');
+            break;
+          case 'tcp':
+            Controller = require('../device-controller/modbus/ModbusTCP');
+            break;
+          default:
+            break;
+        }
+        break;
       default:
         break;
     }

@@ -8,12 +8,15 @@ const {writeLogFile} = require('../util/dcUtil');
 
 const {definedControlEvent} = require('../../../default-intelligence').dccFlagModel;
 
-class AbstController {
+const EventEmitter = require('events');
+
+class AbstController extends EventEmitter {
   /**
    * Device Controller 객체를 생성하기 위한 설정 정보
    * @param {deviceInfo} mainConfig
    */
   constructor(mainConfig) {
+    super();
     this.mainConfig = mainConfig;
     /** @type {Array.<AbstManager>}  */
     this.observers = [];
@@ -71,11 +74,11 @@ class AbstController {
     }
   }
 
-  /** @return {Promise} 접속 성공시 Resolve, 실패시 Reject  */
-  async connect() {
-    this.requestConnectCount += 1;
-    BU.CLI('?', this.requestConnectCount);
-  }
+  // /** @return {Promise} 접속 성공시 Resolve, 실패시 Reject  */
+  // async connect() {
+  //   this.requestConnectCount += 1;
+  //   BU.CLI('?', this.requestConnectCount);
+  // }
 
   // TODO 장치와의 연결 접속 해제 필요시 작성
   disconnect() {}
