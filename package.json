@@ -27,10 +27,10 @@
     "eslint-plugin-react": "^7.10.0",
     "jsdoc": "^3.5.5",
     "mocha": "^5.2.0",
-    "prettier": "^1.14.0"
+    "prettier": "^1.14.2"
   },
   "dependencies": {
-    "base-util-jh": "^1.1.9",
+    "base-util-jh": "^1.1.10",
     "bluebird": "^3.5.1",
     "event-to-promise": "^0.8.0",
     "lodash": "^4.17.10",

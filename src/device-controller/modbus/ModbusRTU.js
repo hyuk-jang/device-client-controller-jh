@@ -40,12 +40,16 @@ class ModbusRTU extends AbstController {
     // unitId 설정
     try {
       // BU.CLI(mRtuInfo);
+      // await this.client.setID(0);
       await this.client.setID(mRtuInfo.unitId);
       const values = _.values(mRtuInfo.params);
-      // BU.CLI(values);
+      BU.CLI(values);
+      // BU.CLIN(this.client);
       // fnCode에 해당하드 메소드 호출 및 해당 메소드에 param 적용
       const data = await this.client[mRtuInfo.FN_CODE](...values);
-      // const data = await this.client.readInputRegisters(0, 1);
+      // const data = await this.client.readInputRegisters(0, 10);
+
+      BU.CLI(data);
       this.notifyData(data.data);
       return data;
     } catch (error) {
@@ -63,21 +67,29 @@ class ModbusRTU extends AbstController {
 
     const client = new ModRTU();
 
-    client.connectRTU(
-      this.port,
-      {
-        baudRate: this.baud_rate,
-      },
-      hasError => {
-        if (hasError) {
-          this.client = {};
-          this.notifyDisconnect(hasError);
-          this.emit('close');
-          return;
-        }
-        this.emit('connect');
-      },
-    );
+    // client.connectRTU(
+    //   this.port,
+    //   {
+    //     baudRate: this.baud_rate,
+    //   },
+    //   hasError => {
+    //     BU.CLI(hasError);
+    //     if (hasError) {
+    //       this.client = {};
+    //       this.notifyDisconnect(hasError);
+    //       this.emit('close');
+    //       return;
+    //     }
+    //     this.emit('connect');
+    //   },
+    // );
+
+    client
+      .connectRTUBuffered(this.port, {baudRate: this.baud_rate})
+      .then(() => this.emit('connect'))
+      .catch(this.emit('close'));
+
+    // BU.CLI(result);
 
     await eventToPromise.multi(this, ['connect', 'connection', 'open'], ['close', 'error']);
     /** @type {ModRTU} */
