@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const BU = require('base-util-jh').baseUtil;
+const {BU} = require('base-util-jh');
 
 const AbstCommander = require('./AbstCommander');
 const AbstMediator = require('../device-mediator/AbstMediator');
@@ -79,10 +79,9 @@ class Commander extends AbstCommander {
   /** 장치의 연결이 되어있는지 여부 @return {boolean} */
   get hasConnectedDevice() {
     const hasDisConnected = _.chain(this.manager)
-      .get('deviceController.client')
+      .get('deviceController.client', {})
       .isEmpty()
       .value();
-
     return !hasDisConnected;
   }
 
