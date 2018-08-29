@@ -318,12 +318,7 @@ class Manager extends AbstManager {
     ) {
       currentCommand.data = JSON.stringify(currentCommand.data);
     }
-    await this.deviceController.write(currentCommand.data);
-    // 명령 전송이 성공하였으므로 데이터 수신 상태로 변경
-    this.updateOperationStatus(definedOperationStatus.RECEIVE_WAIT_DATA);
-
-    // BU.CLI('명령 요청', this.iterator.currentReceiver.id, processItem.commandExecutionTimeoutMs);
-    // console.time(`timeout ${testId}`);
+    // 정해진 시간안에 명령 완료 체크 타이머 구동
     currentCommandSet.commandExecutionTimer = new CU.Timer(() => {
       let error;
       switch (currentCommandSet.operationStatus) {
@@ -345,6 +340,13 @@ class Manager extends AbstManager {
       return this.manageProcessingCommand(error);
     }, currentCommand.commandExecutionTimeoutMs || 1000);
     this.operationTimer = currentCommandSet.commandExecutionTimer;
+
+    await this.deviceController.write(currentCommand.data);
+    // 명령 전송이 성공하였으므로 데이터 수신 상태로 변경
+    this.updateOperationStatus(definedOperationStatus.RECEIVE_WAIT_DATA);
+
+    // BU.CLI('명령 요청', this.iterator.currentReceiver.id, processItem.commandExecutionTimeoutMs);
+    // console.time(`timeout ${testId}`);
   }
 
   /**
