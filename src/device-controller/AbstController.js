@@ -22,7 +22,7 @@ class AbstController extends EventEmitter {
     this.configInfo = null;
     this.client = {};
 
-    this.hasConnect;
+    this.hasConnect = false;
     this.connectTimer;
     this.connectIntervalTime = 1000 * 20;
 
@@ -114,12 +114,14 @@ class AbstController extends EventEmitter {
   notifyConnect() {
     // BU.CLI('notifyConnect');
     writeLogFile(this, 'mainConfig.logOption.hasDcEvent', 'event', 'notifyConnect');
+    // BU.CLI(this.hasConnect, _.isEmpty(this.client));
     if (!this.hasConnect && !_.isEmpty(this.client)) {
       this.hasConnect = true;
       this.notifyEvent(definedControlEvent.CONNECT);
 
-      // 타이머가 살아있다면 정지
-      this.connectTimer.getStateRunning() && this.connectTimer.pause();
+      if (!_.isNil(this.connectTimer)) {
+        this.connectTimer.getStateRunning() && this.connectTimer.pause();
+      }
     }
   }
 
@@ -135,7 +137,12 @@ class AbstController extends EventEmitter {
       // 재접속 옵션이 있을 경우에만 자동 재접속 수행
       if (_.get(this.mainConfig.controlInfo, 'hasReconnect') === true) {
         Promise.delay(1000).then(() => {
-          if (_.isEmpty(this.client) && !this.connectTimer.getStateRunning()) {
+          if (
+            _.isEmpty(this.client) &&
+            _.isNil(!this.connectTimer) &&
+            _.isEmpty(!this.connectTimer) &&
+            !this.connectTimer.getStateRunning()
+          ) {
             this.doConnect();
           }
         });
@@ -163,6 +170,12 @@ class AbstController extends EventEmitter {
       observer.onData(data);
     });
   }
+
+  /**
+   * 접속한 client를 설정
+   * @param {*} client
+   */
+  setPassiveClient() {}
 }
 
 module.exports = AbstController;

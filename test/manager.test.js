@@ -85,7 +85,7 @@ describe('Device Manager Test', function() {
       deviceManager.addCommandSet(_.cloneDeep(cmdInfo));
     }
 
-    const standbyCommandSetList = deviceManager.commandStorage.standbyCommandSetList;
+    const {standbyCommandSetList} = deviceManager.commandStorage;
     // 명령 추가 결과 테스트 // [Add] Rank{2} * 3, Rank{3} * 2
     const rank2 = _.find(standbyCommandSetList, {rank: 2});
     expect(rank2.list.length).to.be.eq(3);
@@ -181,9 +181,9 @@ describe('Device Manager Test', function() {
     expect(foundRank2.length).to.be.eq(1);
     // 첫 명령은 수행하였으로
     expect(_.head(foundRank2).currCmdIndex).to.be.eq(1);
-    let currentCommandSet = deviceManager.iterator.currentCommandSet;
+    let currCommandSet = deviceManager.iterator.currentCommandSet;
     // 현재 작업중은 Emergency
-    expect(currentCommandSet.rank).to.be.eq(definedCommandSetRank.EMERGENCY);
+    expect(currCommandSet.rank).to.be.eq(definedCommandSetRank.EMERGENCY);
     // 긴급 명령 CmdList[1]이 진행 중
     await Promise.delay(1000);
     deviceManager.requestTakeAction(
@@ -192,7 +192,7 @@ describe('Device Manager Test', function() {
     );
     BU.CLIN(deviceManager.commandStorage, 4);
     // 2번째 명령 수행중
-    expect(currentCommandSet.currCmdIndex).to.be.eq(1);
+    expect(currCommandSet.currCmdIndex).to.be.eq(1);
 
     // 리스트에서 Rank 2가 최우선이므로 해당 명령을 끄집어와 CmdList[1] 수행 중
     await Promise.delay(1000);
@@ -201,10 +201,10 @@ describe('Device Manager Test', function() {
       definedCommanderResponse.NEXT,
     );
     BU.CLIN(deviceManager.commandStorage, 4);
-    currentCommandSet = deviceManager.iterator.currentCommandSet;
-    expect(currentCommandSet.commandId).to.eq('홍길동0');
-    expect(currentCommandSet.rank).to.be.eq(2);
-    expect(currentCommandSet.currCmdIndex).to.be.eq(1);
+    currCommandSet = deviceManager.iterator.currentCommandSet;
+    expect(currCommandSet.commandId).to.eq('홍길동0');
+    expect(currCommandSet.rank).to.be.eq(2);
+    expect(currCommandSet.currCmdIndex).to.be.eq(1);
 
     // Rank 3 끄집어와 CmdList[0] 수행 중
     await Promise.delay(500);
@@ -214,18 +214,18 @@ describe('Device Manager Test', function() {
       definedCommanderResponse.NEXT,
     );
     await Promise.delay(500);
-    currentCommandSet = deviceManager.iterator.currentCommandSet;
-    expect(currentCommandSet.rank).to.be.eq(3);
-    expect(currentCommandSet.commandId).to.eq('홍길동1');
-    expect(currentCommandSet.currCmdIndex).to.be.eq(0);
+    currCommandSet = deviceManager.iterator.currentCommandSet;
+    expect(currCommandSet.rank).to.be.eq(3);
+    expect(currCommandSet.commandId).to.eq('홍길동1');
+    expect(currCommandSet.currCmdIndex).to.be.eq(0);
 
     // 명령 삭제 요청
-    deviceManager.deleteCommandSet(currentCommandSet.commandId);
+    deviceManager.deleteCommandSet(currCommandSet.commandId);
 
     // 모든 명령 수행 완료
     await Promise.delay(1000);
-    currentCommandSet = deviceManager.iterator.currentCommandSet;
-    expect(_.isEqual(currentCommandSet, {})).to.be.eq(true);
+    currCommandSet = deviceManager.iterator.currentCommandSet;
+    expect(_.isEqual(currCommandSet, {})).to.be.eq(true);
   });
 
   // 1. 지연 명령 수행 시 Delay 대기열로 이동
@@ -289,39 +289,39 @@ describe('Device Manager Test', function() {
     // Delay Rank 2 명령 교체 후 Rank3 CmdList[0] 수행 중 진행 중
     await Promise.delay(2000);
     BU.CLIN(deviceManager.commandStorage, 4);
-    let currentCommandSet = deviceManager.iterator.currentCommandSet;
-    expect(currentCommandSet.commandId).to.eq('홍길동1');
-    expect(currentCommandSet.currCmdIndex).to.eq(0);
-    const delayCommandSetList = deviceManager.iterator.aggregate.delayCommandSetList;
+    let currCommandSet = deviceManager.iterator.currentCommandSet;
+    expect(currCommandSet.commandId).to.eq('홍길동1');
+    expect(currCommandSet.currCmdIndex).to.eq(0);
+    const {delayCommandSetList} = deviceManager.iterator.aggregate;
     expect(delayCommandSetList).to.length(1);
     expect(_.head(delayCommandSetList).commandQueueReturnTimer.getStateRunning()).to.eq(true);
 
     // 일반 명령이 모두 수행되고 Delay 명령만 남은 상태
     await Promise.delay(2000);
 
-    currentCommandSet = deviceManager.iterator.currentCommandSet;
-    expect(_.isEqual(currentCommandSet, {})).to.eq(true);
+    currCommandSet = deviceManager.iterator.currentCommandSet;
+    expect(_.isEqual(currCommandSet, {})).to.eq(true);
     // 작업 대기 상태
     expect(deviceManager.hasPerformCommand).to.eq(false);
 
     // Delay 명령이 수면위로 올라옴
     await Promise.delay(1000);
-    currentCommandSet = deviceManager.iterator.currentCommandSet;
-    expect(currentCommandSet.commandId).to.eq('지연 홍길동');
-    expect(currentCommandSet.currCmdIndex).to.eq(0);
-    expect(currentCommandSet.delayExecutionTimeoutMs).to.eq(undefined);
+    currCommandSet = deviceManager.iterator.currentCommandSet;
+    expect(currCommandSet.commandId).to.eq('지연 홍길동');
+    expect(currCommandSet.currCmdIndex).to.eq(0);
+    expect(currCommandSet.delayExecutionTimeoutMs).to.eq(undefined);
     // 작업 대기 상태
 
     // Delay 명령이 2번째(Delay Time이 없을 경우)
     await Promise.delay(1000);
-    currentCommandSet = deviceManager.iterator.currentCommandSet;
-    expect(currentCommandSet.commandId).to.eq('지연 홍길동');
-    expect(currentCommandSet.currCmdIndex).to.eq(1);
+    currCommandSet = deviceManager.iterator.currentCommandSet;
+    expect(currCommandSet.commandId).to.eq('지연 홍길동');
+    expect(currCommandSet.currCmdIndex).to.eq(1);
 
     // Delay 명령이 2번째(Delay Time이 없을 경우)
     await Promise.delay(1000);
-    currentCommandSet = deviceManager.iterator.currentCommandSet;
-    expect(_.isEqual(currentCommandSet, {})).to.eq(true);
+    currCommandSet = deviceManager.iterator.currentCommandSet;
+    expect(_.isEqual(currCommandSet, {})).to.eq(true);
   });
 
   // 1. 수행 중인 명령 Commander에서 응답 테스트 ['isOk', 'retry']

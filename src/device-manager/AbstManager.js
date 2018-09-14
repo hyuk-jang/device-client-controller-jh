@@ -45,8 +45,6 @@ class AbstManager extends EventEmitter {
     return true;
   }
 
-  setMediator() {}
-
   /** 장치에 메시지를 보내고자 할 경우 */
   async transferCommandToDevice() {}
 
@@ -126,6 +124,33 @@ class AbstManager extends EventEmitter {
       receiver.receiveDcData(returnValue);
     }
   }
+
+  // Setter 부분
+  /**
+   * deviceMediator 을 정의
+   * @param {AbstMediator} deviceMediator
+   */
+  setMediator(deviceMediator) {}
+
+  /** Iterator 정의 */
+  createIterator() {}
+
+  /** @param {deviceInfo} config */
+  setManager(config) {}
+
+  /**
+   *
+   * @param {deviceInfo} config
+   * @param {string} siteUUID Site 단위 고유 ID
+   */
+  setPassiveManager(config, siteUUID) {}
+
+  /**
+   * setPassiveManager에 접속한 client
+   * @param {string} siteUUID Site 단위 고유 ID
+   * @param {*} client setPassiveManager에 접속한 클라이언트
+   */
+  bindingPassiveClient(siteUUID, client) {}
 }
 
 module.exports = AbstManager;

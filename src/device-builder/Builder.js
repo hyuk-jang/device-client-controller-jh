@@ -5,6 +5,7 @@ const Mediator = require('../device-mediator/Mediator');
 
 const AbstManager = require('../device-manager/AbstManager');
 const Manager = require('../device-manager/Manager');
+const ManagerSetter = require('../device-manager/ManagerSetter');
 
 const AbstBuilder = require('./AbstBuilder');
 
@@ -22,6 +23,26 @@ class Builder extends AbstBuilder {
   setDeviceClient(config) {
     try {
       const deviceManager = this.setDeviceManager(config);
+      const deviceCommander = this.setDeviceCommnader(config);
+      deviceCommander.manager = deviceManager;
+
+      this.mediator.setColleague(deviceCommander, deviceManager);
+
+      return {deviceCommander, deviceManager};
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Create 'Commander', 'Server'
+   * @param {deviceInfo} config
+   * @param {string} siteUUID
+   * @return {{deviceCommander: AbstCommander, deviceManager: AbstManager}}
+   */
+  setPassiveClient(config, siteUUID) {
+    try {
+      const deviceManager = this.setPassiveManager(config, siteUUID);
       const deviceCommander = this.setDeviceCommnader(config);
       deviceCommander.manager = deviceManager;
 
@@ -84,8 +105,19 @@ class Builder extends AbstBuilder {
    * @return {AbstManager}
    */
   setDeviceManager(config) {
-    const deviceManager = new Manager();
+    const deviceManager = new ManagerSetter();
     return deviceManager.setManager(config);
+    // return deviceManager;
+  }
+
+  /**
+   * @param {deviceInfo} config
+   * @param {string} siteUUID
+   * @return {AbstManager}
+   */
+  setPassiveManager(config, siteUUID) {
+    const deviceManager = new ManagerSetter();
+    return deviceManager.setPassiveManager(config, siteUUID);
     // return deviceManager;
   }
 

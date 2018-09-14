@@ -21,9 +21,9 @@ class AbstDeviceClient extends EventEmitter {
   constructor() {
     super();
     /** @private @type {AbstCommander}  */
-    this.commander = {};
-    /** @type {AbstManager} @private */
-    this.manager = {};
+    this.commander;
+    /** @type {AbstManager} */
+    this.manager;
 
     this.MODBUS = MODBUS;
     this.definedCommanderResponse = definedCommanderResponse;
@@ -55,6 +55,38 @@ class AbstDeviceClient extends EventEmitter {
       const deviceClientInfo = builder.setDeviceClient(config);
       this.commander = deviceClientInfo.deviceCommander;
       this.manager = deviceClientInfo.deviceManager;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Builder
+  /**
+   * Create 'Commander', 'Manager' And Set Property 'commander', 'manager'
+   * @param {deviceInfo} config
+   * @param {string} siteUUID
+   */
+  setPassiveClient(config, siteUUID) {
+    try {
+      // BU.CLI(config);
+      const builder = new Builder();
+      config.getUser = () => this;
+      const deviceClientInfo = builder.setPassiveClient(config, siteUUID);
+      this.commander = deviceClientInfo.deviceCommander;
+      this.manager = deviceClientInfo.deviceManager;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * setPassiveManager에 접속한 client
+   * @param {string} siteUUID Site 단위 고유 ID
+   * @param {*} client setPassiveManager에 접속한 클라이언트
+   */
+  bindingPassiveClient(siteUUID, client) {
+    try {
+      this.manager.bindingPassiveClient(siteUUID, client);
     } catch (error) {
       throw error;
     }

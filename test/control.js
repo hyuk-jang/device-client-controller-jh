@@ -2,6 +2,7 @@ const {expect} = require('chai');
 const _ = require('lodash');
 const Promise = require('bluebird');
 const eventToPromise = require('event-to-promise');
+const EventEmitter = require('events');
 
 const {BU, CU} = require('../../base-util-jh');
 
@@ -11,11 +12,7 @@ const AbstIterator = require('../src/device-manager/AbstIterator');
 const AbstManager = require('../src/device-manager/AbstManager');
 const AbstController = require('../src/device-controller/AbstController');
 
-global.BU = BU;
-
 const {definedControlEvent} = require('../../default-intelligence').dccFlagModel;
-
-const EventEmitter = require('events');
 
 class Receiver extends EventEmitter {
   constructor() {
@@ -37,10 +34,10 @@ class Receiver extends EventEmitter {
     // if(eventName !== definedControlEvent.ERROR){
     BU.CLIS(eventName, eventMsg);
     if (eventName === definedControlEvent.CONNECT) {
-      this.connectCount++;
+      this.connectCount += 1;
     }
     if (eventName === definedControlEvent.DISCONNECT) {
-      this.disconnectCount++;
+      this.disconnectCount += 1;
     }
     this.eventName = eventName;
 
@@ -68,7 +65,7 @@ async function init() {
     hasReceiveData: true,
   };
   const abstController = new AbstController(config);
-  const connectTimer = abstController.connectTimer;
+  const {connectTimer} = abstController;
   abstController.connectIntervalTime = 1000 * 3; // 재접속 주기 1초로 변경
   // 옵저버 추가
   abstController.attach(receiver);

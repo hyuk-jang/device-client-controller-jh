@@ -22,6 +22,15 @@ class AbstBuilder {
 
   // }
 
+  /**
+   * Create 'Commander', 'Server'
+   * @param {deviceInfo} config
+   * @param {string} siteUUID
+   * @param {net.Socket} socketClient
+   * @return {{deviceCommander: AbstCommander, deviceManager: AbstManager}}
+   */
+  setPassiveClient() {}
+
   /** @return {AbstMediator} */
   getMediator() {}
 

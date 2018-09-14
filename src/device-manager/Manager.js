@@ -1,13 +1,12 @@
 const _ = require('lodash');
 // const {BU, CU} = require('base-util-jh');
+
+const net = require('net');
+
 const {BU, CU} = require('../../../base-util-jh');
 
 const AbstCommander = require('../device-commander/AbstCommander');
-const AbstMediator = require('../device-mediator/AbstMediator');
-const AbstController = require('../device-controller/AbstController');
 const AbstManager = require('./AbstManager');
-
-const Iterator = require('./Iterator');
 
 const {
   definedCommanderResponse,
@@ -21,120 +20,12 @@ const Socket = require('../device-controller/socket/Socket');
 
 require('../../../default-intelligence');
 
-// DeviceManager는 DeviceController와 1:1 매칭.
-const instanceList = [];
 /** @class DeviceManager */
 class Manager extends AbstManager {
   constructor() {
     super();
 
     this.operationTimer;
-  }
-
-  /** Manager를 초기화 처리 */
-  /** Builder에서 요청 메소드 */
-  /** @param {deviceInfo} config */
-  setManager(config) {
-    /** @type {AbstController} */
-    let deviceController = null;
-    let Controller = null;
-
-    // BU.CLI(config);
-    switch (config.connect_info.type) {
-      case 'serial':
-        switch (config.connect_info.subType) {
-          case 'parser':
-            Controller = require('../device-controller/serial/SerialWithParser');
-            break;
-          default:
-            Controller = require('../device-controller/serial/Serial');
-            break;
-        }
-        break;
-      case 'zigbee':
-        switch (config.connect_info.subType) {
-          case 'xbee':
-            Controller = require('../device-controller/zigbee/SerialWithXbee');
-            break;
-          default:
-            break;
-        }
-        break;
-      case 'socket':
-        switch (config.connect_info.subType) {
-          case 'parser':
-            Controller = require('../device-controller/socket/SocketWithParser');
-            break;
-          default:
-            Controller = require('../device-controller/socket/Socket');
-            break;
-        }
-        break;
-      case 'modbus':
-        switch (config.connect_info.subType) {
-          case 'rtu':
-            Controller = require('../device-controller/modbus/ModbusRTU');
-            break;
-          case 'tcp':
-            Controller = require('../device-controller/modbus/ModbusTCP');
-            break;
-          default:
-            break;
-        }
-        break;
-      default:
-        break;
-    }
-
-    if (_.isNull(Controller)) {
-      throw new Error('There is no such device.');
-    } else {
-      deviceController = new Controller(config, config.connect_info);
-    }
-    // Controller의 접속 정보를 ID로 함
-    this.id = deviceController.configInfo;
-
-    // 해당 장치가 이미 존재하는지 체크
-    const foundInstance = _.find(instanceList, instanceInfo => _.isEqual(instanceInfo.id, this.id));
-    // 장치가 존재하지 않는다면 instanceList에 삽입하고 deviceController에 등록
-    if (_.isEmpty(foundInstance)) {
-      // observer 등록
-      deviceController.attach(this);
-      this.config = config;
-      this.hasPerformCommand = false;
-      // Manager에 Device 등록
-      this.deviceController = deviceController;
-      // BU.CLI('@@@@@@@@@@@', this.id);
-      // 신규 정의시 instanceList에 저장
-      instanceList.push({
-        id: this.id,
-        instance: this,
-      });
-      this.retryChance = 3; // 데이터 유효성 검사가 실패, 데이터 수신 에러가 있을 경우 3회까지 ProcessCmd 재전송
-      /**
-       * @type {commandStorage}
-       */
-      this.commandStorage = {};
-
-      this.createIterator();
-
-      return this;
-    }
-    // singleton pattern
-    return foundInstance.instance;
-  }
-
-  /** Iterator 정의 */
-  createIterator() {
-    this.iterator = new Iterator(this);
-  }
-
-  /**
-   * deviceMediator 을 정의
-   * @param {AbstMediator} deviceMediator
-   */
-  setMediator(deviceMediator) {
-    this.mediator = deviceMediator;
   }
 
   /** Commander로부터 요청 */
