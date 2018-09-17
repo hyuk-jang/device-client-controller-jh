@@ -56,6 +56,8 @@ function connectSocketServer(port, index) {
     if (_.isEqual(data, TEST_MSG)) {
       receiveDataCount += 1;
 
+      client.write(TEST_MSG);
+
       setTimeout(() => {
         client.destroy();
       }, 1000);
@@ -68,7 +70,7 @@ function connectSocketServer(port, index) {
 // 3. Passive CLient를 중복으로 Binding 처리할 경우 connect 이벤트가 1회만 발생하고 제대로 Commander에게 전달되는지
 // 4. User Controller이 명령을 요청할 경우 전송이 잘 되는지
 // 5. Passive CLient가 접속을 끊었을 경우 disconnect이벤트 메시지가 제대로 Commander에게 전달되는지
-// 6. Passive Client에서 보내온 명령이 onDcData로 잘 전달되어야한다.
+// 6. Socket Client가 재접속 할 경우 Binding이 잘 처리되야 한다.
 async function init() {
   const logOption = {
     hasCommanderResponse: true,
@@ -120,7 +122,7 @@ async function init() {
   BU.CLI('Step 1 is Clear');
 
   /** 2. User Controller이 Passive Client가 없는 상태에서 명령 요청하였을 경우 예외처리가 잘 되는지 */
-  const selectedIndex = 0;
+  const selectedIndex = 1;
   const selectedUser = _.nth(dccList, selectedIndex);
 
   try {
@@ -205,7 +207,20 @@ async function init() {
     throw new Error('The client must be disconnected.');
   }
 
+  if (testDisconnectCount !== 2) {
+    throw new Error(`Two disConnect must be closed. expect: 2, result: ${testConnectCount}`);
+  }
+
   BU.CLI('Step 5 is Clear');
+  /** 6. Socket Client가 재접속 할 경우 Binding이 잘 처리되야 한다. */
+  connectSocketServer(socketServerPort, 1);
+  // Socket SErver 로 접속한 CLient bindingPassiveClient 처리할 시간을 부여
+  await Promise.delay(100);
+
+  if (testConnectCount !== 4) {
+    throw new Error(`Two connections must be opened. expect: 3, result: ${testConnectCount}`);
+  }
+  BU.CLI('Step 6 is Clear');
 }
 
 init();

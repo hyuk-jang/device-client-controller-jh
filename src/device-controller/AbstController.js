@@ -135,7 +135,7 @@ class AbstController extends EventEmitter {
       this.notifyEvent(definedControlEvent.DISCONNECT);
       // 이벤트 발송 및 약간의 장치와의 접속 딜레이를 1초 줌
       // 재접속 옵션이 있을 경우에만 자동 재접속 수행
-      if (_.get(this.mainConfig.controlInfo, 'hasReconnect') === true) {
+      if (_.get(this, 'mainConfig.controlInfo.hasReconnect', false) === true) {
         Promise.delay(1000).then(() => {
           if (
             _.isEmpty(this.client) &&
