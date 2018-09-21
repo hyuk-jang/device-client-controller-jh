@@ -148,6 +148,7 @@ class AbstDeviceClient extends EventEmitter {
 
   /** 장치의 연결이 되어있는지 여부 @return {boolean} */
   get hasConnectedDevice() {
+    // BU.CLIN(this.commander)
     return this.commander.hasConnectedDevice;
   }
 

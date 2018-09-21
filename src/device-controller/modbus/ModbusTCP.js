@@ -53,6 +53,12 @@ class ModbusTCP extends AbstController {
       return data;
     } catch (error) {
       // BU.CLI(error);
+      // 포트가 닫혀있는걸 확인 할 경우
+      if (error.name === 'PortNotOpenError') {
+        this.client = {};
+        await this.connect();
+      }
+
       throw error;
     }
   }
