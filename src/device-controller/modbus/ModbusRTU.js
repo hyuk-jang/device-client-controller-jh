@@ -33,25 +33,47 @@ class ModbusRTU extends AbstController {
 
   /**
    * Serial Device로 메시지 전송
-   * @param {{FN_CODE: string, unitId: string, params: Object}} mRtuInfo 전송 데이터
+   * @param {modbusReadFormat|modbusFC5|modbusFC15|modbusFC6|writeFC16} modbusData
    * @return {Promise} Promise 반환 객체
    */
-  async write(mRtuInfo) {
+  async write(modbusData) {
     // unitId 설정
     try {
-      // BU.CLI(mRtuInfo);
-      // await this.client.setID(0);
-      await this.client.setID(mRtuInfo.unitId);
-      const values = _.values(mRtuInfo.params);
-      // BU.CLI(values);
-      // BU.CLIN(this.client);
-      // fnCode에 해당하드 메소드 호출 및 해당 메소드에 param 적용
-      const data = await this.client[mRtuInfo.FN_CODE](...values);
-      // const data = await this.client.readInputRegisters(0, 10);
+      const {fnCode, unitId, address} = modbusData;
+      await this.client.setID(unitId);
 
-      // BU.CLI(data);
-      this.notifyData(data.data);
-      return data;
+      let resData;
+      switch (fnCode) {
+        case 1:
+          resData = await this.client.readCoils(address, modbusData.dataLength);
+          break;
+        case 2:
+          resData = await this.client.readDiscreteInputs(address, modbusData.dataLength);
+          break;
+        case 3:
+          resData = await this.client.readHoldingRegisters(address, modbusData.dataLength);
+          break;
+        case 4:
+          resData = await this.client.readInputRegisters(address, modbusData.dataLength);
+          break;
+        case 5:
+          resData = await this.client.writeCoil(address, modbusData.state);
+          break;
+        case 6:
+          resData = await this.client.writeRegister(address, modbusData.value);
+          break;
+        case 15:
+          resData = await this.client.writeCoils(address, modbusData.stateList);
+          break;
+        case 16:
+          resData = await this.client.writeRegisters(address, modbusData.valueList);
+          break;
+        default:
+          break;
+      }
+      // BU.CLI(resData);
+      this.notifyData(resData.data);
+      return resData;
     } catch (error) {
       // BU.CLI(error);
       // 포트가 닫혀있는걸 확인 할 경우
