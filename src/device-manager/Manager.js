@@ -1,12 +1,12 @@
 const _ = require('lodash');
 // const {BU, CU} = require('base-util-jh');
 
-const net = require('net');
-
 const {BU, CU} = require('../../../base-util-jh');
 
 const AbstCommander = require('../device-commander/AbstCommander');
 const AbstManager = require('./AbstManager');
+
+const Iterator = require('./AbstIterator');
 
 const {
   definedCommanderResponse,
@@ -26,6 +26,8 @@ class Manager extends AbstManager {
     super();
 
     this.operationTimer;
+    /** @type {Iterator} */
+    this.iterator;
   }
 
   /** Commander로부터 요청 */
@@ -144,7 +146,7 @@ class Manager extends AbstManager {
     // BU.CLI(receiver);
     if (receiver === null) {
       // BU.CLIN(this.iterator.currentCommandSet);
-      BU.log('Not set Responder --> Completed Data', data);
+      BU.CLI('Not set Responder --> Completed Data', data);
     } else {
       // Socket 통신이고 데이터가 Object 형태라면 변환하여 반환
       if (this.deviceController instanceof Socket) {
@@ -201,13 +203,14 @@ class Manager extends AbstManager {
     );
 
     // BU.CLI('transferCommandToDevice', currentCommand.data);
+    let currentMsg = currentCommand.data;
     // Socket 통신이고 데이터가 Json 형태라면 Buffer로 변환. TEST 코드에 사용됨.
     if (
       this.deviceController instanceof Socket &&
       !Buffer.isBuffer(currentCommand.data) &&
       typeof currentCommand.data === 'object'
     ) {
-      currentCommand.data = JSON.stringify(currentCommand.data);
+      currentMsg = JSON.stringify(currentMsg);
     }
     // 정해진 시간안에 명령 완료 체크 타이머 구동
     currentCommandSet.commandExecutionTimer = new CU.Timer(() => {
@@ -232,7 +235,7 @@ class Manager extends AbstManager {
     }, currentCommand.commandExecutionTimeoutMs || 1000);
     this.operationTimer = currentCommandSet.commandExecutionTimer;
 
-    await this.deviceController.write(currentCommand.data);
+    await this.deviceController.write(currentMsg);
     // 명령 전송이 성공하였으므로 데이터 수신 상태로 변경
     this.updateOperationStatus(definedOperationStatus.RECEIVE_WAIT_DATA);
 
@@ -277,6 +280,7 @@ class Manager extends AbstManager {
   /** @private 명령 재전송 처리 */
   retryRequestProcessingCommand() {
     BU.CLI('retryWrite', this.retryChance);
+    // BU.CLI(this.iterator.currentCommand)
     this.retryChance -= 1;
     if (this.retryChance > 0) {
       // 0.01 초 지연 시간을 두지 않음
@@ -473,7 +477,7 @@ class Manager extends AbstManager {
 
         // 모든 명령 수행 완료
         if (_.isEmpty(this.iterator.nextCommandSet)) {
-          BU.CLI('Complete All Standby CommandList', _.get(currentCommandSet, 'nodeId'));
+          // BU.CLI('Complete All Standby CommandList', _.get(currentCommandSet, 'nodeId'));
           // BU.CLIN(this.iterator.currentCommandSet);
           this.iterator.clearCurrentCommandSet();
           this.hasPerformCommand = false;
