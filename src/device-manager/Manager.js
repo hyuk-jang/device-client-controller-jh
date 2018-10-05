@@ -57,6 +57,7 @@ class Manager extends AbstManager {
 
       switch (commanderResponse) {
         case definedCommanderResponse.DONE:
+          // BU.CLI('definedCommanderResponse.DONE');
           // BU.CLIN(this.commandStorage);
           // 타이머가 붙어있다면 타이머 해제
           currentCommandSet.commandExecutionTimer &&
@@ -299,9 +300,8 @@ class Manager extends AbstManager {
    * @param {operationStatus} operationStatus
    */
   updateOperationStatus(operationStatus) {
-    // BU.CLI('updateOperationStatus', operationStatus);
-
     const {currentCommandSet} = this.iterator;
+    // BU.CLIS(currentCommandSet.operationStatus, operationStatus);
 
     // 진행 중인 명령이 없거나 명령 삭제 일 경우에는 업데이트 제외
     if (
@@ -360,6 +360,7 @@ class Manager extends AbstManager {
     const {currentCommandSet, currentReceiver} = this.iterator;
     // BU.CLIN(this.commandStorage, 4);
     const {operationStatus} = currentCommandSet;
+    // BU.CLI(operationStatus);
     // 현재 명령이 수행 중일 경우 (currentCommandSet이 설정 되어 있음)
     if (this.hasPerformCommand) {
       // 1:1 통신이라면 해당 사항 없음
@@ -439,12 +440,18 @@ class Manager extends AbstManager {
       if (hasError) {
         // BU.CLI('hasError');
         // BU.CLI(dcErrorFormat.errorInfo);
-        currentReceiver && currentReceiver.onDcError(dcErrorFormat);
         // 에러 핸들링을 필요로 한다면 시스템 대기
         if (_.get(currentCommandSet.controlInfo, 'hasErrorHandling') === true) {
+          // BU.CLI(operationStatus);
+          // BU.CLIN('hasErrorHandling', dcErrorFormat.errorInfo);
+          // 에러 핸들링 상태로 변경
           this.updateOperationStatus(definedOperationStatus.WAIT_ERROR_HANDLING);
+          // 에러 메시지 전송
+          currentReceiver && currentReceiver.onDcError(dcErrorFormat);
           return false;
         }
+        // 에러 메시지 전송
+        currentReceiver && currentReceiver.onDcError(dcErrorFormat);
         // this.iterator.clearCurrentCommandSet();
       }
 
@@ -458,6 +465,7 @@ class Manager extends AbstManager {
         }
 
         // Operation Status 초기화
+        // BU.CLI('진행 중인 명령이 모두 수행');
         this.updateOperationStatus(definedOperationStatus.WAIT);
 
         // 1:1 통신 일 경우는 다음 Step으로 넘어가지 않고 현재 if 문 안에서 끝냄.
