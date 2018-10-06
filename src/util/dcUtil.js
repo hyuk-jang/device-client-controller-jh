@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const {BU, CU} = require('base-util-jh');
+const { BU, CU } = require('base-util-jh');
 
 const AbstManager = require('../device-manager/AbstManager');
 
@@ -66,7 +66,7 @@ exports.writeLogFile = writeLogFile;
  * @param {*} commander
  */
 function initManager(manager, commander) {
-  manager.commandStorage = {currentCommandSet: {}, standbyCommandSetList: []};
+  manager.commandStorage = { currentCommandSet: {}, standbyCommandSetList: [] };
   // 반복기 생성
   manager.createIterator();
   // 명령을 받을 객체 생성
@@ -78,9 +78,9 @@ function initManager(manager, commander) {
         // BU.CLI(cmd);
       }
       // BU.CLIN(manager);
-      commander && commander.onDcData({data: `onDcData: ${cmd}`});
+      commander && commander.onDcData({ data: `onDcData: ${cmd}` });
     },
-    id: {port: 3000},
+    id: { port: 3000 },
   };
   /** @type {deviceInfo} */
   manager.config = {};
@@ -93,7 +93,7 @@ function initManager(manager, commander) {
   };
 
   // 장치 연결자 생성
-  manager.deviceController.client = {alive: true};
+  manager.deviceController.client = { alive: true };
   // 작업중인 상태 X
   manager.hasPerformCommand = false;
   // 명령 저장소는 테스트전 청소 처리

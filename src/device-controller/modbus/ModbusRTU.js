@@ -3,7 +3,7 @@ const eventToPromise = require('event-to-promise');
 
 // create an empty modbus client
 const ModRTU = require('modbus-serial');
-const {BU} = require('base-util-jh');
+const { BU } = require('base-util-jh');
 
 const AbstController = require('../AbstController');
 
@@ -21,10 +21,10 @@ class ModbusRTU extends AbstController {
     this.port = connectInfo.port;
     this.baud_rate = connectInfo.baudRate;
 
-    const foundInstance = _.find(instanceList, {id: this.port});
+    const foundInstance = _.find(instanceList, { id: this.port });
     if (_.isEmpty(foundInstance)) {
-      this.configInfo = {port: this.port, baud_rate: this.baud_rate};
-      instanceList.push({id: this.port, instance: this});
+      this.configInfo = { port: this.port, baud_rate: this.baud_rate };
+      instanceList.push({ id: this.port, instance: this });
       this.setInit();
     } else {
       return foundInstance.instance;
@@ -39,7 +39,7 @@ class ModbusRTU extends AbstController {
   async write(modbusData) {
     // unitId 설정
     try {
-      const {fnCode, unitId, address} = modbusData;
+      const { fnCode, unitId, address } = modbusData;
       await this.client.setID(unitId);
 
       let resData;
@@ -113,7 +113,7 @@ class ModbusRTU extends AbstController {
     // );
 
     client
-      .connectRTUBuffered(this.port, {baudRate: this.baud_rate})
+      .connectRTUBuffered(this.port, { baudRate: this.baud_rate })
       .then(() => this.emit('connect'))
       .catch(this.emit('close'));
 

@@ -20,11 +20,11 @@ class SerialWithXbee extends AbstController {
     this.xbeeConfig = connectInfo.addConfigInfo;
     this.xbeeAPI = null;
 
-    const foundInstance = _.find(instanceList, {id: this.port});
+    const foundInstance = _.find(instanceList, { id: this.port });
     if (_.isEmpty(foundInstance)) {
       this.xbeeAPI = new xbeeApi.XBeeAPI(this.xbeeConfig);
-      this.configInfo = {port: this.port, baud_rate: this.baud_rate, xbeeConfig: this.xbeeConfig};
-      instanceList.push({id: this.port, instance: this});
+      this.configInfo = { port: this.port, baud_rate: this.baud_rate, xbeeConfig: this.xbeeConfig };
+      instanceList.push({ id: this.port, instance: this });
       this.setInit();
     } else {
       return foundInstance.instance;

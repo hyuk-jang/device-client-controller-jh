@@ -2,7 +2,7 @@ const _ = require('lodash');
 const net = require('net');
 const eventToPromise = require('event-to-promise');
 const split = require('split');
-const {BU} = require('base-util-jh');
+const { BU } = require('base-util-jh');
 
 const AbstController = require('../AbstController');
 
@@ -21,14 +21,14 @@ class SocketWithParser extends AbstController {
     this.host = connectInfo.host || 'localhost';
     this.parserInfo = connectInfo.addConfigInfo;
 
-    this.configInfo = {host: this.host, port: this.port, parserInfo: this.parserInfo};
+    this.configInfo = { host: this.host, port: this.port, parserInfo: this.parserInfo };
 
     const foundInstance = _.find(instanceList, instanceInfo =>
       _.isEqual(instanceInfo.id, this.configInfo),
     );
 
     if (_.isEmpty(foundInstance)) {
-      instanceList.push({id: this.configInfo, instance: this});
+      instanceList.push({ id: this.configInfo, instance: this });
       this.setInit();
     } else {
       return foundInstance.instance;

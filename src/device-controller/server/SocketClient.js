@@ -1,7 +1,7 @@
 const _ = require('lodash');
 
 const net = require('net');
-const {BU} = require('base-util-jh');
+const { BU } = require('base-util-jh');
 
 const AbstController = require('../AbstController');
 
@@ -24,7 +24,7 @@ class SocketClient extends AbstController {
     );
 
     if (_.isEmpty(foundInstance)) {
-      instanceList.push({id: this.configInfo, instance: this});
+      instanceList.push({ id: this.configInfo, instance: this });
     } else {
       return foundInstance.instance;
     }

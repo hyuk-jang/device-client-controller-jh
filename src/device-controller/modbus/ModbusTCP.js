@@ -2,7 +2,7 @@ const _ = require('lodash');
 const eventToPromise = require('event-to-promise');
 // create an empty modbus client
 const ModRTU = require('modbus-serial');
-const {BU} = require('base-util-jh');
+const { BU } = require('base-util-jh');
 
 const AbstController = require('../AbstController');
 
@@ -20,14 +20,14 @@ class ModbusTCP extends AbstController {
     this.port = connectInfo.port;
     this.host = connectInfo.host || 'localhost';
 
-    this.configInfo = {host: this.host, port: this.port};
+    this.configInfo = { host: this.host, port: this.port };
 
     const foundInstance = _.find(instanceList, instanceInfo =>
       _.isEqual(instanceInfo.id, this.configInfo),
     );
 
     if (_.isEmpty(foundInstance)) {
-      instanceList.push({id: this.configInfo, instance: this});
+      instanceList.push({ id: this.configInfo, instance: this });
       this.setInit();
     } else {
       return foundInstance.instance;
@@ -72,7 +72,7 @@ class ModbusTCP extends AbstController {
 
     const client = new ModRTU();
     // const hasErr = await client.connectTCP(this.host, {port: this.port}, hasError => {
-    client.connectTCP(this.host, {port: this.port}, hasError => {
+    client.connectTCP(this.host, { port: this.port }, hasError => {
       if (hasError) {
         this.client = {};
         this.notifyDisconnect(hasError);

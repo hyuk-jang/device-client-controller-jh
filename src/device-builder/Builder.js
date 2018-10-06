@@ -28,7 +28,7 @@ class Builder extends AbstBuilder {
 
       this.mediator.setColleague(deviceCommander, deviceManager);
 
-      return {deviceCommander, deviceManager};
+      return { deviceCommander, deviceManager };
     } catch (error) {
       throw error;
     }
@@ -48,7 +48,7 @@ class Builder extends AbstBuilder {
 
       this.mediator.setColleague(deviceCommander, deviceManager);
 
-      return {deviceCommander, deviceManager};
+      return { deviceCommander, deviceManager };
     } catch (error) {
       throw error;
     }

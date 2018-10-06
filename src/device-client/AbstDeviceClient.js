@@ -2,7 +2,7 @@ const _ = require('lodash');
 const serialport = require('serialport');
 const EventEmitter = require('events');
 
-const {BU} = require('base-util-jh');
+const { BU } = require('base-util-jh');
 
 const Builder = require('../device-builder/Builder');
 const AbstCommander = require('../device-commander/AbstCommander');

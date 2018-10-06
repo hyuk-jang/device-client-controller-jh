@@ -1,6 +1,6 @@
 const _ = require('lodash');
 
-const {BU, CU} = require('base-util-jh');
+const { BU, CU } = require('base-util-jh');
 
 const Manager = require('./Manager');
 const AbstCommander = require('../device-commander/AbstCommander');
@@ -26,7 +26,7 @@ class Iterator {
    * @return {commandInfo} 다음 명령 존재시 : true, 없을 시: false
    */
   get currentCommand() {
-    const {currentCommandSet} = this;
+    const { currentCommandSet } = this;
     if (_.isEmpty(currentCommandSet)) {
       return null;
     }
@@ -59,7 +59,7 @@ class Iterator {
    */
   get nextCommand() {
     try {
-      const {currentCommandSet} = this;
+      const { currentCommandSet } = this;
       if (_.isEmpty(currentCommandSet)) {
         return null;
       }
@@ -90,17 +90,17 @@ class Iterator {
    */
   addCmd(cmdInfo) {
     // BU.CLI(cmdInfo);
-    const {rank} = cmdInfo;
+    const { rank } = cmdInfo;
     // BU.CLIN(cmdInfo);
     // 명령 rank가 등록되어있지 않다면 신규로 등록
     if (!_.includes(_.map(this.aggregate.standbyCommandSetList, 'rank'), rank)) {
-      this.aggregate.standbyCommandSetList.push({rank, list: [cmdInfo]});
+      this.aggregate.standbyCommandSetList.push({ rank, list: [cmdInfo] });
       // rank 순으로 정렬
       this.aggregate.standbyCommandSetList = _.sortBy(this.aggregate.standbyCommandSetList, 'rank');
       // BU.CLIN(this.aggregate, 4);
     } else {
       // 저장된 rank 객체 배열에 삽입
-      const foundRank = _.find(this.aggregate.standbyCommandSetList, {rank});
+      const foundRank = _.find(this.aggregate.standbyCommandSetList, { rank });
       foundRank.list.push(cmdInfo);
     }
     // BU.CLIN(this.aggregate, 4);
@@ -115,7 +115,7 @@ class Iterator {
     // BU.CLI('deleteCmd 수행', commandId);
     // 명령 대기 리스트 삭제
     this.aggregate.standbyCommandSetList.forEach(rank => {
-      _.remove(rank.list, {commandId});
+      _.remove(rank.list, { commandId });
     });
 
     // 명령 예약 리스트 삭제
@@ -138,7 +138,7 @@ class Iterator {
    * delayExecutionTimeoutMs 시간 후 Process Rank List에 shift() 처리하는 함수 바인딩 처리
    */
   moveToReservedCmdList() {
-    const {currentCommandSet, currentCommand} = this;
+    const { currentCommandSet, currentCommand } = this;
 
     // delayExecutionTimeoutMs 가 존재 할 경우만 수행
     if (_.isNumber(currentCommand.delayExecutionTimeoutMs)) {
@@ -198,7 +198,7 @@ class Iterator {
     }
     // 대기 집합 확인
     this.aggregate.standbyCommandSetList.forEach(commandStorageInfo => {
-      const addObj = {rank: commandStorageInfo.rank, list: []};
+      const addObj = { rank: commandStorageInfo.rank, list: [] };
 
       addObj.list = _.filter(commandStorageInfo.list, commandSet => {
         const hasEqualStandbySet = _.isEqual(commandSet.commander, searchInfo.commander);
@@ -238,7 +238,7 @@ class Iterator {
     // searchInfo.rank가 숫자고 해당 Rank가 등록되어 있다면 검색 수행
     if (_.isNumber(searchInfo.rank)) {
       const fountIt = _.chain(this.aggregate.standbyCommandSetList)
-        .find({rank: searchInfo.rank})
+        .find({ rank: searchInfo.rank })
         .get('list')
         .value();
 
@@ -247,7 +247,7 @@ class Iterator {
 
     if (_.isString(searchInfo.commandId) && searchInfo.commandId) {
       _.forEach(this.aggregate.standbyCommandSetList, rankInfo => {
-        const foundIt = _.filter(rankInfo.list, {commandId: searchInfo.commandId});
+        const foundIt = _.filter(rankInfo.list, { commandId: searchInfo.commandId });
         returnValue = _.concat(returnValue, foundIt);
       });
     }
@@ -259,7 +259,7 @@ class Iterator {
    * @param {string} commandId 명령 Id
    */
   findDelayCommandSetList(commandId) {
-    return _.find(this.aggregate.delayCommandSetList, {commandId});
+    return _.find(this.aggregate.delayCommandSetList, { commandId });
   }
 
   /**
@@ -274,12 +274,12 @@ class Iterator {
   changeNextCommand() {
     // BU.CLI('changeNextCommand');
     try {
-      const {currentCommandSet} = this;
+      const { currentCommandSet } = this;
       // 현재 진행중인 명령이 비어있다면 다음 순위 명령을 가져옴
       if (_.isEmpty(currentCommandSet) || this.nextCommand === null) {
         // BU.CLI('다음 명령이 존재하지 않죠?', this.nextCommand);
         // 다음 명령이 존재할 경우
-        const {nextCommandSet} = this;
+        const { nextCommandSet } = this;
         // 다음 수행할 Rank가 없다면 false 반환
         if (_.isEmpty(nextCommandSet)) {
           throw new ReferenceError('The following command does not exist.');

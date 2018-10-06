@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const {BU} = require('base-util-jh');
+const { BU } = require('base-util-jh');
 const Manager = require('./Manager');
 
 const Iterator = require('./Iterator');
@@ -197,7 +197,7 @@ class ManagerSetter extends Manager {
       throw new Error('The manager is not set up.');
     }
 
-    const {instance} = foundInstance;
+    const { instance } = foundInstance;
 
     // DeviceController에 client가 비워져있을 경우에만 설정
     if (_.isEmpty(_.get(instance, 'deviceController.client', {}))) {

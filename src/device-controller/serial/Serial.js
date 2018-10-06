@@ -18,10 +18,10 @@ class Serial extends AbstController {
     this.port = connectInfo.port;
     this.baud_rate = connectInfo.baudRate;
 
-    const foundInstance = _.find(instanceList, {id: this.port});
+    const foundInstance = _.find(instanceList, { id: this.port });
     if (_.isEmpty(foundInstance)) {
-      this.configInfo = {port: this.port, baud_rate: this.baud_rate};
-      instanceList.push({id: this.port, instance: this});
+      this.configInfo = { port: this.port, baud_rate: this.baud_rate };
+      instanceList.push({ id: this.port, instance: this });
       this.setInit();
     } else {
       return foundInstance.instance;

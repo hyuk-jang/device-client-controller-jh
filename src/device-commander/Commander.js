@@ -1,12 +1,12 @@
 const _ = require('lodash');
-const {BU} = require('base-util-jh');
+const { BU } = require('base-util-jh');
 
 const AbstCommander = require('./AbstCommander');
 const AbstMediator = require('../device-mediator/AbstMediator');
 const AbstManager = require('../device-manager/AbstManager');
 const AbstDeviceClient = require('../device-client/AbstDeviceClient');
 
-const {writeLogFile, getDefaultControlInfo, getDefaultLogOption} = require('../util/dcUtil');
+const { writeLogFile, getDefaultControlInfo, getDefaultLogOption } = require('../util/dcUtil');
 
 const {
   definedCommanderResponse,

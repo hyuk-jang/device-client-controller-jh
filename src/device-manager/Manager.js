@@ -1,7 +1,7 @@
 const _ = require('lodash');
 // const {BU, CU} = require('base-util-jh');
 
-const {BU, CU} = require('../../../base-util-jh');
+const { BU, CU } = require('../../../base-util-jh');
 
 const AbstCommander = require('../device-commander/AbstCommander');
 const AbstManager = require('./AbstManager');
@@ -14,7 +14,7 @@ const {
   definedOperationStatus,
 } = require('../../../default-intelligence').dccFlagModel;
 
-const {writeLogFile} = require('../util/dcUtil');
+const { writeLogFile } = require('../util/dcUtil');
 
 const Socket = require('../device-controller/socket/Socket');
 
@@ -39,7 +39,7 @@ class Manager extends AbstManager {
    */
   requestTakeAction(commander, commanderResponse) {
     // BU.CLI('responseToDataFromCommander');
-    const {currentCommandSet} = this.iterator;
+    const { currentCommandSet } = this.iterator;
 
     if (_.isEmpty(currentCommandSet)) {
       throw new Error('No commands are currently in progress.');
@@ -187,9 +187,9 @@ class Manager extends AbstManager {
     }
     // BU.log('Device write');
     // BU.CLI(this.sendMsgTimeOutSec);
-    const {currentCommandSet} = this.iterator;
+    const { currentCommandSet } = this.iterator;
     // BU.CLI(processItem);
-    const {currentCommand} = this.iterator;
+    const { currentCommand } = this.iterator;
 
     // 명령 전송을 기다림
     this.updateOperationStatus(definedOperationStatus.REQUEST_CMD);
@@ -253,7 +253,7 @@ class Manager extends AbstManager {
    */
   requestProcessingCommand() {
     try {
-      const {currentCommand} = this.iterator;
+      const { currentCommand } = this.iterator;
       // DeviceController 의 client가 빈 객체라면 연결이 해제된걸로 판단
       // TODO
       if (_.isEmpty(this.deviceController.client)) {
@@ -300,7 +300,7 @@ class Manager extends AbstManager {
    * @param {operationStatus} operationStatus
    */
   updateOperationStatus(operationStatus) {
-    const {currentCommandSet} = this.iterator;
+    const { currentCommandSet } = this.iterator;
     // BU.CLIS(currentCommandSet.operationStatus, operationStatus);
 
     // 진행 중인 명령이 없거나 명령 삭제 일 경우에는 업데이트 제외
@@ -319,7 +319,7 @@ class Manager extends AbstManager {
    * @param {Error=} messageError
    */
   sendMessageToCommander(message, messageError) {
-    const {currentCommandSet, currentReceiver} = this.iterator;
+    const { currentCommandSet, currentReceiver } = this.iterator;
 
     const hasTerminate = _.isEqual(
       message,
@@ -357,9 +357,9 @@ class Manager extends AbstManager {
     // BU.CLIN(this.commandStorage);
     // BU.CLIN(this.deviceController.configInfo);
 
-    const {currentCommandSet, currentReceiver} = this.iterator;
+    const { currentCommandSet, currentReceiver } = this.iterator;
     // BU.CLIN(this.commandStorage, 4);
-    const {operationStatus} = currentCommandSet;
+    const { operationStatus } = currentCommandSet;
     // BU.CLI(operationStatus);
     // 현재 명령이 수행 중일 경우 (currentCommandSet이 설정 되어 있음)
     if (this.hasPerformCommand) {
@@ -522,7 +522,7 @@ class Manager extends AbstManager {
     // BU.CLI('nextCommand');
     // BU.CLIN(this.commandStorage);
     try {
-      const {currentCommandSet, nextCommandSet} = this.iterator;
+      const { currentCommandSet, nextCommandSet } = this.iterator;
       // BU.CLIN(currProcessCmdInfo);
       // BU.CLI(currCmd);
       // 현재 아무런 명령이 존재하지 않을 경우

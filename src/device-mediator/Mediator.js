@@ -42,7 +42,7 @@ class Mediator extends AbstMediator {
    * @param {AbstCommander} deviceCommander
    */
   setCommander(deviceCommander) {
-    const foundCommander = _.find(this.deviceCommanderList, {id: deviceCommander.id});
+    const foundCommander = _.find(this.deviceCommanderList, { id: deviceCommander.id });
     if (_.isEmpty(foundCommander)) {
       deviceCommander.setMediator(this);
       this.deviceCommanderList.push(deviceCommander);
@@ -54,7 +54,7 @@ class Mediator extends AbstMediator {
    * @param {AbstManager} deviceManager
    */
   setManager(deviceManager) {
-    const foundManager = _.find(this.deviceManagerList, {id: deviceManager.id});
+    const foundManager = _.find(this.deviceManagerList, { id: deviceManager.id });
     if (_.isEmpty(foundManager)) {
       deviceManager.setMediator(this);
       this.deviceManagerList.push(deviceManager);
@@ -84,7 +84,7 @@ class Mediator extends AbstMediator {
    */
   getDeviceManager(deviceCommander) {
     // BU.CLIN(deviceCommander)
-    const foundIt = _.find(this.relationList, {commander: deviceCommander});
+    const foundIt = _.find(this.relationList, { commander: deviceCommander });
     if (_.isEmpty(foundIt)) {
       throw new Error(`The Commander(${deviceCommander.id}) does not have a device.`);
     }
@@ -142,7 +142,7 @@ class Mediator extends AbstMediator {
    * @return {Array.<AbstCommander>}
    */
   getDeviceCommander(deviceManager) {
-    const foundIt = _.filter(this.relationList, {manager: deviceManager});
+    const foundIt = _.filter(this.relationList, { manager: deviceManager });
     if (_.isEmpty(foundIt)) {
       throw new Error(`The Manager(${deviceManager.deviceController}) does not have a command`);
     }

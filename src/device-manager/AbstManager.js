@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const {BU} = require('base-util-jh');
+const { BU } = require('base-util-jh');
 const eventToPromise = require('event-to-promise');
 
 const EventEmitter = require('events');
