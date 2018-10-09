@@ -67,7 +67,7 @@ class Socket extends AbstController {
     });
 
     client.on('end', () => {
-      // console.log('Client disconnected');
+      console.log('Client disconnected', this.port);
     });
 
     client.on('error', error => {

@@ -127,20 +127,24 @@ class AbstController extends EventEmitter {
 
   /** 장치와의 연결이 해제되었을 경우 */
   notifyDisconnect() {
-    // BU.CLI('notifyClose');
     writeLogFile(this, 'mainConfig.logOption.hasDcEvent', 'event', 'notifyDisconnect');
     // 장치와의 연결이 계속해제된 상태였다면 이벤트를 보내지 않음
     if (this.hasConnect !== false && _.isEmpty(this.client)) {
+      // BU.CLI('notifyClose', this.hasConnect);
       this.hasConnect = false;
       this.notifyEvent(definedControlEvent.DISCONNECT);
+
+      // BU.CLIS(this.connectTimer);
       // 이벤트 발송 및 약간의 장치와의 접속 딜레이를 1초 줌
       // 재접속 옵션이 있을 경우에만 자동 재접속 수행
       if (_.get(this, 'mainConfig.controlInfo.hasReconnect', false) === true) {
         Promise.delay(1000).then(() => {
           if (
+            // 접속 클라이언트가 비어있고
             _.isEmpty(this.client) &&
-            _.isNil(!this.connectTimer) &&
-            _.isEmpty(!this.connectTimer) &&
+            // Timer객체가 생성되어져있는 상태이며
+            !_.isNil(this.connectTimer) &&
+            // 현재 진행중인 타이머가 없을 경우
             !this.connectTimer.getStateRunning()
           ) {
             this.doConnect();
