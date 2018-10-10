@@ -7,6 +7,7 @@ const { BU } = require('base-util-jh');
 const Builder = require('../device-builder/Builder');
 const AbstCommander = require('../device-commander/AbstCommander');
 const AbstManager = require('../device-manager/AbstManager');
+const ManagerSetter = require('../device-manager/ManagerSetter');
 
 const {
   MODBUS,
@@ -86,7 +87,9 @@ class AbstDeviceClient extends EventEmitter {
    */
   bindingPassiveClient(siteUUID, client) {
     try {
-      this.manager.bindingPassiveClient(siteUUID, client);
+      // BU.CLI('bindingPassiveClient', siteUUID);
+      const managerSetter = new ManagerSetter();
+      managerSetter.bindingPassiveClient(siteUUID, client);
     } catch (error) {
       throw error;
     }
@@ -148,7 +151,7 @@ class AbstDeviceClient extends EventEmitter {
 
   /** 장치의 연결이 되어있는지 여부 @return {boolean} */
   get hasConnectedDevice() {
-    // BU.CLIN(this.commander)
+    // BU.CLIN(this.commander, 2)
     return this.commander.hasConnectedDevice;
   }
 

@@ -187,6 +187,7 @@ class ManagerSetter extends Manager {
    */
   bindingPassiveClient(siteUUID, client) {
     // BU.CLI(siteUUID);
+    // BU.CLIN(instanceList);
     // 해당 매니저가 이미 존재하는지 체크
     const foundInstance = _.find(instanceList, instanceInfo =>
       _.isEqual(instanceInfo.id, siteUUID),

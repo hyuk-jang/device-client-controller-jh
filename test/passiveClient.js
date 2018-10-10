@@ -4,9 +4,12 @@ const Promise = require('bluebird');
 const eventToPromise = require('event-to-promise');
 const EventEmitter = require('events');
 
-const {BU, CU} = require('../../base-util-jh');
+const { BU, CU } = require('../../base-util-jh');
 
-const {definedControlEvent} = require('../../default-intelligence').dccFlagModel;
+const AbstDeviceClient = require('../src/device-client/AbstDeviceClient');
+// const ManagerSetter = require('../src/device-manager/ManagerSetter');
+
+const { definedControlEvent } = require('../../default-intelligence').dccFlagModel;
 
 const DCC = require('../index');
 
@@ -36,7 +39,7 @@ class Receiver extends DCC {
    * @param {dcEvent} dcEvent
    */
   updatedDcEventOnDevice(dcEvent) {
-    const {eventName, eventMsg} = dcEvent;
+    const { eventName, eventMsg } = dcEvent;
     // if(eventName !== definedControlEvent.ERROR){
     BU.CLIS(eventName, eventMsg);
     if (eventName === definedControlEvent.CONNECT) {
@@ -137,6 +140,7 @@ async function init() {
   BU.CLI('Step 2 is Clear');
 
   /** 3. Passive CLient를 중복으로 Binding 처리할 경우 connect 이벤트가 1회만 발생하고 제대로 Commander에게 전달되는지 */
+  const deviceClient = new AbstDeviceClient();
   // Socket Server 구동 시작
   // const socketServerList = [3000, 3001, 3002].map(listenSocketServer);
   const socketServerPort = 3000;
@@ -147,7 +151,7 @@ async function init() {
       console.log(`client is Connected ${socketServerPort}`);
 
       // Bindindg 처리
-      selectedUser.bindingPassiveClient(_.nth(userList, selectedIndex).siteUUID, socket);
+      deviceClient.bindingPassiveClient(_.nth(userList, selectedIndex).siteUUID, socket);
 
       socket.on('data', data => {
         console.log(`P: ${socketServerPort} --> Received Data: ${data} `);
