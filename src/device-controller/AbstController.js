@@ -7,7 +7,12 @@ const AbstManager = require('../device-manager/AbstManager');
 
 const { writeLogFile } = require('../util/dcUtil');
 
-const { definedControlEvent } = require('../../../default-intelligence').dccFlagModel;
+const {
+  CONNECT,
+  DATA,
+  DEVICE_ERROR,
+  DISCONNECT,
+} = require('../../../default-intelligence').dccFlagModel.definedControlEvent;
 
 class AbstController extends EventEmitter {
   /**
@@ -117,7 +122,7 @@ class AbstController extends EventEmitter {
     // BU.CLI(this.hasConnect, _.isEmpty(this.client));
     if (!this.hasConnect && !_.isEmpty(this.client)) {
       this.hasConnect = true;
-      this.notifyEvent(definedControlEvent.CONNECT);
+      this.notifyEvent(CONNECT);
 
       if (!_.isNil(this.connectTimer)) {
         this.connectTimer.getStateRunning() && this.connectTimer.pause();
@@ -132,7 +137,7 @@ class AbstController extends EventEmitter {
     if (this.hasConnect !== false && _.isEmpty(this.client)) {
       // BU.CLI('notifyClose', this.hasConnect);
       this.hasConnect = false;
-      this.notifyEvent(definedControlEvent.DISCONNECT);
+      this.notifyEvent(DISCONNECT);
 
       // BU.CLIS(this.connectTimer);
       // 이벤트 발송 및 약간의 장치와의 접속 딜레이를 1초 줌
