@@ -134,7 +134,7 @@ class ManagerSetter extends Manager {
     if (_.isNull(Controller)) {
       throw new Error('There is no such device.');
     } else {
-      deviceController = new Controller(config, siteUUID);
+      deviceController = new Controller(siteUUID);
     }
 
     // Controller의 접속 정보를 ID로 함
@@ -172,6 +172,7 @@ class ManagerSetter extends Manager {
    * @param {AbstMediator} deviceMediator
    */
   setMediator(deviceMediator) {
+    // BU.CLI(this.id, instanceList.length);
     this.mediator = deviceMediator;
   }
 
@@ -187,7 +188,6 @@ class ManagerSetter extends Manager {
    */
   bindingPassiveClient(siteUUID, client) {
     // BU.CLI(siteUUID);
-    // BU.CLIN(instanceList);
     // 해당 매니저가 이미 존재하는지 체크
     const foundInstance = _.find(instanceList, instanceInfo =>
       _.isEqual(instanceInfo.id, siteUUID),

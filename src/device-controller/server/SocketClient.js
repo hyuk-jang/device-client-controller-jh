@@ -55,7 +55,7 @@ class SocketClient extends AbstController {
    * @param {net.Socket} client
    */
   setPassiveClient(client) {
-    // BU.CLI('setPassiveClient');
+    BU.CLI('setPassiveClient', this.configInfo);
     // 기본 Client와의 연결이 존재한다면 해당 연결을 끊음
     if (!_.isEmpty(this.client)) {
       this.client.destroy();
@@ -70,7 +70,6 @@ class SocketClient extends AbstController {
     });
 
     client.on('close', err => {
-      BU.CLI('CLOSE');
       this.client = {};
       this.notifyDisconnect(err);
     });
