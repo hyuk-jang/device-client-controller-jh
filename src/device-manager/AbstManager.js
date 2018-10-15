@@ -88,7 +88,13 @@ class AbstManager extends EventEmitter {
       eventName,
       spreader: this,
     };
-    this.mediator.updatedDcEventOnDevice(returnDcEvent);
+
+    if (_.get(this, 'mediator.updatedDcEventOnDevice') === undefined) {
+      BU.CLIN(this.mediator);
+      process.exit();
+    } else {
+      this.mediator.updatedDcEventOnDevice(returnDcEvent);
+    }
 
     // BU.CLIN(eventName);
     // BU.CLIN(this.deviceController.client);
