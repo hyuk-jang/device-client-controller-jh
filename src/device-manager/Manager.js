@@ -42,7 +42,13 @@ class Manager extends AbstManager {
     const { currentCommandSet } = this.iterator;
 
     if (_.isEmpty(currentCommandSet)) {
-      throw new Error('No commands are currently in progress.');
+      return writeLogFile(
+        this,
+        'config.logOption.hasDcError',
+        'error',
+        'No commands are currently in progress.',
+        _.get(commander, 'id'),
+      );
     }
 
     // 현재 진행중인 명령 객체와 일치해야지만 가능
