@@ -286,7 +286,9 @@ class Manager extends AbstManager {
 
   /** @private 명령 재전송 처리 */
   retryRequestProcessingCommand() {
-    BU.CLI('retryWrite', this.retryChance);
+    const commanderId = _.get(this, 'iterator.currentReceiver.id', '');
+    const id = `M: ${id}\tC: ${commanderId}`;
+    BU.CLI('retryWrite', `${id}: this.retryChance`);
     // BU.CLI(this.iterator.currentCommand)
     this.retryChance -= 1;
     if (this.retryChance > 0) {

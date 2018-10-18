@@ -14,11 +14,26 @@ const AbstManager = require('../device-manager/AbstManager');
  */
 function writeLogFile(logObj, path, eventType, dataTitle, data) {
   // BU.CLIS(path, eventType, dataTitle, data, _.get(logObj, path));
+
   if (_.get(logObj, path)) {
     let id = _.get(logObj, 'id', 'etc');
     if (_.isObject(id)) {
       id = _.get(logObj, 'iterator.currentReceiver.id', '');
     }
+
+    if (eventType === 'event') {
+      const observerList = _.get(logObj, 'observers', []);
+      const idList = _.union(observerList.map(observer => _.get(observer, 'id', '')));
+      id = idList.toString();
+    } else if (
+      dataTitle === 'onData' ||
+      dataTitle === 'transferData' ||
+      dataTitle === 'commanderResponse'
+    ) {
+      const commanderId = _.get(logObj, 'iterator.currentReceiver.id', '');
+      id = `M: ${id}\tC: ${commanderId}`;
+    }
+
     if (data === undefined) {
       BU.appendFile(
         `./log/device-client/${eventType}/${BU.convertDateToText(new Date(), '', 2)}.txt`,
@@ -33,6 +48,7 @@ function writeLogFile(logObj, path, eventType, dataTitle, data) {
         //   BU.writeFile(`./log/device-client/${eventType}/${BU.convertDateToText(new Date(), '', 2)}.hex`, bufData);
         // }
         // realData = data.toString('hex');
+
         realData = data.toString();
         // xbee 저장
         if (eventType === 'data' && dataTitle === 'onData' && BU.IsJsonString(realData)) {
