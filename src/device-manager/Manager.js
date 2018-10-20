@@ -1,7 +1,7 @@
 const _ = require('lodash');
 // const {BU, CU} = require('base-util-jh');
 
-const { BU, CU } = require('../../../base-util-jh');
+const { BU, CU } = require('base-util-jh');
 
 const AbstCommander = require('../device-commander/AbstCommander');
 const AbstManager = require('./AbstManager');

@@ -4,7 +4,7 @@ const Promise = require('bluebird');
 const eventToPromise = require('event-to-promise');
 const EventEmitter = require('events');
 
-const { BU, CU } = require('../../base-util-jh');
+const { BU, CU } = require('base-util-jh');
 
 const AbstDeviceClient = require('../src/device-client/AbstDeviceClient');
 // const ManagerSetter = require('../src/device-manager/ManagerSetter');

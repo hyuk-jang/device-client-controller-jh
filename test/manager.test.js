@@ -1,9 +1,9 @@
-const {expect} = require('chai');
+const { expect } = require('chai');
 const _ = require('lodash');
 const Promise = require('bluebird');
 const eventToPromise = require('event-to-promise');
 
-const {BU, CU} = require('../../base-util-jh');
+const { BU, CU } = require('base-util-jh');
 
 global._ = _;
 global.BU = BU;
@@ -23,7 +23,7 @@ const {
   definedOperationStatus,
 } = require('../../default-intelligence').dccFlagModel;
 
-const {initManager} = require('../src/util/dcUtil');
+const { initManager } = require('../src/util/dcUtil');
 
 describe('Device Manager Test', function() {
   this.timeout(20000);
@@ -65,7 +65,7 @@ describe('Device Manager Test', function() {
     // 명령 자동 진행을 막기 위하여 1:1 모드로 고정함
     deviceManager.commandStorage.currentCommandSet = {
       test: 'test',
-      controlInfo: {hasOneAndOne: true},
+      controlInfo: { hasOneAndOne: true },
     };
     /** @type {commandSet} */
 
@@ -77,7 +77,7 @@ describe('Device Manager Test', function() {
       cmdInfo.cmdList = [];
       // CmdList = 2 Length
       for (let j = 0; j < i; j += 1) {
-        const addCmdData = {data: `i:${i} j:${j}`};
+        const addCmdData = { data: `i:${i} j:${j}` };
         cmdInfo.cmdList.push(addCmdData);
       }
 
@@ -85,13 +85,13 @@ describe('Device Manager Test', function() {
       deviceManager.addCommandSet(_.cloneDeep(cmdInfo));
     }
 
-    const {standbyCommandSetList} = deviceManager.commandStorage;
+    const { standbyCommandSetList } = deviceManager.commandStorage;
     // 명령 추가 결과 테스트 // [Add] Rank{2} * 3, Rank{3} * 2
-    const rank2 = _.find(standbyCommandSetList, {rank: 2});
+    const rank2 = _.find(standbyCommandSetList, { rank: 2 });
     expect(rank2.list.length).to.be.eq(3);
     expect(_.head(rank2.list).cmdList.length).to.be.eq(0);
     expect(_.nth(rank2.list, 1).cmdList.length).to.be.eq(2);
-    const rank3 = _.find(standbyCommandSetList, {rank: 3});
+    const rank3 = _.find(standbyCommandSetList, { rank: 3 });
     expect(rank3.list.length).to.be.eq(2);
     expect(_.head(rank3.list).cmdList.length).to.be.eq(1);
 
@@ -130,7 +130,7 @@ describe('Device Manager Test', function() {
       cmdInfo.cmdList = [];
       // CmdList = 2 Length
       for (let j = 0; j < 2; j += 1) {
-        const addCmdData = {data: `i:${i} j:${j}`};
+        const addCmdData = { data: `i:${i} j:${j}` };
         cmdInfo.cmdList.push(addCmdData);
       }
       deviceManager.addCommandSet(_.cloneDeep(cmdInfo));
@@ -139,7 +139,7 @@ describe('Device Manager Test', function() {
     /** @type {commandSet} */
     const emergencyCmdInfo = {
       rank: definedCommandSetRank.EMERGENCY,
-      controlInfo: {hasErrorHandling: true},
+      controlInfo: { hasErrorHandling: true },
       commandId: '긴급 홍길동',
       cmdList: [
         {
@@ -163,7 +163,7 @@ describe('Device Manager Test', function() {
       rank: definedCommandSetRank.EMERGENCY,
     });
     expect(foundRankEmergency.length).to.be.eq(1);
-    let foundRank2 = deviceManager.iterator.findStandbyCommandSetList({rank: 2});
+    let foundRank2 = deviceManager.iterator.findStandbyCommandSetList({ rank: 2 });
     // 명령 수행중이므로 0개
     expect(foundRank2.length).to.be.eq(0);
 
@@ -175,7 +175,7 @@ describe('Device Manager Test', function() {
     );
     BU.CLIN(deviceManager.commandStorage, 4);
     await Promise.delay(500);
-    foundRank2 = deviceManager.iterator.findStandbyCommandSetList({rank: 2});
+    foundRank2 = deviceManager.iterator.findStandbyCommandSetList({ rank: 2 });
     BU.CLIN(deviceManager.commandStorage, 4);
     // 명령 교체했으므로 1개
     expect(foundRank2.length).to.be.eq(1);
@@ -248,7 +248,7 @@ describe('Device Manager Test', function() {
       cmdInfo.cmdList = [];
       // CmdList = 2 Length
       for (let j = 0; j < 2; j += 1) {
-        const addCmdData = {data: `i:${i} j:${j}`};
+        const addCmdData = { data: `i:${i} j:${j}` };
         cmdInfo.cmdList.push(addCmdData);
       }
       deviceManager.addCommandSet(_.cloneDeep(cmdInfo));
@@ -292,7 +292,7 @@ describe('Device Manager Test', function() {
     let currCommandSet = deviceManager.iterator.currentCommandSet;
     expect(currCommandSet.commandId).to.eq('홍길동1');
     expect(currCommandSet.currCmdIndex).to.eq(0);
-    const {delayCommandSetList} = deviceManager.iterator.aggregate;
+    const { delayCommandSetList } = deviceManager.iterator.aggregate;
     expect(delayCommandSetList).to.length(1);
     expect(_.head(delayCommandSetList).commandQueueReturnTimer.getStateRunning()).to.eq(true);
 
@@ -331,7 +331,7 @@ describe('Device Manager Test', function() {
     // 명령 자동 진행을 막기 위하여 1:1 모드로 고정함
     deviceManager.commandStorage.currentCommandSet = {
       test: 'test',
-      controlInfo: {hasOneAndOne: true},
+      controlInfo: { hasOneAndOne: true },
     };
 
     // [Add] Rank{2} * 1, Rank{3} * 1
@@ -342,7 +342,7 @@ describe('Device Manager Test', function() {
       cmdInfo.cmdList = [];
       // CmdList = 2 Length
       for (let j = 0; j < 2; j += 1) {
-        const addCmdData = {data: `i:${i} j:${j}`};
+        const addCmdData = { data: `i:${i} j:${j}` };
         cmdInfo.cmdList.push(addCmdData);
       }
       deviceManager.addCommandSet(_.cloneDeep(cmdInfo));
