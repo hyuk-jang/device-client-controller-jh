@@ -37,23 +37,24 @@ class Manager extends AbstManager {
    * @param {AbstCommander} commander
    * @param {string} commanderResponse
    */
-  requestTakeAction(commander, commanderResponse) {
-    // BU.CLI('responseToDataFromCommander');
+  async requestTakeAction(commander, commanderResponse) {
     const { currentCommandSet } = this.iterator;
 
     if (_.isEmpty(currentCommandSet)) {
-      return writeLogFile(
+      await writeLogFile(
         this,
         'config.logOption.hasDcError',
         'error',
         'No commands are currently in progress.',
         _.get(commander, 'id'),
       );
+      return false;
     }
 
     // 현재 진행중인 명령 객체와 일치해야지만 가능
     if (_.isEqual(currentCommandSet.commander, commander)) {
-      writeLogFile(
+      // BU.CLI('requestTakeAction', commanderResponse);
+      await writeLogFile(
         this,
         'config.logOption.hasCommanderResponse',
         'data',
@@ -142,12 +143,12 @@ class Manager extends AbstManager {
    * 장치에서 데이터가 수신되었을 경우 해당 장치의 데이터를 수신할 Commander에게 전송
    * @param {*} data
    */
-  onData(data) {
+  async onData(data) {
     // BU.CLI('onData', data);
     // this.iterator.currentReceiver &&
     // 데이터 수신이 이루어지고 해당 데이터에 대한 Commander의 응답을 기다리는 중
     this.updateOperationStatus(definedOperationStatus.RECEIVE_WAIT_PROCESSING_DATA);
-    writeLogFile(this, 'config.logOption.hasReceiveData', 'data', 'onData', data);
+    await writeLogFile(this, 'config.logOption.hasReceiveData', 'data', 'onData', data);
 
     const receiver = this.iterator.currentReceiver;
     // BU.CLI(receiver);
@@ -200,8 +201,8 @@ class Manager extends AbstManager {
     // 명령 전송을 기다림
     this.updateOperationStatus(definedOperationStatus.REQUEST_CMD);
 
-    // BU.CLIN(currentCommand.data, currentCommand.commandExecutionTimeoutMs);
-    writeLogFile(
+    // BU.CLI('transferCommandToDevice', this.id);
+    await writeLogFile(
       this,
       'config.logOption.hasTransferCommand',
       'data',

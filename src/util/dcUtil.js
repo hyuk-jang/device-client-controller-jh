@@ -12,7 +12,7 @@ const AbstManager = require('../device-manager/AbstManager');
  * @param {string=} dataTitle log event Type
  * @param {*=} data
  */
-function writeLogFile(logObj, path, eventType, dataTitle, data) {
+async function writeLogFile(logObj, path, eventType, dataTitle, data) {
   // BU.CLIS(path, eventType, dataTitle, data, _.get(logObj, path));
 
   if (_.get(logObj, path)) {
@@ -69,10 +69,12 @@ function writeLogFile(logObj, path, eventType, dataTitle, data) {
       } else {
         realData = data;
       }
-      BU.appendFile(
+      const isWrite = await BU.appendFile(
         `./log/device-client/${eventType}/${BU.convertDateToText(new Date(), '', 2)}.txt`,
         `${id} : ${dataTitle} --> ${realData}`,
       );
+
+      return isWrite;
     }
   }
 }
