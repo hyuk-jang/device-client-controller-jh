@@ -20,6 +20,8 @@ const Socket = require('../device-controller/socket/Socket');
 
 require('../../../default-intelligence');
 
+const Timeout = setTimeout(function() {}, 0).constructor;
+
 /** @class DeviceManager */
 class Manager extends AbstManager {
   constructor() {
@@ -67,8 +69,10 @@ class Manager extends AbstManager {
           // BU.CLI('definedCommanderResponse.DONE');
           // BU.CLIN(this.commandStorage);
           // 타이머가 붙어있다면 타이머 해제
-          currentCommandSet.commandExecutionTimer &&
-            currentCommandSet.commandExecutionTimer.pause();
+
+          currentCommandSet.commandExecutionTimer instanceof Timeout &&
+            clearTimeout(currentCommandSet.commandExecutionTimer);
+
           this.updateOperationStatus(definedOperationStatus.RECEIVE_DATA_DONE);
           this.manageProcessingCommand();
           break;
@@ -80,8 +84,8 @@ class Manager extends AbstManager {
         // 다음 명령을 수행해라 (강제)
         case definedCommanderResponse.NEXT:
           // BU.CLI('definedCommanderResponse.NEXT');
-          currentCommandSet.commandExecutionTimer &&
-            currentCommandSet.commandExecutionTimer.pause();
+          currentCommandSet.commandExecutionTimer instanceof Timeout &&
+            clearTimeout(currentCommandSet.commandExecutionTimer);
           this.updateOperationStatus(definedOperationStatus.RECEIVE_NEXT_FORCE);
           this.manageProcessingCommand();
           break;
@@ -89,8 +93,8 @@ class Manager extends AbstManager {
         case definedCommanderResponse.RETRY:
           // BU.CLI('definedCommanderResponse.RETRY', this.iterator.currentReceiver.id);
           // 타이머가 붙어있다면 타이머 해제
-          currentCommandSet.commandExecutionTimer &&
-            currentCommandSet.commandExecutionTimer.pause();
+          currentCommandSet.commandExecutionTimer instanceof Timeout &&
+            clearTimeout(currentCommandSet.commandExecutionTimer);
           this.retryRequestProcessingCommand();
           break;
         default:
@@ -145,6 +149,7 @@ class Manager extends AbstManager {
    */
   async onData(data) {
     // BU.CLI('onData', data);
+    this.data = data;
     // this.iterator.currentReceiver &&
     // 데이터 수신이 이루어지고 해당 데이터에 대한 Commander의 응답을 기다리는 중
     this.updateOperationStatus(definedOperationStatus.RECEIVE_WAIT_PROCESSING_DATA);
@@ -189,8 +194,8 @@ class Manager extends AbstManager {
    */
   async transferCommandToDevice() {
     // 타이머가 동작 중이라면 이전 명령 타이머 해제
-    if (_.get(this.operationTimer, 'getStateRunning') === true) {
-      this.operationTimer.pause();
+    if (this.operationTimer instanceof Timeout) {
+      clearTimeout(this.operationTimer);
     }
     // BU.log('Device write');
     // BU.CLI(this.sendMsgTimeOutSec);
@@ -220,8 +225,18 @@ class Manager extends AbstManager {
     ) {
       currentMsg = JSON.stringify(currentMsg);
     }
+
+    // 전송 요청은 0.1초안에 이루어져야 함
+    const transferTimer = setTimeout(() => {
+      throw new Error('The transfer request timed out.');
+    }, 100);
+
+    await this.deviceController.write(currentMsg);
+    // 전송 요청 해제
+    clearTimeout(transferTimer);
+
     // 정해진 시간안에 명령 완료 체크 타이머 구동
-    currentCommandSet.commandExecutionTimer = new CU.Timer(() => {
+    currentCommandSet.commandExecutionTimer = setTimeout(() => {
       let error;
       switch (currentCommandSet.operationStatus) {
         case definedOperationStatus.REQUEST_CMD:
@@ -243,7 +258,6 @@ class Manager extends AbstManager {
     }, currentCommand.commandExecutionTimeoutMs || 1000);
     this.operationTimer = currentCommandSet.commandExecutionTimer;
 
-    await this.deviceController.write(currentMsg);
     // 명령 전송이 성공하였으므로 데이터 수신 상태로 변경
     this.updateOperationStatus(definedOperationStatus.RECEIVE_WAIT_DATA);
 
@@ -309,7 +323,7 @@ class Manager extends AbstManager {
    * @private 현재 명령을 수행하는 과정에서 생기는 제어 상태 변경 처리
    * @param {operationStatus} operationStatus
    */
-  updateOperationStatus(operationStatus) {
+  async updateOperationStatus(operationStatus) {
     const { currentCommandSet } = this.iterator;
     // BU.CLIS(currentCommandSet.operationStatus, operationStatus);
 
@@ -322,6 +336,13 @@ class Manager extends AbstManager {
     }
     // BU.CLI('updateOperationStatus', operationStatus);
     currentCommandSet.operationStatus = operationStatus;
+    // await writeLogFile(
+    //   this,
+    //   'config.logOption.hasCommanderResponse',
+    //   'data',
+    //   'updateOperationStatus',
+    //   currentCommandSet.operationStatus,
+    // );
   }
 
   /**
@@ -452,6 +473,13 @@ class Manager extends AbstManager {
         // BU.CLI(dcErrorFormat.errorInfo);
         // 에러 핸들링을 필요로 한다면 시스템 대기
         if (_.get(currentCommandSet.controlInfo, 'hasErrorHandling') === true) {
+          // writeLogFile(
+          //   this,
+          //   'config.logOption.hasCommanderResponse',
+          //   'data',
+          //   definedOperationStatus.E_UNHANDLING_DATA,
+          //   this.data,
+          // );
           // BU.CLI(operationStatus);
           // BU.CLIN('hasErrorHandling', dcErrorFormat.errorInfo);
           // 에러 핸들링 상태로 변경

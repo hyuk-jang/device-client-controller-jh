@@ -10,6 +10,8 @@ const {
   definedOperationStatus,
 } = require('../../../default-intelligence').dccFlagModel;
 
+const Timeout = setTimeout(function() {}, 0).constructor;
+
 class Iterator {
   /** @param {Manager} deviceManager */
   constructor(deviceManager) {
@@ -347,8 +349,8 @@ class Iterator {
         dcError.commandSet = this.currentCommandSet;
         this.currentReceiver.onDcError(dcError);
       }
-      this.currentCommandSet.commandExecutionTimer &&
-        this.currentCommandSet.commandExecutionTimer.pause();
+      this.currentCommandSet.commandExecutionTimer instanceof Timeout &&
+        clearTimeout(this.currentCommandSet.commandExecutionTimer);
     }
 
     this.aggregate.currentCommandSet = {};
