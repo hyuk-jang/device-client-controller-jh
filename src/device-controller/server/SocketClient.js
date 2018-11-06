@@ -72,10 +72,15 @@ class SocketClient extends AbstController {
     });
 
     client.on('end', () => {
-      // console.log('Client disconnected');
+      console.log('Client disconnected');
     });
 
     client.on('error', error => {
+      BU.CLI(error);
+      if (_.has(this.client, 'destroy')) {
+        this.client.destroy();
+        this.client = {};
+      }
       this.notifyError(error);
     });
 
