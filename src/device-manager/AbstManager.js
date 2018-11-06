@@ -90,7 +90,7 @@ class AbstManager extends EventEmitter {
     };
 
     if (_.get(this, 'mediator.updatedDcEventOnDevice') === undefined) {
-      BU.CLIN(this.mediator);
+      // BU.CLIN(this.mediator);
       process.exit();
     } else {
       this.mediator.updatedDcEventOnDevice(returnDcEvent);
@@ -105,7 +105,7 @@ class AbstManager extends EventEmitter {
         errorInfo: new Error(eventName),
         spreader: this,
       };
-      this.iterator.clearAllCommandSetStorage(returnDcError);
+      this.iterator.deleteAllCommandSet(returnDcError);
     }
   }
 

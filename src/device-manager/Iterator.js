@@ -8,6 +8,7 @@ const AbstCommander = require('../device-commander/AbstCommander');
 const {
   definedCommandSetRank,
   definedOperationStatus,
+  definedCommandSetMessage,
 } = require('../../../default-intelligence').dccFlagModel;
 
 const Timeout = setTimeout(function() {}, 0).constructor;
@@ -338,17 +339,12 @@ class Iterator {
 
   /**
    * 현재 진행중인 명령 초기화
-   * @param {dcError} dcError
    * @return {void}
    */
-  clearCurrentCommandSet(dcError) {
+  clearCurrentCommandSet() {
     // BU.CLI('clearCurrentCommandSet');
     if (!_.isEmpty(this.currentCommandSet)) {
       // 에러가 존재하고 받을 대상이 있다면 전송
-      if (_.isError(_.get(dcError, 'errorInfo')) && this.currentReceiver) {
-        dcError.commandSet = this.currentCommandSet;
-        this.currentReceiver.onDcError(dcError);
-      }
       this.currentCommandSet.commandExecutionTimer instanceof Timeout &&
         clearTimeout(this.currentCommandSet.commandExecutionTimer);
     }
@@ -357,6 +353,7 @@ class Iterator {
   }
 
   /**
+   * FIXME: 명령 삭제 시 Client User와의 상호 작용 처리 필요
    * 삭제하고자 하는 정보 AND 연산
    * @param {{commander: AbstCommander, commandId: string=}} searchInfo
    */
@@ -428,6 +425,74 @@ class Iterator {
       }
       return true;
     });
+  }
+
+  /**
+   * @desc 장치와의 접속이 끊어졌을 경우
+   * 현재 명령을 수행하는 도중 에러가 발생할 경우 실행. 현재 진행중인 명령 초기화하고 다음 명령 수행
+   * @param {dcError} dcError
+   * @return {void}
+   */
+  deleteCurrentCommandSet(dcError) {
+    // BU.CLI('clearCurrentCommandSet');
+    if (!_.isEmpty(this.currentCommandSet)) {
+      // dcError에 현재 명령 구성 붙임
+
+      // 현재 명령이 삭제되었다고 알려줌
+      // NOTE: onDcMessage 발생. requestTakeAction 처리 하면 안됨
+      this.manager.sendMessageToCommander(
+        definedCommandSetMessage.COMMANDSET_DELETE,
+        dcError.errorInfo,
+        { commandSetInfo: this.currentCommandSet, receiver: this.currentReceiver },
+      );
+
+      // Timer 및 현재 명령 셋 해제
+      this.clearCurrentCommandSet();
+
+      // 에러 핸들링을 하지 않는다면 다음 명령 수행 요청
+      if (_.get(this.currentCommandSet.controlInfo, 'hasErrorHandling') === false) {
+        this.manager.nextCommand();
+      } else {
+        // 현재 명령 수행 중 여부를 false 바꿈 (addCommandSet 메소드에서의 명령 추가를 위함)
+        this.manager.hasPerformCommand = false;
+      }
+    }
+  }
+
+  /**
+   * @desc 장치와의 접속이 끊어졌을 경우
+   * 현재 요청 중인 모든 명령을 취소 처리하고 명령 종료 메시지 보냄
+   * @param {dcError} dcError
+   * @return {void}
+   */
+  deleteAllCommandSet(dcError) {
+    // 명령 대기열에 존재하는 명령 삭제
+    _.forEach(this.aggregate.standbyCommandSetList, item => {
+      _.dropWhile(item.list, commandInfo => {
+        // BU.CLIN(commandInfo);
+        this.manager.sendMessageToCommander(
+          definedCommandSetMessage.COMMANDSET_DELETE,
+          dcError.errorInfo,
+          { commandSetInfo: commandInfo, receiver: commandInfo.commander },
+        );
+
+        return true;
+      });
+    });
+
+    // 지연 명령 대기열에 존재하는 명령 삭제
+    _.dropWhile(this.aggregate.delayCommandSetList, commandInfo => {
+      commandInfo.commandQueueReturnTimer && commandInfo.commandQueueReturnTimer.pause();
+      this.manager.sendMessageToCommander(
+        definedCommandSetMessage.COMMANDSET_DELETE,
+        dcError.errorInfo,
+        { commandSetInfo: commandInfo, receiver: commandInfo.commander },
+      );
+
+      return true;
+    });
+
+    this.deleteCurrentCommandSet(dcError);
   }
 
   /**

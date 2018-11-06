@@ -90,5 +90,21 @@ class AbstIterator {
    * @param {dcError} dcError
    */
   clearAllCommandSetStorage(dcError) {}
+
+  /**
+   * @desc 장치와의 접속이 끊어졌을 경우
+   * 현재 명령을 수행하는 도중 에러가 발생할 경우 실행. 현재 진행중인 명령 초기화하고 다음 명령 수행
+   * @param {dcError} dcError
+   * @return {void}
+   */
+  deleteCurrentCommandSet(dcError) {}
+
+  /**
+   * @desc 장치와의 접속이 끊어졌을 경우
+   * 현재 요청 중인 모든 명령을 취소 처리하고 명령 종료 메시지 보냄
+   * @param {dcError} dcError
+   * @return {void}
+   */
+  deleteAllCommandSet(dcError) {}
 }
 module.exports = AbstIterator;

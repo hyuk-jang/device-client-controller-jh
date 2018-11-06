@@ -9,4 +9,6 @@ const client = net.connect(
   },
 );
 
+client.on('data', console.log)
+
 client.write('hi');

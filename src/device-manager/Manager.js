@@ -47,7 +47,7 @@ class Manager extends AbstManager {
         this,
         'config.logOption.hasDcError',
         'error',
-        'No commands are currently in progress.',
+        `No commands are currently in progress.${commanderResponse}`,
         _.get(commander, 'id'),
       );
       return false;
@@ -116,8 +116,8 @@ class Manager extends AbstManager {
       throw new Error('The device is not connected.');
     }
     this.iterator.addCmd(commandSet);
-    // 작업 중이 아니라면 명령 제어 요청
-    if (!this.hasPerformCommand) {
+    // 작업 중이 아니거나 현재 아무런 명령이 존재하지 않는다면 다음 명령 수행 요청
+    if (!this.hasPerformCommand || _.isEmpty(this.iterator.currentCommandSet)) {
       this.manageProcessingCommand();
     }
     // return false;
@@ -348,21 +348,30 @@ class Manager extends AbstManager {
   /**
    * @param {string} message
    * @param {Error=} messageError
+   * @param {{commandSetInfo: commandSet, receiver: AbstCommander}=} commandStorage
    */
-  sendMessageToCommander(message, messageError) {
-    const { currentCommandSet, currentReceiver } = this.iterator;
+  sendMessageToCommander(message, messageError, commandStorage = {}) {
+    let { commandSetInfo, receiver } = commandStorage;
+    if (_.isEmpty(commandStorage)) {
+      const { currentCommandSet, currentReceiver } = this.iterator;
+      commandSetInfo = currentCommandSet;
+      receiver = currentReceiver;
+    }
 
-    const hasTerminate = _.isEqual(
-      message,
+    // 완료 목록(명령 완료, 명령 삭제)
+    const completeMsgList = [
+      definedCommandSetMessage.COMMANDSET_DELETE,
       definedCommandSetMessage.COMMANDSET_EXECUTION_TERMINATE,
-    );
+    ];
 
-    if (hasTerminate && _.isEqual(currentCommandSet, this.lastestCommandSet)) {
+    const hasTerminate = _.includes(completeMsgList, message);
+
+    if (hasTerminate && _.isEqual(commandSetInfo, this.lastestCommandSet)) {
       return false;
     }
     /** @type {dcMessage} */
     const dcMessageFormat = {
-      commandSet: currentCommandSet,
+      commandSet: commandSetInfo,
       msgCode: message,
       msgError: messageError || undefined,
       spreader: this,
@@ -370,11 +379,11 @@ class Manager extends AbstManager {
 
     // 마지막으로 보낸 CommandSet을 기억
     if (hasTerminate) {
-      this.lastestCommandSet = currentCommandSet;
+      this.lastestCommandSet = commandSetInfo;
     }
 
     // BU.CLIN(currentReceiver);
-    currentReceiver && currentReceiver.onDcMessage(dcMessageFormat);
+    receiver && receiver.onDcMessage(dcMessageFormat);
   }
 
   /**
@@ -579,11 +588,9 @@ class Manager extends AbstManager {
       return this.requestProcessingCommand();
     } catch (error) {
       // 다음 명령이 존재하지 않을 경우
-      // BU.CLI(error);
-      // writeLogFile(this, 'config.logOption.hasDcError', 'error', _.get(error, 'message'),  _.get(error, 'stack'));
-      this.iterator.clearCurrentCommandSet();
       this.hasPerformCommand = false;
-      throw error;
+      writeLogFile(this, 'config.logOption.hasDcError', 'error', _.get(error, 'message'), this.id);
+      this.iterator.clearCurrentCommandSet();
     }
   }
 }

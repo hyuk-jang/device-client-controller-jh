@@ -58,12 +58,9 @@ class SocketClient extends AbstController {
     BU.CLI('setPassiveClient', this.configInfo);
     // 기본 Client와의 연결이 존재한다면 해당 연결을 끊음
     if (!_.isEmpty(this.client)) {
+      BU.CLI('기존 연결 제거');
       this.client.destroy();
     }
-
-    this.client = client;
-    // 소켓을 붙인다는 것은 연결된것이기에 connect 이벤트 발생
-    this.notifyConnect();
 
     client.on('data', bufferData => {
       this.notifyData(bufferData);
@@ -81,6 +78,10 @@ class SocketClient extends AbstController {
     client.on('error', error => {
       this.notifyError(error);
     });
+
+    this.client = client;
+    // 소켓을 붙인다는 것은 연결된것이기에 connect 이벤트 발생
+    this.notifyConnect();
   }
 }
 module.exports = SocketClient;
