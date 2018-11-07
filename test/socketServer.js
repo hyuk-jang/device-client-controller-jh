@@ -20,6 +20,8 @@ for (let i = 0; i < 3; i += 1) {
 
       // socket.write('18?');
 
+      socket.write('hi');
+
       socket.on('data', data => {
         console.log(`P: ${port} --> Received Data: ${data} `);
         // return socket.write(`this.is.my.socket\r\ngogogogo${port}`);

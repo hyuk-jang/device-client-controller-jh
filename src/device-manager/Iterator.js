@@ -1,7 +1,5 @@
 const _ = require('lodash');
-
 const { BU, CU } = require('base-util-jh');
-
 const Manager = require('./Manager');
 const AbstCommander = require('../device-commander/AbstCommander');
 
@@ -468,7 +466,7 @@ class Iterator {
   deleteAllCommandSet(dcError) {
     // 명령 대기열에 존재하는 명령 삭제
     _.forEach(this.aggregate.standbyCommandSetList, item => {
-      _.dropWhile(item.list, commandInfo => {
+      _.remove(item.list, commandInfo => {
         // BU.CLIN(commandInfo);
         this.manager.sendMessageToCommander(
           definedCommandSetMessage.COMMANDSET_DELETE,
@@ -481,7 +479,7 @@ class Iterator {
     });
 
     // 지연 명령 대기열에 존재하는 명령 삭제
-    _.dropWhile(this.aggregate.delayCommandSetList, commandInfo => {
+    _.remove(this.aggregate.delayCommandSetList, commandInfo => {
       commandInfo.commandQueueReturnTimer && commandInfo.commandQueueReturnTimer.pause();
       this.manager.sendMessageToCommander(
         definedCommandSetMessage.COMMANDSET_DELETE,
@@ -493,6 +491,8 @@ class Iterator {
     });
 
     this.deleteCurrentCommandSet(dcError);
+    // BU.CLIN(_.map(this.aggregate.standbyCommandSetList, 'list'));
+    // BU.CLIN(this.aggregate.currentCommandSet, 'list');
   }
 
   /**
