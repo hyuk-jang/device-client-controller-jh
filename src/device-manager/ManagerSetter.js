@@ -203,6 +203,9 @@ class ManagerSetter extends Manager {
     // DeviceController에 client가 비워져있을 경우에만 설정
     if (_.isEmpty(_.get(instance, 'deviceController.client', {}))) {
       instance.deviceController.setPassiveClient(client);
+    } else {
+      // FIXME: 기존의 Connection이 존재하면 해당 접속을 끊고 연결
+      instance.deviceController.setPassiveClient(client);
     }
   }
 }

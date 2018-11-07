@@ -60,33 +60,37 @@ class SocketClient extends AbstController {
     if (!_.isEmpty(this.client)) {
       BU.CLI('기존 연결 제거');
       this.client.destroy();
-    }
 
-    client.on('data', bufferData => {
-      this.notifyData(bufferData);
-    });
+      // setTimeout(() => {
+      this.setPassiveClient(client);
+      // }, 1);
+    } else {
+      client.on('data', bufferData => {
+        this.notifyData(bufferData);
+      });
 
-    client.on('close', err => {
-      this.client = {};
-      this.notifyDisconnect(err);
-    });
-
-    client.on('end', () => {
-      console.log('Client disconnected');
-    });
-
-    client.on('error', error => {
-      BU.CLI(error);
-      if (_.has(this.client, 'destroy')) {
-        this.client.destroy();
+      client.on('close', err => {
         this.client = {};
-      }
-      this.notifyError(error);
-    });
+        this.notifyDisconnect(err);
+      });
 
-    this.client = client;
-    // 소켓을 붙인다는 것은 연결된것이기에 connect 이벤트 발생
-    this.notifyConnect();
+      client.on('end', () => {
+        console.log('Client disconnected');
+      });
+
+      client.on('error', error => {
+        BU.CLI(error);
+        if (_.has(this.client, 'destroy')) {
+          this.client.destroy();
+          this.client = {};
+        }
+        this.notifyError(error);
+      });
+
+      this.client = client;
+      // 소켓을 붙인다는 것은 연결된것이기에 connect 이벤트 발생
+      this.notifyConnect();
+    }
   }
 }
 module.exports = SocketClient;
