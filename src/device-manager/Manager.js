@@ -3,22 +3,20 @@ const _ = require('lodash');
 
 const { BU, CU } = require('base-util-jh');
 
+const {
+  definedCommanderResponse,
+  definedCommandSetMessage,
+  definedOperationStatus,
+} = require('default-intelligence').dccFlagModel;
+
 const AbstCommander = require('../device-commander/AbstCommander');
 const AbstManager = require('./AbstManager');
 
 const Iterator = require('./AbstIterator');
 
-const {
-  definedCommanderResponse,
-  definedCommandSetMessage,
-  definedOperationStatus,
-} = require('../../../default-intelligence').dccFlagModel;
-
 const { writeLogFile } = require('../util/dcUtil');
 
 const Socket = require('../device-controller/socket/Socket');
-
-require('../../../default-intelligence');
 
 const Timeout = setTimeout(function() {}, 0).constructor;
 

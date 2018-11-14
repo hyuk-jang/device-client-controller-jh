@@ -4,11 +4,6 @@ const EventEmitter = require('events');
 
 const { BU } = require('base-util-jh');
 
-const Builder = require('../device-builder/Builder');
-const AbstCommander = require('../device-commander/AbstCommander');
-const AbstManager = require('../device-manager/AbstManager');
-const ManagerSetter = require('../device-manager/ManagerSetter');
-
 const {
   MODBUS,
   definedCommanderResponse,
@@ -16,7 +11,12 @@ const {
   definedCommandSetRank,
   definedControlEvent,
   definedOperationError,
-} = require('../../../default-intelligence').dccFlagModel;
+} = require('default-intelligence').dccFlagModel;
+
+const Builder = require('../device-builder/Builder');
+const AbstCommander = require('../device-commander/AbstCommander');
+const AbstManager = require('../device-manager/AbstManager');
+const ManagerSetter = require('../device-manager/ManagerSetter');
 
 class AbstDeviceClient extends EventEmitter {
   constructor() {

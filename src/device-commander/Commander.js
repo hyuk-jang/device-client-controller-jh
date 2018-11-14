@@ -1,13 +1,6 @@
 const _ = require('lodash');
 const { BU } = require('base-util-jh');
 
-const AbstCommander = require('./AbstCommander');
-const AbstMediator = require('../device-mediator/AbstMediator');
-const AbstManager = require('../device-manager/AbstManager');
-const AbstDeviceClient = require('../device-client/AbstDeviceClient');
-
-const { writeLogFile, getDefaultControlInfo, getDefaultLogOption } = require('../util/dcUtil');
-
 const {
   definedCommanderResponse,
   definedCommandSetMessage,
@@ -15,7 +8,14 @@ const {
   definedControlEvent,
   definedOperationError,
   definedOperationStatus,
-} = require('../../../default-intelligence').dccFlagModel;
+} = require('default-intelligence').dccFlagModel;
+
+const AbstCommander = require('./AbstCommander');
+const AbstMediator = require('../device-mediator/AbstMediator');
+const AbstManager = require('../device-manager/AbstManager');
+const AbstDeviceClient = require('../device-client/AbstDeviceClient');
+
+const { writeLogFile, getDefaultControlInfo, getDefaultLogOption } = require('../util/dcUtil');
 
 const instanceList = [];
 

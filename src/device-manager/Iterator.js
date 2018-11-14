@@ -1,13 +1,13 @@
 const _ = require('lodash');
 const { BU, CU } = require('base-util-jh');
-const Manager = require('./Manager');
-const AbstCommander = require('../device-commander/AbstCommander');
-
 const {
   definedCommandSetRank,
   definedOperationStatus,
   definedCommandSetMessage,
-} = require('../../../default-intelligence').dccFlagModel;
+} = require('default-intelligence').dccFlagModel;
+
+const Manager = require('./Manager');
+const AbstCommander = require('../device-commander/AbstCommander');
 
 const Timeout = setTimeout(function() {}, 0).constructor;
 

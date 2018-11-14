@@ -6,10 +6,10 @@ const EventEmitter = require('events');
 
 const { BU, CU } = require('base-util-jh');
 
+const { definedControlEvent } = require('default-intelligence').dccFlagModel;
+
 const AbstDeviceClient = require('../src/device-client/AbstDeviceClient');
 // const ManagerSetter = require('../src/device-manager/ManagerSetter');
-
-const { definedControlEvent } = require('../../default-intelligence').dccFlagModel;
 
 const DCC = require('../index');
 

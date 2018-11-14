@@ -1,9 +1,12 @@
-const {expect} = require('chai');
+const { expect } = require('chai');
 const _ = require('lodash');
+const EventEmitter = require('events');
 const Promise = require('bluebird');
 const eventToPromise = require('event-to-promise');
 
-const {BU, CU} = require('base-util-jh');
+const { BU, CU } = require('base-util-jh');
+
+const { definedControlEvent } = require('default-intelligence').dccFlagModel;
 
 const AbstDeviceClient = require('../src/device-client/AbstDeviceClient');
 const AbstMediator = require('../src/device-mediator/AbstMediator');
@@ -12,10 +15,6 @@ const AbstManager = require('../src/device-manager/AbstManager');
 const AbstController = require('../src/device-controller/AbstController');
 
 global.BU = BU;
-
-const {definedControlEvent} = require('../../default-intelligence').dccFlagModel;
-
-const EventEmitter = require('events');
 
 class Receiver extends EventEmitter {
   constructor() {
@@ -69,7 +68,7 @@ describe('Device Manager Test', function() {
     BU.CLI(connectTimer.getTimeLeft());
     expect(connectTimer.getTimeLeft() < 0).to.eq(true);
     // Test 클라이언트를 설정
-    abstController.client = {alive: true};
+    abstController.client = { alive: true };
 
     // 장치 접속 성공
     // occurConnectCount: 1,  occurDisconnectCount: 1
@@ -87,7 +86,7 @@ describe('Device Manager Test', function() {
     expect(abstController.hasConnect).to.eq(false);
 
     // 장치에서 접속이 성공하여 연결 객체가 생성되고 이벤트가 올라온 상태 테스트
-    abstController.client = {alive: true};
+    abstController.client = { alive: true };
     await eventToPromise(receiver, definedControlEvent.CONNECT);
     expect(abstController.hasConnect).to.eq(true);
     // occurConnectCount: 2,  occurDisconnectCount: 2

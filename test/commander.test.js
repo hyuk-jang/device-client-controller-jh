@@ -9,6 +9,12 @@ global._ = _;
 global.BU = BU;
 global.CU = CU;
 
+const {
+  definedCommanderResponse,
+  definedCommandSetMessage,
+  definedCommandSetRank,
+} = require('default-intelligence').dccFlagModel;
+
 const AbstDeviceClient = require('../src/device-client/AbstDeviceClient');
 
 const Commander = require('../src/device-commander/Commander');
@@ -19,12 +25,6 @@ const SocketDeviceController = require('../src/device-controller/socket/Socket')
 
 // console.log(uuidv4());
 const Manager = require('../src/device-manager/Manager');
-
-const {
-  definedCommanderResponse,
-  definedCommandSetMessage,
-  definedCommandSetRank,
-} = require('../../default-intelligence').dccFlagModel;
 
 const { initManager } = require('../src/util/dcUtil');
 

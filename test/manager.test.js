@@ -8,6 +8,11 @@ const { BU, CU } = require('base-util-jh');
 global._ = _;
 global.BU = BU;
 global.CU = CU;
+const {
+  definedCommandSetRank,
+  definedCommanderResponse,
+  definedOperationStatus,
+} = require('default-intelligence').dccFlagModel;
 
 const AbstDeviceClient = require('../src/device-client/AbstDeviceClient');
 const SerialDeviceController = require('../src/device-controller/serial/Serial');
@@ -16,12 +21,6 @@ const SocketDeviceController = require('../src/device-controller/socket/Socket')
 
 // console.log(uuidv4());
 const DeviceManager = require('../src/device-manager/Manager');
-
-const {
-  definedCommandSetRank,
-  definedCommanderResponse,
-  definedOperationStatus,
-} = require('../../default-intelligence').dccFlagModel;
 
 const { initManager } = require('../src/util/dcUtil');
 

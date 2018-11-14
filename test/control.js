@@ -12,7 +12,7 @@ const AbstIterator = require('../src/device-manager/AbstIterator');
 const AbstManager = require('../src/device-manager/AbstManager');
 const AbstController = require('../src/device-controller/AbstController');
 
-const { definedControlEvent } = require('../../default-intelligence').dccFlagModel;
+const { definedControlEvent } = require('default-intelligence').dccFlagModel;
 
 class Receiver extends EventEmitter {
   constructor() {

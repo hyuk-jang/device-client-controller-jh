@@ -3,16 +3,16 @@ const Promise = require('bluebird');
 const _ = require('lodash');
 
 const { BU, CU } = require('base-util-jh');
-const AbstManager = require('../device-manager/AbstManager');
-
-const { writeLogFile } = require('../util/dcUtil');
-
 const {
   CONNECT,
   DATA,
   DEVICE_ERROR,
   DISCONNECT,
-} = require('../../../default-intelligence').dccFlagModel.definedControlEvent;
+} = require('default-intelligence').dccFlagModel.definedControlEvent;
+
+const AbstManager = require('../device-manager/AbstManager');
+
+const { writeLogFile } = require('../util/dcUtil');
 
 class AbstController extends EventEmitter {
   /**
