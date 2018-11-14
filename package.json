@@ -30,8 +30,8 @@
     "prettier": "^1.14.3"
   },
   "dependencies": {
-    "base-util-jh": "^1.1.19",
-    "bluebird": "^3.5.2",
+    "base-util-jh": "^1.1.20",
+    "bluebird": "^3.5.3",
     "event-to-promise": "^0.8.0",
     "lodash": "^4.17.11",
     "modbus-serial": "^7.3.0",

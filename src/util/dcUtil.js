@@ -38,7 +38,7 @@ async function writeLogFile(logObj, path, eventType, dataTitle, data) {
 
     if (data === undefined) {
       BU.appendFile(
-        `./log/device-client/${eventType}/${BU.convertDateToText(new Date(), '', 2)}.txt`,
+        `./log/device-client/${eventType}/${BU.convertDateToText(new Date(), '', 2)}.log`,
         `${id} : ${dataTitle}`,
       );
     } else {
@@ -72,7 +72,7 @@ async function writeLogFile(logObj, path, eventType, dataTitle, data) {
         realData = data;
       }
       const isWrite = await BU.appendFile(
-        `./log/device-client/${eventType}/${filePath}.txt`,
+        `./log/device-client/${eventType}/${filePath}.log`,
         `${id} : ${dataTitle} --> ${realData}`,
       );
 

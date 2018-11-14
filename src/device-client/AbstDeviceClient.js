@@ -152,7 +152,10 @@ class AbstDeviceClient extends EventEmitter {
   /** 장치의 연결이 되어있는지 여부 @return {boolean} */
   get hasConnectedDevice() {
     // BU.CLIN(this.commander, 2)
-    return this.commander.hasConnectedDevice;
+    const isConnected = _.get(this, 'commander.hasConnectedDevice', false);
+
+    return isConnected;
+    // return this.commander.hasConnectedDevice;
   }
 
   /** 현재 발생되고 있는 시스템 에러 리스트
