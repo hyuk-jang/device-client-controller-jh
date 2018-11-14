@@ -25,7 +25,7 @@ async function writeLogFile(logObj, path, eventType, dataTitle, data) {
     if (eventType === 'event') {
       const observerList = _.get(logObj, 'observers', []);
       const idList = _.union(observerList.map(observer => _.get(observer, 'id', '')));
-      id = idList.toString();
+      id = JSON.stringify(idList);
     } else if (
       dataTitle === 'onData' ||
       dataTitle === 'transferData' ||
