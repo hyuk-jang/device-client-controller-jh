@@ -43,6 +43,19 @@ class AbstDeviceClient extends EventEmitter {
     return serialList;
   }
 
+  /**
+   * @desc 장치와 직접 통신하고자 할 경우
+   * Create 'Controller'
+   * @param {deviceInfo} config
+   */
+  setDeviceController(config) {
+    const managerSetter = new ManagerSetter();
+    const manager = managerSetter.setManager(config);
+    // Default인 Manager 삭제
+    manager.deviceController.observers = [];
+    return manager.deviceController;
+  }
+
   // Builder
   /**
    * Create 'Commander', 'Manager' And Set Property 'commander', 'manager'

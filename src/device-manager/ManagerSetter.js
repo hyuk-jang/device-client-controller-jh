@@ -7,6 +7,18 @@ const Iterator = require('./Iterator');
 const AbstMediator = require('../device-mediator/AbstMediator');
 const AbstController = require('../device-controller/AbstController');
 
+// Active Controller
+const SerialWithParser = require('../device-controller/serial/SerialWithParser');
+const Serial = require('../device-controller/serial/Serial');
+const SerialWithXbee = require('../device-controller/zigbee/SerialWithXbee');
+const SocketWithParser = require('../device-controller/socket/SocketWithParser');
+const Socket = require('../device-controller/socket/Socket');
+const ModbusRTU = require('../device-controller/modbus/ModbusRTU');
+const ModbusTCP = require('../device-controller/modbus/ModbusTCP');
+
+// Passive Controller
+const SocketClient = require('../device-controller/server/SocketClient');
+
 // DeviceManager는 DeviceController와 1:1 매칭.
 /** @type {{id: *, instance:ManagerSetter}[]} */
 const instanceList = [];
@@ -25,17 +37,17 @@ class ManagerSetter extends Manager {
       case 'serial':
         switch (config.connect_info.subType) {
           case 'parser':
-            Controller = require('../device-controller/serial/SerialWithParser');
+            Controller = SerialWithParser;
             break;
           default:
-            Controller = require('../device-controller/serial/Serial');
+            Controller = Serial;
             break;
         }
         break;
       case 'zigbee':
         switch (config.connect_info.subType) {
           case 'xbee':
-            Controller = require('../device-controller/zigbee/SerialWithXbee');
+            Controller = SerialWithXbee;
             break;
           default:
             break;
@@ -44,20 +56,20 @@ class ManagerSetter extends Manager {
       case 'socket':
         switch (config.connect_info.subType) {
           case 'parser':
-            Controller = require('../device-controller/socket/SocketWithParser');
+            Controller = SocketWithParser;
             break;
           default:
-            Controller = require('../device-controller/socket/Socket');
+            Controller = Socket;
             break;
         }
         break;
       case 'modbus':
         switch (config.connect_info.subType) {
           case 'rtu':
-            Controller = require('../device-controller/modbus/ModbusRTU');
+            Controller = ModbusRTU;
             break;
           case 'tcp':
-            Controller = require('../device-controller/modbus/ModbusTCP');
+            Controller = ModbusTCP;
             break;
           default:
             break;
@@ -84,6 +96,7 @@ class ManagerSetter extends Manager {
       this.config = config;
       this.hasPerformCommand = false;
       // Manager에 Device 등록
+      /** @type {AbstController} */
       this.deviceController = deviceController;
       // BU.CLI('@@@@@@@@@@@', this.id);
       // 신규 정의시 instanceList에 저장
@@ -119,11 +132,8 @@ class ManagerSetter extends Manager {
     switch (config.connect_info.type) {
       case 'socket':
         switch (config.connect_info.subType) {
-          case 'parser':
-            Controller = require('../device-controller/server/SocketClientWithParser');
-            break;
           default:
-            Controller = require('../device-controller/server/SocketClient');
+            Controller = SocketClient;
             break;
         }
         break;
@@ -147,6 +157,7 @@ class ManagerSetter extends Manager {
       this.config = config;
       this.hasPerformCommand = false;
       // Manager에 Device 등록
+      /** @type {AbstController} */
       this.deviceController = deviceController;
       // BU.CLI('@@@@@@@@@@@', this.id);
       // 신규 정의시 instanceList에 저장

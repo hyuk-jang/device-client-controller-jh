@@ -94,7 +94,7 @@ class AbstController extends EventEmitter {
   async write(msgInfo) {}
 
   attach(observer) {
-    // BU.log('Observer attached');
+    BU.CLI('Observer attached');
     this.observers.push(observer);
   }
 
@@ -109,9 +109,10 @@ class AbstController extends EventEmitter {
   }
 
   notifyEvent(eventName) {
-    // BU.CLI('notifyEvent', eventName);
+    BU.CLI('notifyEvent', eventName);
+    // BU.CLIN(this.observers);
     this.observers.forEach(observer => {
-      observer.onEvent(eventName);
+      _.get(observer, 'onEvent') && observer.onEvent(eventName);
     });
   }
 
@@ -176,7 +177,7 @@ class AbstController extends EventEmitter {
   notifyData(data) {
     // BU.CLI('notifyData', data, data.length);
     this.observers.forEach(observer => {
-      observer.onData(data);
+      _.get(observer, 'onData') && observer.onData(data);
     });
   }
 

@@ -40,6 +40,8 @@ class ModbusRTU extends AbstController {
     // unitId 설정
     try {
       const { fnCode, unitId, address } = modbusData;
+      // BU.CLIS(fnCode, unitId, address);
+      // BU.CLINS(this.client);
       await this.client.setID(unitId);
 
       let resData;
@@ -88,6 +90,7 @@ class ModbusRTU extends AbstController {
 
   /** 장치 접속 시도 */
   async connect() {
+    // BU.CLI('connect');
     /** 접속 중인 상태라면 접속 시도하지 않음 */
     if (!_.isEmpty(this.client)) {
       throw new Error(`Already connected. ${this.port}`);
@@ -120,8 +123,10 @@ class ModbusRTU extends AbstController {
     // BU.CLI(result);
 
     await eventToPromise.multi(this, ['connect', 'connection', 'open'], ['close', 'error']);
+
     /** @type {ModRTU} */
     this.client = client;
+    // BU.CLIN(this.client);
     return this.client;
   }
 
