@@ -27,7 +27,8 @@ class AbstController extends EventEmitter {
     this.configInfo = null;
     this.client = {};
 
-    this.hasConnect = false;
+    // 초기 상태는 undefined
+    this.hasConnect;
     this.connectTimer;
     this.connectIntervalTime = 1000 * 20;
 
@@ -109,8 +110,7 @@ class AbstController extends EventEmitter {
   }
 
   notifyEvent(eventName) {
-    BU.CLI('notifyEvent', eventName);
-    // BU.CLIN(this.observers);
+    // BU.CLI('notifyEvent', eventName);
     this.observers.forEach(observer => {
       _.get(observer, 'onEvent') && observer.onEvent(eventName);
     });
@@ -168,7 +168,7 @@ class AbstController extends EventEmitter {
     // BU.CLI('notifyError', error);
     writeLogFile(this, 'mainConfig.logOption.hasDcEvent', 'event', 'notifyError', error);
     // 장치에서 이미 에러 내역을 발송한 상태라면 이벤트를 보내지 않음
-    // this.notifyDisconnect();
+    this.notifyDisconnect();
   }
 
   /**
