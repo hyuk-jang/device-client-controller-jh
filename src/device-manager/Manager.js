@@ -224,13 +224,13 @@ class Manager extends AbstManager {
       currentMsg = JSON.stringify(currentMsg);
     }
 
-    // 전송 요청은 0.1초안에 이루어져야 함
+    // 전송 요청은 1초안에 이루어져야 함
     const transferTimer = setTimeout(() => {
       // BU.debugConsole();
       this.updateOperationStatus(definedOperationStatus.E_DISCONNECTED_DEVICE);
       return this.manageProcessingCommand();
       // throw new Error('The transfer request timed out.');
-    }, 100);
+    }, currentCommand.commandExecutionTimeoutMs || 1000);
 
     await this.deviceController.write(currentMsg);
     // 전송 요청 해제
