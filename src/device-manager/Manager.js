@@ -226,7 +226,10 @@ class Manager extends AbstManager {
 
     // 전송 요청은 0.1초안에 이루어져야 함
     const transferTimer = setTimeout(() => {
-      throw new Error('The transfer request timed out.');
+      // BU.debugConsole();
+      this.updateOperationStatus(definedOperationStatus.E_DISCONNECTED_DEVICE);
+      return this.manageProcessingCommand();
+      // throw new Error('The transfer request timed out.');
     }, 100);
 
     await this.deviceController.write(currentMsg);
@@ -436,10 +439,13 @@ class Manager extends AbstManager {
           this.sendMessageToCommander(definedCommandSetMessage.COMMANDSET_DELETE);
           this.iterator.clearCurrentCommandSet();
           break;
-        case definedOperationStatus.E_DISCONNECTED_DEVICE: // 장치와의 연결이 해제될 경우에는 반복기에 처리 의뢰. AbstManager에서 이미 해당 메소드를 호출함
-          // BU.CLI('E_DISCONNECTED_DEVICE');
-          // return this.iterator.clearAllCommandSetStorage();
-          return false;
+        case definedOperationStatus.E_DISCONNECTED_DEVICE:
+          hasError = true;
+          dcErrorFormat.errorInfo = new Error(definedOperationStatus.E_DISCONNECTED_DEVICE);
+          break;
+        // BU.CLI('E_DISCONNECTED_DEVICE');
+        // return this.iterator.clearAllCommandSetStorage();
+        // return false;
         case definedOperationStatus.E_TIMEOUT:
           hasError = true;
           dcErrorFormat.errorInfo = new Error(definedOperationStatus.E_TIMEOUT);
