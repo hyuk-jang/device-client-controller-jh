@@ -224,8 +224,12 @@ class Manager extends AbstManager {
       currentMsg = JSON.stringify(currentMsg);
     }
 
+    let isWriteFailed;
     // 전송 요청은 1초안에 이루어져야 함
     const transferTimer = setTimeout(() => {
+      // 전송 요청에 성공하였다면 아래의 행동을 취하지 않음. setTimeout과 write 메소드간의 시간 차 때문에 생기는 현상 해결을 위한 조치
+      if (isWriteFailed === 0) return false;
+      isWriteFailed = 1;
       // BU.debugConsole();
       this.updateOperationStatus(definedOperationStatus.E_DISCONNECTED_DEVICE);
       return this.manageProcessingCommand();
@@ -233,6 +237,11 @@ class Manager extends AbstManager {
     }, currentCommand.commandExecutionTimeoutMs || 1000);
 
     await this.deviceController.write(currentMsg);
+
+    // 이미 에러처리를 하였다면 실행하지 않음
+    if (isWriteFailed === 1) return false;
+
+    isWriteFailed = 0;
     // 전송 요청 해제
     clearTimeout(transferTimer);
 

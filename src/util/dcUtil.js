@@ -43,6 +43,7 @@ async function writeLogFile(logObj, path, eventType, dataTitle, data) {
       );
     } else {
       let realData = '';
+
       if (Buffer.isBuffer(data)) {
         // // FIXME: Hex 파일 형태로 저장할 경우 보완
         // if(eventType === 'data' && dataTitle === 'onData'){
@@ -65,6 +66,11 @@ async function writeLogFile(logObj, path, eventType, dataTitle, data) {
         }
       } else if (data instanceof Error) {
         realData = data;
+      } else if (Buffer.isBuffer(_.get(data, 'data'))) {
+        // xbee
+        realData = _.clone(data);
+        realData.data = realData.data.toString();
+        realData = JSON.stringify(realData);
       } else if (_.isObject(data)) {
         // if(_.get(realData, 'data.type') === 'Buffer') {}
         realData = JSON.stringify(data);
