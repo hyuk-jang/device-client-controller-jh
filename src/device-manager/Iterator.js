@@ -6,7 +6,6 @@ const {
   definedCommandSetMessage,
 } = require('default-intelligence').dccFlagModel;
 
-const Manager = require('./Manager');
 const AbstCommander = require('../device-commander/AbstCommander');
 
 const Timeout = setTimeout(function() {}, 0).constructor;
@@ -87,9 +86,24 @@ class Iterator {
   }
 
   /**
+   * 현재 진행중인 명령 초기화
+   * @return {void}
+   */
+  clearCurrentCommandSet() {
+    // BU.CLI('clearCurrentCommandSet');
+    if (!_.isEmpty(this.currentCommandSet)) {
+      // 에러가 존재하고 받을 대상이 있다면 전송
+      this.currentCommandSet.commandExecutionTimer instanceof Timeout &&
+        clearTimeout(this.currentCommandSet.commandExecutionTimer);
+    }
+
+    this.aggregate.currentCommandSet = {};
+  }
+
+  /**
    * @param {commandSet} cmdInfo 추가할 명령
    */
-  addCmd(cmdInfo) {
+  addCommandSet(cmdInfo) {
     // BU.CLI(cmdInfo);
     const { rank } = cmdInfo;
     // BU.CLIN(cmdInfo);
@@ -109,27 +123,87 @@ class Iterator {
 
   /**
    * 수행 명령 리스트에 등록된 명령을 취소
-   * @param {string} commandId 명령을 취소 할 command Id
+   * @param {string=} commandId 명령을 취소 할 command Id
+   * @param {dcError=} dcError
    * @return {void}
    */
-  deleteCmd(commandId) {
-    // BU.CLI('deleteCmd 수행', commandId);
-    // 명령 대기 리스트 삭제
-    this.aggregate.standbyCommandSetList.forEach(rank => {
-      _.remove(rank.list, { commandId });
+  deleteCommandSet(commandId = null, dcError = null) {
+    const hasAllDelete = _.isNil(commandId);
+    // BU.CLI('deleteCommandSet 수행', commandId);
+    _.forEach(this.aggregate.standbyCommandSetList, item => {
+      _.remove(item.list, commandInfo => {
+        // BU.CLIN(commandInfo);
+        if (hasAllDelete || _.eq(commandId, commandInfo.commandId)) {
+          this.manager.sendMessageToCommander(
+            definedCommandSetMessage.COMMANDSET_DELETE,
+            _.get(dcError, 'errorInfo'),
+            {
+              commandSetInfo: commandInfo,
+              receiver: commandInfo.commander,
+            },
+          );
+          return true;
+        }
+        return false;
+      });
     });
 
-    // 명령 예약 리스트 삭제
-    this.aggregate.delayCommandSetList = _.reject(this.aggregate.delayCommandSetList, cmdInfo => {
-      if (cmdInfo.commandId === commandId) {
-        cmdInfo.commandQueueReturnTimer && cmdInfo.commandQueueReturnTimer.pause();
+    // 지연 명령 대기열에 존재하는 명령 삭제
+    _.remove(this.aggregate.delayCommandSetList, commandInfo => {
+      // 타이머가 존재한다면 제거
+      commandInfo.commandQueueReturnTimer && commandInfo.commandQueueReturnTimer.pause();
+      if (hasAllDelete || _.eq(commandId, commandInfo.commandId)) {
+        this.manager.sendMessageToCommander(
+          definedCommandSetMessage.COMMANDSET_DELETE,
+          _.get(dcError, 'errorInfo'),
+          {
+            commandSetInfo: commandInfo,
+            receiver: commandInfo.commander,
+          },
+        );
+        return true;
       }
+      return false;
     });
 
+    // 대기 중 명령과 지연 명령의 삭제 처리가 끝난 후 현재 명령 삭제 상태 체크 및 진행
     // 현재 명령을 삭제 요청 할 경우 시스템에 해당 명령 삭제 상태로 교체
-    if (this.currentCommandSet.commandId === commandId) {
-      this.aggregate.currentCommandSet.operationStatus =
-        definedOperationStatus.PROCESSING_DELETE_COMMAND;
+    if (hasAllDelete || this.currentCommandSet.commandId === commandId) {
+      this.deleteCurrentCommandSet(dcError);
+    }
+  }
+
+  /**
+   * 현재 진행 중인 명령을 삭제 처리
+   * 현재 명령을 수행하는 도중 에러가 발생할 경우 실행. 현재 진행중인 명령 초기화하고 다음 명령 수행
+   * @param {dcError} dcError
+   * @return {void}
+   */
+  deleteCurrentCommandSet(dcError) {
+    // BU.CLI('clearCurrentCommandSet');
+    if (!_.isEmpty(this.currentCommandSet)) {
+      // 현재 명령이 삭제되었다고 Commander에게 Message를 보냄.
+      this.manager.sendMessageToCommander(
+        definedCommandSetMessage.COMMANDSET_DELETE,
+        _.get(dcError, 'errorInfo'),
+        { commandSetInfo: this.currentCommandSet, receiver: this.currentReceiver },
+      );
+
+      // 명령 삭제 중으로 상태 변경
+      this.manager.updateOperationStatus(definedOperationStatus.PROCESSING_DELETE_COMMAND);
+      // 명령 상태 점검. hasErrorHandling 값이 true라면 대기, 아니라면 다음 명령 수행
+      this.manager.manageProcessingCommand();
+
+      // Timer 및 현재 명령 셋 해제
+      // this.clearCurrentCommandSet();
+
+      // // 에러 핸들링을 하지 않는다면 다음 명령 수행 요청
+      // if (_.get(this.currentCommandSet.controlInfo, 'hasErrorHandling') === false) {
+      //   this.manager.nextCommand();
+      // } else {
+      //   // 명령 삭제 중으로 상태 변경
+      //   this.manager.updateOperationStatus(definedOperationStatus.PROCESSING_DELETE_COMMAND);
+      // }
     }
   }
 
@@ -333,166 +407,6 @@ class Iterator {
       // 명령 집합에서 첫번째 목록을 process로 가져오고 해당 배열에서 제거
       this.aggregate.currentCommandSet = standbyCommandSetList.list.shift();
     }
-  }
-
-  /**
-   * 현재 진행중인 명령 초기화
-   * @return {void}
-   */
-  clearCurrentCommandSet() {
-    // BU.CLI('clearCurrentCommandSet');
-    if (!_.isEmpty(this.currentCommandSet)) {
-      // 에러가 존재하고 받을 대상이 있다면 전송
-      this.currentCommandSet.commandExecutionTimer instanceof Timeout &&
-        clearTimeout(this.currentCommandSet.commandExecutionTimer);
-    }
-
-    this.aggregate.currentCommandSet = {};
-  }
-
-  /**
-   * FIXME: 명령 삭제 시 Client User와의 상호 작용 처리 필요
-   * 삭제하고자 하는 정보 AND 연산
-   * @param {{commander: AbstCommander, commandId: string=}} searchInfo
-   */
-  clearCommandSet(searchInfo) {
-    // CurrentSet 확인 후  삭제 요청
-    const hasEqualCurrentSet = _.isEqual(this.currentCommandSet.commander, searchInfo.commander);
-    if (hasEqualCurrentSet) {
-      const hasTrue = _.isString(searchInfo.commandId)
-        ? _.eq(this.currentCommandSet.commandId, searchInfo.commandId)
-        : true;
-      if (hasTrue) {
-        this.deleteCmd(searchInfo.commandId);
-      }
-    }
-    // 대기 집합 확인 후 삭제
-    this.aggregate.standbyCommandSetList.forEach(commandStorageInfo => {
-      _.remove(commandStorageInfo.list, commandSet => {
-        const hasEqualStandbySet = _.isEqual(commandSet.commander, searchInfo.commander);
-        if (hasEqualStandbySet) {
-          return _.isString(searchInfo.commandId)
-            ? _.eq(commandSet.commandId, searchInfo.commandId)
-            : true;
-        }
-        return false;
-      });
-    });
-    // 지연 집합 확인 후 삭제
-    _.remove(this.aggregate.delayCommandSetList, commandSet => {
-      const hasEqualDelaySet = _.isEqual(commandSet.commander, searchInfo.commander);
-      if (hasEqualDelaySet) {
-        return _.isString(searchInfo.commandId)
-          ? _.eq(commandSet.commandId, searchInfo.commandId)
-          : true;
-      }
-      return false;
-    });
-  }
-
-  /** 모든 명령을 초기화 */
-
-  /**
-   * 모든 명령을 초기화
-   * param 값에 따라 Commander에게 초기화 하는 이유를 보냄.
-   * @param {dcError} dcError
-   */
-  clearAllCommandSetStorage(dcError) {
-    // BU.CLI('clearAllCommandSetStorage');
-    // 현재 수행중인 명령 삭제
-    this.clearCurrentCommandSet(dcError);
-
-    // 명령 대기열에 존재하는 명령 삭제
-    _.forEach(this.aggregate.standbyCommandSetList, item => {
-      _.dropWhile(item.list, commandInfo => {
-        // BU.CLIN(commandInfo);
-        if (_.isError(_.get(dcError, 'errorInfo')) && commandInfo.commander) {
-          dcError.commandSet = commandInfo;
-          commandInfo.commander.onDcError(dcError);
-        }
-        return true;
-      });
-    });
-
-    // 지연 명령 대기열에 존재하는 명령 삭제
-    _.dropWhile(this.aggregate.delayCommandSetList, commandInfo => {
-      commandInfo.commandQueueReturnTimer && commandInfo.commandQueueReturnTimer.pause();
-      if (_.isError(_.get(dcError, 'errorInfo')) && commandInfo.commander) {
-        dcError.commandSet = commandInfo;
-        commandInfo.commander.onDcError(dcError);
-      }
-      return true;
-    });
-  }
-
-  /**
-   * @desc 장치와의 접속이 끊어졌을 경우
-   * 현재 명령을 수행하는 도중 에러가 발생할 경우 실행. 현재 진행중인 명령 초기화하고 다음 명령 수행
-   * @param {dcError} dcError
-   * @return {void}
-   */
-  deleteCurrentCommandSet(dcError) {
-    // BU.CLI('clearCurrentCommandSet');
-    if (!_.isEmpty(this.currentCommandSet)) {
-      // dcError에 현재 명령 구성 붙임
-
-      // 현재 명령이 삭제되었다고 알려줌
-      // NOTE: onDcMessage 발생. requestTakeAction 처리 하면 안됨
-      this.manager.sendMessageToCommander(
-        definedCommandSetMessage.COMMANDSET_DELETE,
-        dcError.errorInfo,
-        { commandSetInfo: this.currentCommandSet, receiver: this.currentReceiver },
-      );
-
-      // Timer 및 현재 명령 셋 해제
-      this.clearCurrentCommandSet();
-
-      // 에러 핸들링을 하지 않는다면 다음 명령 수행 요청
-      if (_.get(this.currentCommandSet.controlInfo, 'hasErrorHandling') === false) {
-        this.manager.nextCommand();
-      } else {
-        // 현재 명령 수행 중 여부를 false 바꿈 (addCommandSet 메소드에서의 명령 추가를 위함)
-        this.manager.hasPerformCommand = false;
-      }
-    }
-  }
-
-  /**
-   * @desc 장치와의 접속이 끊어졌을 경우
-   * 현재 요청 중인 모든 명령을 취소 처리하고 명령 종료 메시지 보냄
-   * @param {dcError} dcError
-   * @return {void}
-   */
-  deleteAllCommandSet(dcError) {
-    // 명령 대기열에 존재하는 명령 삭제
-    _.forEach(this.aggregate.standbyCommandSetList, item => {
-      _.remove(item.list, commandInfo => {
-        // BU.CLIN(commandInfo);
-        this.manager.sendMessageToCommander(
-          definedCommandSetMessage.COMMANDSET_DELETE,
-          dcError.errorInfo,
-          { commandSetInfo: commandInfo, receiver: commandInfo.commander },
-        );
-
-        return true;
-      });
-    });
-
-    // 지연 명령 대기열에 존재하는 명령 삭제
-    _.remove(this.aggregate.delayCommandSetList, commandInfo => {
-      commandInfo.commandQueueReturnTimer && commandInfo.commandQueueReturnTimer.pause();
-      this.manager.sendMessageToCommander(
-        definedCommandSetMessage.COMMANDSET_DELETE,
-        dcError.errorInfo,
-        { commandSetInfo: commandInfo, receiver: commandInfo.commander },
-      );
-
-      return true;
-    });
-
-    this.deleteCurrentCommandSet(dcError);
-    // BU.CLIN(_.map(this.aggregate.standbyCommandSetList, 'list'));
-    // BU.CLIN(this.aggregate.currentCommandSet, 'list');
   }
 
   /**

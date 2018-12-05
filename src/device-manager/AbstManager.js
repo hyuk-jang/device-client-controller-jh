@@ -105,7 +105,7 @@ class AbstManager extends EventEmitter {
         errorInfo: new Error(eventName),
         spreader: this,
       };
-      this.iterator.deleteAllCommandSet(returnDcError);
+      this.iterator.deleteCommandSet(null, returnDcError);
     }
   }
 

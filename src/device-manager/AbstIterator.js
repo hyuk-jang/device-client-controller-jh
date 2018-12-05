@@ -29,16 +29,30 @@ class AbstIterator {
   get nextCommandSet() {}
 
   /**
+   * 현재 진행중인 명령 초기화
+   * @param {dcError} dcError
+   * @return {void}
+   */
+  clearCurrentCommandSet(dcError) {}
+
+  /**
    * @param {commandSet} cmdInfo 추가할 명령
    */
-  addCmd(cmdInfo) {}
+  addCommandSet(cmdInfo) {}
 
   /**
    * 수행 명령 리스트에 등록된 명령을 취소
    * @param {string} commandId 명령을 취소 할 command Id
    * @return {void}
    */
-  deleteCmd(commandId) {}
+  deleteCommandSet(commandId) {}
+
+  /**
+   * 현재 진행중인 명령 초기화하고 다음 명령 수행
+   * @param {dcError} dcError
+   * @return {void}
+   */
+  deleteCurrentCommandSet(dcError) {}
 
   /**
    * Current Process Item의 delayExecutionTimeoutMs 유무를 확인,
@@ -78,33 +92,9 @@ class AbstIterator {
   changeNextCommandSet(standbyCommandSetList) {}
 
   /**
-   * 현재 진행중인 명령 초기화
-   * @param {dcError} dcError
-   * @return {void}
+   * 현재 진행중인 명령이 끝났는지 여부
+   * @return {boolean}
    */
-  clearCurrentCommandSet(dcError) {}
-
-  /**
-   * 모든 명령을 초기화
-   * param 값에 따라 Commander에게 초기화 하는 이유를 보냄.
-   * @param {dcError} dcError
-   */
-  clearAllCommandSetStorage(dcError) {}
-
-  /**
-   * @desc 장치와의 접속이 끊어졌을 경우
-   * 현재 명령을 수행하는 도중 에러가 발생할 경우 실행. 현재 진행중인 명령 초기화하고 다음 명령 수행
-   * @param {dcError} dcError
-   * @return {void}
-   */
-  deleteCurrentCommandSet(dcError) {}
-
-  /**
-   * @desc 장치와의 접속이 끊어졌을 경우
-   * 현재 요청 중인 모든 명령을 취소 처리하고 명령 종료 메시지 보냄
-   * @param {dcError} dcError
-   * @return {void}
-   */
-  deleteAllCommandSet(dcError) {}
+  isDone() {}
 }
 module.exports = AbstIterator;

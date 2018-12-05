@@ -124,8 +124,6 @@ function initManager(manager, commander) {
   manager.deviceController.client = { alive: true };
   // 작업중인 상태 X
   manager.hasPerformCommand = false;
-  // 명령 저장소는 테스트전 청소 처리
-  manager.iterator.clearAllCommandSetStorage();
 }
 exports.initManager = initManager;
 

@@ -13,14 +13,15 @@ const {
   definedCommanderResponse,
   definedOperationStatus,
 } = require('default-intelligence').dccFlagModel;
-
 const AbstDeviceClient = require('../src/device-client/AbstDeviceClient');
+
 const SerialDeviceController = require('../src/device-controller/serial/Serial');
 const SerialDeviceControllerWithParser = require('../src/device-controller/serial/SerialWithParser');
 const SocketDeviceController = require('../src/device-controller/socket/Socket');
 
 // console.log(uuidv4());
 const DeviceManager = require('../src/device-manager/Manager');
+const ManagerSetter = require('../src/device-manager/ManagerSetter');
 
 const { initManager } = require('../src/util/dcUtil');
 
@@ -48,24 +49,34 @@ describe('Device Manager Test', function() {
     commander: null,
     cmdList: [],
     currCmdIndex: 0,
-    commandExecutionTimeoutMs: 1000 * 1,
   };
 
   // 명령 추가 및 삭제
-  it.skip('Add & Delete CMD Test', done => {
+  it.only('Add & Delete CMD Test', done => {
     const cmdInfo = _.cloneDeep(defaultCmdInfo);
-    const deviceManager = new DeviceManager({
-      target_id: 'Add & Delete CMD Test',
-      target_name: '',
-      target_category: '',
-    });
-    initManager(deviceManager);
+
+    const manager = new ManagerSetter();
+    manager.setPassiveManager(
+      {
+        target_id: 'Add & Delete CMD Test',
+        connect_info: { type: 'socket' },
+        controlInfo: { hasOneAndOne: true, hasErrorHandling: true },
+      },
+      'siteUUID',
+    );
+
+    manager.deviceController = {
+      write: data => {
+        BU.CLI(data)
+      },
+      client: { alive: true },
+    };
 
     // 명령 자동 진행을 막기 위하여 1:1 모드로 고정함
-    deviceManager.commandStorage.currentCommandSet = {
-      test: 'test',
-      controlInfo: { hasOneAndOne: true },
-    };
+    // manager.commandStorage.currentCommandSet = {
+    //   test: 'test',
+    //   controlInfo: { hasOneAndOne: true },
+    // };
     /** @type {commandSet} */
 
     // [Add] Rank{2} * 3, Rank{3} * 2
@@ -76,17 +87,21 @@ describe('Device Manager Test', function() {
       cmdInfo.cmdList = [];
       // CmdList = 2 Length
       for (let j = 0; j < i; j += 1) {
-        const addCmdData = { data: `i:${i} j:${j}` };
+        const addCmdData = {
+          data: `i:${i} j:${j}`,
+          commandExecutionTimeoutMs: 1000 * 1,
+        };
         cmdInfo.cmdList.push(addCmdData);
       }
 
       // BU.CLI(cmdInfo);
-      deviceManager.addCommandSet(_.cloneDeep(cmdInfo));
+      manager.iterator.addCommandSet(_.cloneDeep(cmdInfo));
     }
 
-    const { standbyCommandSetList } = deviceManager.commandStorage;
+    const { standbyCommandSetList } = manager.commandStorage;
     // 명령 추가 결과 테스트 // [Add] Rank{2} * 3, Rank{3} * 2
     const rank2 = _.find(standbyCommandSetList, { rank: 2 });
+    // Rank{2} * 3
     expect(rank2.list.length).to.be.eq(3);
     expect(_.head(rank2.list).cmdList.length).to.be.eq(0);
     expect(_.nth(rank2.list, 1).cmdList.length).to.be.eq(2);
@@ -96,11 +111,12 @@ describe('Device Manager Test', function() {
 
     // 삭제 테스트
     // [Delete] Rank{2} * 3, Rank{3} * 1
-    deviceManager.deleteCommandSet('홍길동1');
+    manager.deleteCommandSet('홍길동1');
+    BU.CLI(manager.commandStorage);
     expect(rank3.list.length).to.be.eq(1);
 
     // [Delete] Rank{2} * 2, Rank{3} * 1
-    deviceManager.deleteCommandSet('홍길동0');
+    manager.deleteCommandSet('홍길동0');
     expect(rank2.list.length).to.be.eq(2);
 
     done();
@@ -326,7 +342,7 @@ describe('Device Manager Test', function() {
   // 1. 수행 중인 명령 Commander에서 응답 테스트 ['isOk', 'retry']
   // 2. 수행 중인 명령 Commander와 연관이 없는 객체의 응답 테스트
   // 3. 장치 접속 해제 'Disconnect' 발생 시 테스트 [addCommand(), 명렁 처리]
-  it.skip('Behavior Operation Status', async () => {
+  it('Behavior Operation Status', async () => {
     // 명령 자동 진행을 막기 위하여 1:1 모드로 고정함
     deviceManager.commandStorage.currentCommandSet = {
       test: 'test',

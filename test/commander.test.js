@@ -47,16 +47,16 @@ describe('Request Execution Command', function() {
   // 1. Builder를 이용하여 Commnader, Mediator, Manager 생성
   // 2. Mnager 객체 생성
   it.skip('Commander Constuction', done => {
-    const con_1 = _.cloneDeep(constructorInfo);
-    const con_2 = _.cloneDeep(constructorInfo);
+    const const1 = _.cloneDeep(constructorInfo);
+    const const2 = _.cloneDeep(constructorInfo);
 
-    con_1.target_id = '홍길동 1';
-    con_2.target_id = '홍길동 2';
+    const1.target_id = '홍길동 1';
+    const2.target_id = '홍길동 2';
 
-    const manager_A = new Manager(con_1);
-    initManager(manager_A);
-    const commander_A = new Commander(con_1);
-    commander_A.manager = manager_A;
+    const manager = new Manager(const1);
+    initManager(manager);
+    const commander = new Commander(const1);
+    commander.manager = manager;
 
     done();
   });

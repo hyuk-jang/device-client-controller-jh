@@ -189,6 +189,7 @@ class ManagerSetter extends Manager {
 
   /** Iterator 정의 */
   createIterator() {
+    /** @type {Iterator} */
     this.iterator = new Iterator(this);
   }
 

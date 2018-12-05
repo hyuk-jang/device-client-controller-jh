@@ -113,7 +113,7 @@ class Manager extends AbstManager {
     if (_.isEmpty(this.deviceController.client)) {
       throw new Error('The device is not connected.');
     }
-    this.iterator.addCmd(commandSet);
+    this.iterator.addCommandSet(commandSet);
     // 작업 중이 아니거나 현재 아무런 명령이 존재하지 않는다면 다음 명령 수행 요청
     if (!this.hasPerformCommand || _.isEmpty(this.iterator.currentCommandSet)) {
       this.manageProcessingCommand();
@@ -127,7 +127,7 @@ class Manager extends AbstManager {
    * @return {commandStorage}
    */
   deleteCommandSet(commandId) {
-    this.iterator.deleteCmd(commandId);
+    this.iterator.deleteCommandSet(commandId);
     this.manageProcessingCommand();
   }
 
@@ -231,7 +231,7 @@ class Manager extends AbstManager {
       if (isWriteFailed === 0) return false;
       isWriteFailed = 1;
       // BU.debugConsole();
-      this.updateOperationStatus(definedOperationStatus.E_DISCONNECTED_DEVICE);
+      this.updateOperationStatus(definedOperationStatus.E_TIMEOUT);
       return this.manageProcessingCommand();
       // throw new Error('The transfer request timed out.');
     }, currentCommand.commandExecutionTimeoutMs || 1000);
@@ -401,6 +401,7 @@ class Manager extends AbstManager {
    * 명령 집합을 총 관리 감독하는 메소드.
    * 명령을 수행하는 과정에서 발생하는 이벤트 처리 담당.
    * 명령 처리 순서 관리 감독.
+   * 메소드가 호출되면 에러상태가 아닐 경우 다음 명령으로 진행함.
    * @param {Error} error 에러
    */
   manageProcessingCommand(error) {
@@ -445,16 +446,13 @@ class Manager extends AbstManager {
           this.iterator.moveToReservedCmdList();
           break;
         case definedOperationStatus.PROCESSING_DELETE_COMMAND: // Delete
-          this.sendMessageToCommander(definedCommandSetMessage.COMMANDSET_DELETE);
+          // error 값이 있다면 에러. 아니라면 의도적인 삭제
           this.iterator.clearCurrentCommandSet();
           break;
         case definedOperationStatus.E_DISCONNECTED_DEVICE:
           hasError = true;
           dcErrorFormat.errorInfo = new Error(definedOperationStatus.E_DISCONNECTED_DEVICE);
           break;
-        // BU.CLI('E_DISCONNECTED_DEVICE');
-        // return this.iterator.clearAllCommandSetStorage();
-        // return false;
         case definedOperationStatus.E_TIMEOUT:
           hasError = true;
           dcErrorFormat.errorInfo = new Error(definedOperationStatus.E_TIMEOUT);
@@ -515,6 +513,7 @@ class Manager extends AbstManager {
         // this.iterator.clearCurrentCommandSet();
       }
 
+      // BU.CLI(this.commandStorage)
       // 진행 중인 명령이 모두 수행되었을 경우
       if (this.iterator.isDone()) {
         const skipOperationStatus = [definedOperationStatus.PROCESSING_DELETE_COMMAND];
@@ -528,19 +527,12 @@ class Manager extends AbstManager {
         // BU.CLI('진행 중인 명령이 모두 수행');
         this.updateOperationStatus(definedOperationStatus.WAIT);
 
-        // 1:1 통신 일 경우는 다음 Step으로 넘어가지 않고 현재 if 문 안에서 끝냄.
-        if (_.get(this.iterator.currentCommandSet.controlInfo, 'hasOneAndOne') === true) {
-          // 포커스를 움직이고자 요청할 경우
-          if (operationStatus === definedOperationStatus.RECEIVE_NEXT_FORCE) {
-            // 다음 진행할 명령이 존재한다면 바로 수행
-            if (!_.isEmpty(this.iterator.nextCommandSet)) {
-              return this.nextCommand();
-            }
-            // 아닐 경우 현재 명령 수행 중 여부를 false 바꿈 (addCommandSet 메소드에서의 명령 추가를 위함)
-            this.hasPerformCommand = false;
-          }
-          // 명령이 모두 수행되었고 1:1 통신을 하고 있다는 메시지를 보냄
-          return this.sendMessageToCommander(definedCommandSetMessage.ONE_AND_ONE_COMUNICATION);
+        // 포커스를 움직이고자 요청 하고 다음 진행할 명령이 존재한다면 바로 수행
+        if (
+          operationStatus === definedOperationStatus.RECEIVE_NEXT_FORCE &&
+          !_.isEmpty(this.iterator.nextCommandSet)
+        ) {
+          return this.nextCommand();
         }
 
         // 모든 명령 수행 완료
@@ -600,6 +592,7 @@ class Manager extends AbstManager {
       this.iterator.changeNextCommand();
       return this.requestProcessingCommand();
     } catch (error) {
+      // BU.CLI(error)
       // 다음 명령이 존재하지 않을 경우
       this.hasPerformCommand = false;
       writeLogFile(this, 'config.logOption.hasDcError', 'error', _.get(error, 'message'), this.id);
