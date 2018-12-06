@@ -25,7 +25,6 @@ controller.setDeviceClient(defaultConfig);
 
 const defaultCommandFormat = controller.getDefaultCommandConfig();
 // defaultCommandFormat.cmdList = ['sss'];
-// defaultCommandFormat.hasOneAndOne = true;
 // BU.CLIN(controller.manager.hasConnected());
 
 if (controller.manager.hasConnected) {

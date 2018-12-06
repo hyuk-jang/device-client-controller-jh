@@ -81,7 +81,7 @@ class Manager extends AbstManager {
           break;
         // 다음 명령을 수행해라 (강제)
         case definedCommanderResponse.NEXT:
-          // BU.CLI('definedCommanderResponse.NEXT');
+          BU.CLI('definedCommanderResponse.NEXT');
           currentCommandSet.commandExecutionTimer instanceof Timeout &&
             clearTimeout(currentCommandSet.commandExecutionTimer);
           this.updateOperationStatus(definedOperationStatus.RECEIVE_NEXT_FORCE);
@@ -132,12 +132,15 @@ class Manager extends AbstManager {
   }
 
   /**
-   * 찾고자 하는 정보 AND 연산
-   * @param {{commander: AbstCommander, commandId: string=}} searchInfo
+   * Commander와 연결된 Manager에서 Filtering 요건과 충족되는 모든 명령 저장소 가져옴.
+   * @param {Object} filterInfo Filtering 정보. 해당 내역이 없다면 Commander와 관련된 전체 명령 추출
+   * @param {AbstCommander} filterInfo.commander
+   * @param {string=} filterInfo.commandId 명령 ID.
+   * @param {number=} filterInfo.rank 명령 Rank
    * @return {commandStorage}
    */
-  findCommandStorage(searchInfo) {
-    return this.iterator.findCommandStorage(searchInfo);
+  filterCommandStorage(filterInfo) {
+    return this.iterator.filterCommandStorage(filterInfo);
   }
 
   /** AbstManager Implement */
@@ -335,7 +338,7 @@ class Manager extends AbstManager {
    */
   async updateOperationStatus(operationStatus) {
     const { currentCommandSet } = this.iterator;
-    // BU.CLIS(currentCommandSet.operationStatus, operationStatus);
+    BU.CLIS(currentCommandSet.operationStatus, operationStatus);
 
     // 진행 중인 명령이 없거나 명령 삭제 일 경우에는 업데이트 제외
     if (

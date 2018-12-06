@@ -13,7 +13,6 @@ if (connectType === 'serial') {
   defaultConfig.target_id = 'davis_vantagepro2';
   defaultConfig.baud_rate = 19200;
   defaultConfig.port = 'COM3';
-  defaultConfig.hasOneAndOne = true;
   // defaultConfig.parser.type = 'readyParser';
   // defaultConfig.parser.option = Buffer.from([0x4c, 0x4f, 0x4f, 0xc4]);
   // defaultConfig.parser.type = 'readLineParser';
@@ -26,7 +25,6 @@ controller.setDeviceClient(defaultConfig);
 
 const defaultCommandFormat = controller.getDefaultCommandConfig();
 // defaultCommandFormat.cmdList = ['sss'];
-// defaultCommandFormat.hasOneAndOne = true;
 // BU.CLIN(controller.manager.hasConnected());
 
 if (controller.manager.hasConnected) {
@@ -39,7 +37,6 @@ if (controller.manager.hasConnected) {
     if (controller.manager.hasConnected) {
       BU.CLI('명령 전송 준비');
       const commandInfo = controller.getDefaultCommandConfig();
-      commandInfo.hasOneAndOne = true;
       commandInfo.cmdList = ['LOOP\n'];
       controller.executeCommand(commandInfo);
 

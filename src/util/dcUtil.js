@@ -132,7 +132,6 @@ exports.initManager = initManager;
  */
 function getDefaultControlInfo() {
   return {
-    hasOneAndOne: false,
     hasReconnect: false,
     hasErrorHandling: false,
   };

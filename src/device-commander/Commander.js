@@ -94,7 +94,6 @@ class Commander extends AbstCommander {
     try {
       // 오브젝트가 아니라면 자동으로 생성
       if (_.isObject(commandSet)) {
-        // let findSetKeyList = ['cmdList', 'commander', 'commandId', 'hasOneAndOne', 'rank', 'currCmdIndex'];
         const findSetKeyList = ['cmdList', 'commander', 'commandId', 'rank', 'currCmdIndex'];
 
         const hasTypeCommandSet = _.eq(
@@ -137,7 +136,6 @@ class Commander extends AbstCommander {
       commander: this,
       controlInfo: this.controlInfo,
     };
-    // commandSet.hasOneAndOne = this.hasOneAndOne;
     // commandSet.hasErrorHandling = this.hasErrorHandling;
 
     // 배열일 경우
@@ -191,7 +189,6 @@ class Commander extends AbstCommander {
       // 자동 생성
       commandSetInfo.operationStatus = definedOperationStatus.WAIT;
       commandSetInfo.commander = this;
-      // commandInfo.hasOneAndOne = this.hasOneAndOne;
       return commandSetInfo;
     } catch (error) {
       throw error;
@@ -199,13 +196,16 @@ class Commander extends AbstCommander {
   }
 
   /**
-   * Commander와 연결된 장비에서 진행중인 저장소의 모든 명령을 가지고 옴
-   * @param {{commander: AbstCommander, commandId: string=}} searchInfo
+   * Commander와 연결된 Manager에서 Filtering 요건과 충족되는 모든 명령 저장소 가져옴.
+   * @param {Object} filterInfo Filtering 정보. 해당 내역이 없다면 Commander와 관련된 전체 명령 추출
+   * @param {string=} filterInfo.commandId 명령 ID.
+   * @param {number=} filterInfo.rank 명령 Rank
    * @return {commandStorage}
    */
-  findCommandStorage(searchInfo) {
+  filterCommandStorage(filterInfo) {
     try {
-      return this.manager.findCommandStorage(searchInfo);
+      _.set(filterInfo, 'commander', this);
+      return this.manager.filterCommandStorage(filterInfo);
       // BU.CLIN(commandStorage, 3);
     } catch (error) {
       throw error;

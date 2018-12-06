@@ -117,7 +117,6 @@ class AbstDeviceClient extends EventEmitter {
     const generationConfigInfo = {
       target_id: '',
       target_category: '',
-      // hasOneAndOne: false,
       connect_info: {
         type: '',
       },
@@ -131,7 +130,6 @@ class AbstDeviceClient extends EventEmitter {
       },
       controlInfo: {
         hasErrorHandling: false,
-        hasOneAndOne: false,
         hasReconnect: false,
       },
     };
@@ -154,12 +152,14 @@ class AbstDeviceClient extends EventEmitter {
   }
 
   /**
-   * Commander와 연결된 장비에서 진행중인 저장소의 모든 명령을 가지고 옴
-   * @param {{commander: AbstCommander, commandId: string=}} searchInfo
+   * Commander와 연결된 Manager에서 Filtering 요건과 충족되는 모든 명령 저장소 가져옴.
+   * @param {Object} filterInfo Filtering 정보. 해당 내역이 없다면 Commander와 관련된 전체 명령 추출
+   * @param {string=} filterInfo.commandId 명령 ID.
+   * @param {number=} filterInfo.rank 명령 Rank
    * @return {commandStorage}
    */
-  findCommandStorage(searchInfo) {
-    return this.commander.findCommandStorage(searchInfo);
+  filterCommandStorage(filterInfo) {
+    return this.commander.filterCommandStorage(filterInfo);
   }
 
   /** 장치의 연결이 되어있는지 여부 @return {boolean} */

@@ -29,7 +29,6 @@ class AbstCommander {
   /**
    * 장치로 명령을 내림
    * 아무런 명령을 내리지 않을 경우 해당 장치와의 연결고리를 끊지 않는다고 판단
-   * 명시적으로 hasOneAndOne을 True로 줄 해당 명령 리스트를 모두 수행하고 다음 CommandFormat으로 이동하지 않음
    * @param {commandSet} commandSet
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */
@@ -48,11 +47,13 @@ class AbstCommander {
   generationManualCommand(commandSetInfo) {}
 
   /**
-   * Commander와 연결된 장비에서 진행중인 저장소의 모든 명령을 가지고 옴
-   * @param {{commander: AbstCommander, commandId: string=}} searchInfo
+   * Commander와 연결된 Manager에서 Filtering 요건과 충족되는 모든 명령 저장소 가져옴.
+   * @param {Object} filterInfo Filtering 정보. 해당 내역이 없다면 Commander와 관련된 전체 명령 추출
+   * @param {string=} filterInfo.commandId 명령 ID.
+   * @param {number=} filterInfo.rank 명령 Rank
    * @return {commandStorage}
    */
-  findCommandStorage(searchInfo) {}
+  filterCommandStorage(searchInfo) {}
 
   /**
    * 수행 명령 리스트에 등록된 명령을 취소

@@ -70,11 +70,14 @@ class AbstManager extends EventEmitter {
   deleteCommandSet(commandId) {}
 
   /**
-   * 찾고자 하는 정보 AND 연산
-   * @param {{commander: AbstCommander, commandId: string=}} searchInfo
+   * Commander와 연결된 Manager에서 Filtering 요건과 충족되는 모든 명령 저장소 가져옴.
+   * @param {Object} filterInfo Filtering 정보. 해당 내역이 없다면 Commander와 관련된 전체 명령 추출
+   * @param {AbstCommander} filterInfo.commander
+   * @param {string=} filterInfo.commandId 명령 ID.
+   * @param {number=} filterInfo.rank 명령 Rank
    * @return {commandStorage}
    */
-  findCommandStorage(searchInfo) {}
+  filterCommandStorage(filterInfo) {}
 
   /**
    * Device Controller에서 새로운 이벤트가 발생되었을 경우 알림

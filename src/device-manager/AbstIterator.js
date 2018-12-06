@@ -62,17 +62,21 @@ class AbstIterator {
   moveToReservedCmdList() {}
 
   /**
-   * standbyCommandSetList에서 검색 조건에 맞는 commandSet 를 돌려줌
-   * @param {{rank: number, commandId: string}} searchInfo or 검색
-   * @return {Array.<commandSet>}
+   * Commander와 연결된 Manager에서 Filtering 요건과 충족되는 모든 명령 저장소 가져옴.
+   * @param {Object} filterInfo Filtering 정보. 해당 내역이 없다면 Commander와 관련된 전체 명령 추출
+   * @param {AbstCommander} filterInfo.commander
+   * @param {string=} filterInfo.commandId 명령 ID.
+   * @param {number=} filterInfo.rank 명령 Rank
+   * @return {commandStorage}
    */
-  findStandbyCommandSetList(searchInfo) {}
+  filterCommandStorage(filterInfo) {}
 
   /**
-   * Reserved List에서 commandId가 동일한 commandSet 을 돌려줌
-   * @param {string} commandId 명령 Id
+   * standbyCommandSetList에서 검색 조건에 맞는 commandSet 를 돌려줌
+   * @param {number|string=} value Number: Rank or String: commandId
+   * @return {commandSet[]}
    */
-  findDelayCommandSetList(commandId) {}
+  convertStandbyStorageToArray(convertConfig) {}
 
   /**
    * @description 다음 진행 할 명령을 Process에 할당.
