@@ -79,11 +79,11 @@ class AbstController extends EventEmitter {
     }
   }
 
-  // /** @return {Promise} 접속 성공시 Resolve, 실패시 Reject  */
-  // async connect() {
-  //   this.requestConnectCount += 1;
-  //   BU.CLI('?', this.requestConnectCount);
-  // }
+  /** @return {Promise} 접속 성공시 Resolve, 실패시 Reject  */
+  async connect() {
+    this.requestConnectCount += 1;
+    BU.CLI('?', this.requestConnectCount);
+  }
 
   // TODO 장치와의 연결 접속 해제 필요시 작성
   disconnect() {}
@@ -95,7 +95,7 @@ class AbstController extends EventEmitter {
   async write(msgInfo) {}
 
   attach(observer) {
-    BU.CLI('Observer attached');
+    // BU.CLI('Observer attached');
     this.observers.push(observer);
   }
 

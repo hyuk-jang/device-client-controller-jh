@@ -1,7 +1,6 @@
 const _ = require('lodash');
-// const {BU, CU} = require('base-util-jh');
 
-const { BU, CU } = require('base-util-jh');
+const { BU } = require('base-util-jh');
 
 const {
   definedCommanderResponse,
@@ -9,7 +8,6 @@ const {
   definedOperationStatus,
 } = require('default-intelligence').dccFlagModel;
 
-const AbstCommander = require('../device-commander/AbstCommander');
 const AbstManager = require('./AbstManager');
 
 const Iterator = require('./AbstIterator');
@@ -32,6 +30,7 @@ class Manager extends AbstManager {
 
   /** Commander로부터 요청 */
   /**
+   * @desc Log 파일 생성 처리 때문에 async/await 사용함.
    * updateData를 통해 전달받은 데이터에 대한 Commander의 응답을 받을 메소드
    * 응답받은 데이터에 문제가 있거나 다른 사유로 명령을 재 전송하고자 할 경우(3회까지 가능)
    * @param {AbstCommander} commander
@@ -81,7 +80,7 @@ class Manager extends AbstManager {
           break;
         // 다음 명령을 수행해라 (강제)
         case definedCommanderResponse.NEXT:
-          BU.CLI('definedCommanderResponse.NEXT');
+          // BU.CLI('definedCommanderResponse.NEXT');
           currentCommandSet.commandExecutionTimer instanceof Timeout &&
             clearTimeout(currentCommandSet.commandExecutionTimer);
           this.updateOperationStatus(definedOperationStatus.RECEIVE_NEXT_FORCE);
@@ -338,7 +337,7 @@ class Manager extends AbstManager {
    */
   async updateOperationStatus(operationStatus) {
     const { currentCommandSet } = this.iterator;
-    BU.CLIS(currentCommandSet.operationStatus, operationStatus);
+    // BU.CLIS(currentCommandSet.operationStatus, operationStatus);
 
     // 진행 중인 명령이 없거나 명령 삭제 일 경우에는 업데이트 제외
     if (
@@ -349,13 +348,6 @@ class Manager extends AbstManager {
     }
     // BU.CLI('updateOperationStatus', operationStatus);
     currentCommandSet.operationStatus = operationStatus;
-    // await writeLogFile(
-    //   this,
-    //   'config.logOption.hasCommanderResponse',
-    //   'data',
-    //   'updateOperationStatus',
-    //   currentCommandSet.operationStatus,
-    // );
   }
 
   /**

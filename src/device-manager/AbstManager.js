@@ -1,10 +1,7 @@
 const _ = require('lodash');
 const { BU } = require('base-util-jh');
-const eventToPromise = require('event-to-promise');
 
 const EventEmitter = require('events');
-const AbstCommander = require('../device-commander/AbstCommander');
-const AbstMediator = require('../device-mediator/AbstMediator');
 
 class AbstManager extends EventEmitter {
   constructor() {
@@ -49,11 +46,13 @@ class AbstManager extends EventEmitter {
   async transferCommandToDevice() {}
 
   /**
-   * Manager에게 Msg를 보내어 명령 진행 의사 결정을 취함
-   * @param {string} key 요청 key
-   *
+   * @desc Log 파일 생성 처리 때문에 async/await 사용함.
+   * updateData를 통해 전달받은 데이터에 대한 Commander의 응답을 받을 메소드
+   * 응답받은 데이터에 문제가 있거나 다른 사유로 명령을 재 전송하고자 할 경우(3회까지 가능)
+   * @param {AbstCommander} commander
+   * @param {string} commanderResponse
    */
-  requestTakeAction(key) {}
+  async requestTakeAction(commander, commanderResponse) {}
 
   /**
    * 명령 추가

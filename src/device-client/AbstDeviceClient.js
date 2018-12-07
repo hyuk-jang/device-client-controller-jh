@@ -230,12 +230,13 @@ class AbstDeviceClient extends EventEmitter {
   }
 
   /**
+   * @desc Log 파일 생성 처리 때문에 async/await 사용함.
    * Manager에게 Msg를 보내어 명령 진행 의사 결정을 취함
    * @param {string} key 요청 key
    */
-  requestTakeAction(key) {
+  async requestTakeAction(key) {
     try {
-      return this.commander.requestTakeAction(key);
+      return await this.commander.requestTakeAction(key);
     } catch (error) {
       throw error;
     }

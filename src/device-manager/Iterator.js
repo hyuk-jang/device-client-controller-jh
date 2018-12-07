@@ -6,8 +6,6 @@ const {
   definedCommandSetMessage,
 } = require('default-intelligence').dccFlagModel;
 
-const AbstCommander = require('../device-commander/AbstCommander');
-
 const Timeout = setTimeout(function() {}, 0).constructor;
 
 class Iterator {

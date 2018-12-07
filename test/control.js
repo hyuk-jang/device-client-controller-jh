@@ -5,14 +5,13 @@ const eventToPromise = require('event-to-promise');
 const EventEmitter = require('events');
 
 const { BU, CU } = require('base-util-jh');
+const { definedControlEvent } = require('default-intelligence').dccFlagModel;
 
 const AbstDeviceClient = require('../src/device-client/AbstDeviceClient');
 const AbstMediator = require('../src/device-mediator/AbstMediator');
 const AbstIterator = require('../src/device-manager/AbstIterator');
 const AbstManager = require('../src/device-manager/AbstManager');
 const AbstController = require('../src/device-controller/AbstController');
-
-const { definedControlEvent } = require('default-intelligence').dccFlagModel;
 
 class Receiver extends EventEmitter {
   constructor() {
@@ -45,7 +44,12 @@ class Receiver extends EventEmitter {
   }
 }
 
-init();
+init()
+  .then(console.log)
+  .catch(e => {
+    console.error(e);
+    process.exit();
+  });
 
 // 1. Controller 객체를 생성하면 자동으로 접속을 수행하는지 테스트
 // 2. 연결 객체(client)가 비어져 있을 경우 연결이 안된걸로 판단하고 Disconet 이벤트를 발송 시키는지
@@ -55,8 +59,13 @@ init();
 // 6. client가 살아있는데 disconnect, error 이벤트가 수신 될 경우 접속수행 X, 이벤트 발생 X
 
 async function init() {
+  BU.CLI('@');
   const receiver = new Receiver();
-  const config = {};
+  const config = {
+    controlInfo: {
+      hasReconnect: true,
+    },
+  };
   config.logOption = {
     hasCommanderResponse: true,
     hasTransferCommand: true,
@@ -65,6 +74,7 @@ async function init() {
     hasReceiveData: true,
   };
   const abstController = new AbstController(config);
+  abstController.setInit();
   const { connectTimer } = abstController;
   abstController.connectIntervalTime = 1000 * 3; // 재접속 주기 1초로 변경
   // 옵저버 추가
@@ -78,7 +88,7 @@ async function init() {
 
   /** 2. 연결 객체(client)가 비어져 있을 경우 연결이 안된걸로 판단하고 Disconet 이벤트를 발송 시키는지 */
   // connectCount: 0,  disconnectCount: 1
-  await eventToPromise(receiver, definedControlEvent.DISCONNECT);
+  // await eventToPromise(receiver, definedControlEvent.DISCONNECT);
 
   if (
     connectTimer.getTimeLeft() > 0 && // 설정된 타이머의 남은 시간은 0ms 이하
@@ -91,24 +101,25 @@ async function init() {
 
   // 남아 있는 시간 만큼 대기. 새로이 돌아가고 있음
   await Promise.delay(abstController.connectTimer.getTimeLeft());
-  // connectCount: 0,  disconnectCount: 1
-  if (receiver.disconnectCount !== 1 && abstController.requestConnectCount !== 2)
-    throw new Error('disconnectCount !== 1');
+  // connectCount: 0,  disconnectCount: 0
+  if (receiver.disconnectCount === 0 && abstController.requestConnectCount !== 1)
+    throw new Error('disconnectCount !== 0');
 
   /** 3. 재접속 타이머가 돌아가고 있는데 client가 살아났을 경우 자동으로 정지하는지 */
   // 객체 연결
   abstController.client = {
     alive: true,
   };
-  // connectCount: 1,  disconnectCount: 1
+  // requestConnectCount: 1, connectCount: 0,  disconnectCount: 0
   await eventToPromise(receiver, definedControlEvent.CONNECT);
-  if (abstController.requestConnectCount !== 2) {
+  if (abstController.requestConnectCount !== 1) {
     throw new Error(
-      `Expected abstController.requestConnectCount === 2, But ${
+      `Expected abstController.requestConnectCount === 1, But ${
         abstController.requestConnectCount
       }`,
     );
   }
+  // requestConnectCount: 1, connectCount: 1,  disconnectCount: 0
   if (receiver.connectCount !== 1) throw new Error('connectCount !== 1');
   // 연결이 수립됐으므로 타이머는 정지
   if (abstController.connectTimer.getStateRunning()) throw new Error('타이머가 도네');
@@ -119,6 +130,7 @@ async function init() {
   /** 4. Error 및 Disconnect가 다수 발생하더라도 실제로 이벤트 발송은 1회만 하는지 */
   // 연결 객체 제거 및 에러 발생
   abstController.client = {};
+  // requestConnectCount: 2, connectCount: 1,  disconnectCount: 0
   abstController.notifyError(new Error(definedControlEvent.DISCONNECT));
 
   // 타이머 기본 설정 시간 만큼 기다린 후 에러 추가 발생
@@ -126,11 +138,12 @@ async function init() {
   abstController.client = {};
   abstController.notifyError(new Error('다른 에러 발생'));
   await Promise.delay(abstController.connectIntervalTime);
+  // requestConnectCount: 2, connectCount: 1,  disconnectCount: 1
   // 에러는 여러번 연속해서 발생하더라도 이벤트는 1회만 수신되어야 하므로 2번 예상
   BU.CLI('##################################');
-  if (abstController.requestConnectCount !== 3) {
+  if (abstController.requestConnectCount !== 2) {
     throw new Error(
-      `Expected abstController.requestConnectCount === 3, But ${
+      `Expected abstController.requestConnectCount === 2, But ${
         abstController.requestConnectCount
       }`,
     );
@@ -145,16 +158,15 @@ async function init() {
   abstController.doConnect();
 
   await Promise.delay(abstController.connectIntervalTime);
-  BU.CLI('##################################');
+  // requestConnectCount: 2, connectCount: 1,  disconnectCount: 1
   abstController.doConnect();
-  BU.CLI('@@@@@@@@@@@@@@@@@');
 
-  // connectCount: 2,  disconnectCount: 2
+  // requestConnectCount: 2, connectCount: 1,  disconnectCount: 0
   await Promise.delay(abstController.connectIntervalTime);
   // client가 존재할 경우 connect() 호출을 하지 않음
-  if (abstController.requestConnectCount !== 3) {
+  if (abstController.requestConnectCount !== 2) {
     throw new Error(
-      `Expected abstController.requestConnectCount === 3, But ${
+      `Expected abstController.requestConnectCount === 2, But ${
         abstController.requestConnectCount
       }`,
     );
@@ -166,11 +178,14 @@ async function init() {
   };
   // 연결 객체는 살아있는데 끊어짐 수신받으면 재접속 수행하지 않음
   abstController.notifyDisconnect();
+  // requestConnectCount: 2, connectCount: 2,  disconnectCount: 1
   await Promise.delay(abstController.connectIntervalTime);
-  if (receiver.disconnectCount !== 2) throw new Error('disconnectCount !== 2');
-  if (abstController.requestConnectCount !== 3) {
+
+  if (receiver.disconnectCount !== 1)
+    throw new Error(`disconnectCount !== 1, But ${receiver.disconnectCount}`);
+  if (abstController.requestConnectCount !== 2) {
     throw new Error(
-      `Expected abstController.requestConnectCount  === 3, But ${receiver.requestConnectCount}`,
+      `Expected abstController.requestConnectCount  === 2, But ${receiver.requestConnectCount}`,
     );
   }
 
@@ -178,6 +193,8 @@ async function init() {
   abstController.client = {};
   // 1초 딜레이 후 doConnect() 타이머 발생
   abstController.notifyError(new Error('다른 에러 발생'));
+  // requestConnectCount: 3, connectCount: 2,  disconnectCount: 2
+
   // 0.1초 후 연결되었다는 이벤트 발생 --> doConnect 타이머 발생하면 안됨
   await Promise.delay(abstController.connectIntervalTime);
 
@@ -185,12 +202,12 @@ async function init() {
   if (receiver.connectCount !== 2) {
     throw new Error(`Expected connectCount === 2, But ${receiver.connectCount} `);
   }
-  if (receiver.disconnectCount !== 3) {
-    throw new Error('disconnectCount !== 3');
+  if (receiver.disconnectCount !== 2) {
+    throw new Error('disconnectCount !== 2');
   }
-  if (abstController.requestConnectCount !== 4) {
+  if (abstController.requestConnectCount !== 3) {
     throw new Error(
-      `Expected abstController.requestConnectCount === 4, But ${
+      `Expected abstController.requestConnectCount === 3, But ${
         abstController.requestConnectCount
       }`,
     );
@@ -198,18 +215,19 @@ async function init() {
   abstController.client = {
     alive: true,
   };
-  BU.CLI(abstController.hasConnect);
   abstController.notifyConnect();
+  // requestConnectCount: 3, connectCount: 3,  disconnectCount: 2
+  // BU.CLIS(abstController.requestConnectCount, receiver.connectCount, receiver.disconnectCount);
   await Promise.delay(abstController.connectIntervalTime);
   if (receiver.connectCount !== 3) {
     throw new Error(`Expected connectCount === 3, But ${receiver.connectCount} `);
   }
-  if (receiver.disconnectCount !== 3) {
-    throw new Error(`disconnectCount === 3, But ${receiver.disconnectCount}`);
+  if (receiver.disconnectCount !== 2) {
+    throw new Error(`disconnectCount === 2, But ${receiver.disconnectCount}`);
   }
-  if (abstController.requestConnectCount !== 4) {
+  if (abstController.requestConnectCount !== 3) {
     throw new Error(
-      `Expected abstController.requestConnectCount === 4, But ${
+      `Expected abstController.requestConnectCount === 3, But ${
         abstController.requestConnectCount
       }`,
     );
