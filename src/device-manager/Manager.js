@@ -44,14 +44,17 @@ class Manager extends AbstManager {
     // 지정된 내용이 아니라면 처리하지 않음.
     if (!_.includes([DONE, NEXT, RETRY, ERROR], commanderResponse)) return false;
 
-    await writeLogFile(
-      this,
-      'config.logOption.hasReceiveData',
-      'data',
-      'onData',
-      _.get(this, 'currentData.data'),
-      _.get(this, 'currentData.date'),
-    );
+    // 응답 결과가 Done 일 경우에만 Log 남김
+    if (_.eq(commanderResponse, DONE)) {
+      await writeLogFile(
+        this,
+        'config.logOption.hasReceiveData',
+        'data',
+        'onData',
+        _.get(this, 'currentData.data'),
+        _.get(this, 'currentData.date'),
+      );
+    }
 
     if (_.isEmpty(currentCommandSet)) {
       await writeLogFile(

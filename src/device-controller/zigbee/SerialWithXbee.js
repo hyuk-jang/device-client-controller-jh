@@ -23,7 +23,11 @@ class SerialWithXbee extends AbstController {
     const foundInstance = _.find(instanceList, { id: this.port });
     if (_.isEmpty(foundInstance)) {
       this.xbeeAPI = new xbeeApi.XBeeAPI(this.xbeeConfig);
-      this.configInfo = { port: this.port, baud_rate: this.baud_rate, xbeeConfig: this.xbeeConfig };
+      this.configInfo = {
+        port: this.port,
+        baud_rate: this.baud_rate,
+        xbeeConfig: this.xbeeConfig,
+      };
       instanceList.push({ id: this.port, instance: this });
       this.setInit();
     } else {
@@ -48,9 +52,9 @@ class SerialWithXbee extends AbstController {
           // This frame is definitely the response!
           this.notifyError(
             new Error(
-              `The frameId is not correct. Request Id: ${this.currentFrameId}, Response Id: ${
-                frameObj.id
-              }`,
+              `The frameId is not correct. Request Id: ${
+                this.currentFrameId
+              }, Response Id: ${frameObj.id}`,
             ),
           );
         }
@@ -67,21 +71,21 @@ class SerialWithXbee extends AbstController {
    * @param {xbeeApi_0x10} frameObj 전송 데이터
    * @return {Promise} Promise 반환 객체
    */
-  async write(frameObj) {
+  write(frameObj) {
     if (_.isEmpty(this.client)) {
       throw new Error(`The device is not connected. ${this.port}`);
     }
 
-    this.currentFrameId = frameObj.id;
+    return new Promise((resolve, reject) => {
+      this.currentFrameId = frameObj.id;
 
-    this.xbeeAPI.builder.write(frameObj);
-
-    /** @type {xbeeApi_0x8B} */
-    const frameData = await eventToPromise(this.client, 'data');
-    if (frameData.deliveryStatus === 0) {
-      throw new Error('Data transfer failed');
-    }
-    return true;
+      const isWrite = this.xbeeAPI.builder.write(frameObj);
+      if (isWrite) {
+        resolve();
+      } else {
+        reject(isWrite);
+      }
+    });
   }
 
   async connect() {
