@@ -56,8 +56,8 @@ class AbstDeviceClient extends EventEmitter {
     return manager.deviceController;
   }
 
-  // Builder
   /**
+   * @desc Builder
    * Create 'Commander', 'Manager' And Set Property 'commander', 'manager'
    * @param {deviceInfo} config
    */
@@ -74,8 +74,8 @@ class AbstDeviceClient extends EventEmitter {
     }
   }
 
-  // Builder
   /**
+   * @desc Builder
    * Create 'Commander', 'Manager' And Set Property 'commander', 'manager'
    * @param {deviceInfo} config
    * @param {string} siteUUID

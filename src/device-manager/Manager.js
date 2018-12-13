@@ -15,6 +15,7 @@ const Iterator = require('./AbstIterator');
 const { writeLogFile } = require('../util/dcUtil');
 
 const Socket = require('../device-controller/socket/Socket');
+const SocketWithParser = require('../device-controller/socket/SocketWithParser');
 
 const Timeout = setTimeout(function() {}, 0).constructor;
 
@@ -38,6 +39,19 @@ class Manager extends AbstManager {
    */
   async requestTakeAction(commander, commanderResponse) {
     const { currentCommandSet } = this.iterator;
+    const { DONE, ERROR, NEXT, RETRY, WAIT } = definedCommanderResponse;
+
+    // 지정된 내용이 아니라면 처리하지 않음.
+    if (!_.includes([DONE, NEXT, RETRY, ERROR], commanderResponse)) return false;
+
+    await writeLogFile(
+      this,
+      'config.logOption.hasReceiveData',
+      'data',
+      'onData',
+      _.get(this, 'currentData.data'),
+      _.get(this, 'currentData.date'),
+    );
 
     if (_.isEmpty(currentCommandSet)) {
       await writeLogFile(
@@ -149,20 +163,26 @@ class Manager extends AbstManager {
    */
   async onData(data) {
     // BU.CLI('onData', data);
-    this.data = data;
+    // this.data = data;
+    this.currentData = {
+      data,
+      date: new Date(),
+    };
     // this.iterator.currentReceiver &&
     // 데이터 수신이 이루어지고 해당 데이터에 대한 Commander의 응답을 기다리는 중
     this.updateOperationStatus(definedOperationStatus.RECEIVE_WAIT_PROCESSING_DATA);
-    await writeLogFile(this, 'config.logOption.hasReceiveData', 'data', 'onData', data);
 
     const receiver = this.iterator.currentReceiver;
     // BU.CLI(receiver);
     if (receiver === null) {
       // BU.CLIN(this.iterator.currentCommandSet);
-      BU.CLI('Not set Responder --> Completed Data', data);
+      // BU.CLI('Not set Responder --> Completed Data', data);
     } else {
       // Socket 통신이고 데이터가 Object 형태라면 변환하여 반환
-      if (this.deviceController instanceof Socket) {
+      if (
+        this.deviceController instanceof Socket ||
+        this.deviceController instanceof SocketWithParser
+      ) {
         const strData = data.toString();
         if (BU.IsJsonString(strData)) {
           const jsonData = JSON.parse(strData);
@@ -219,7 +239,8 @@ class Manager extends AbstManager {
     let currentMsg = currentCommand.data;
     // Socket 통신이고 데이터가 Json 형태라면 Buffer로 변환. TEST 코드에 사용됨.
     if (
-      this.deviceController instanceof Socket &&
+      (this.deviceController instanceof Socket ||
+        this.deviceController instanceof SocketWithParser) &&
       !Buffer.isBuffer(currentCommand.data) &&
       typeof currentCommand.data === 'object'
     ) {
@@ -342,7 +363,8 @@ class Manager extends AbstManager {
     // 진행 중인 명령이 없거나 명령 삭제 일 경우에는 업데이트 제외
     if (
       _.isEmpty(currentCommandSet) ||
-      currentCommandSet.operationStatus === definedOperationStatus.PROCESSING_DELETE_COMMAND
+      currentCommandSet.operationStatus ===
+        definedOperationStatus.PROCESSING_DELETE_COMMAND
     ) {
       return false;
     }
@@ -446,7 +468,9 @@ class Manager extends AbstManager {
           break;
         case definedOperationStatus.E_DISCONNECTED_DEVICE:
           hasError = true;
-          dcErrorFormat.errorInfo = new Error(definedOperationStatus.E_DISCONNECTED_DEVICE);
+          dcErrorFormat.errorInfo = new Error(
+            definedOperationStatus.E_DISCONNECTED_DEVICE,
+          );
           break;
         case definedOperationStatus.E_TIMEOUT:
           hasError = true;
@@ -515,7 +539,9 @@ class Manager extends AbstManager {
         // Skip 요청 상태가 아니고 현재 명령 집합의 모든 명령을 수행했다면 발송
         if (!skipOperationStatus.includes(operationStatus)) {
           // BU.CLI('TERMINATE 메시지  발송 요청', _.get(currentCommandSet, 'nodeId'));
-          this.sendMessageToCommander(definedCommandSetMessage.COMMANDSET_EXECUTION_TERMINATE);
+          this.sendMessageToCommander(
+            definedCommandSetMessage.COMMANDSET_EXECUTION_TERMINATE,
+          );
         }
 
         // Operation Status 초기화
@@ -590,7 +616,13 @@ class Manager extends AbstManager {
       // BU.CLI(error)
       // 다음 명령이 존재하지 않을 경우
       this.hasPerformCommand = false;
-      writeLogFile(this, 'config.logOption.hasDcError', 'error', _.get(error, 'message'), this.id);
+      writeLogFile(
+        this,
+        'config.logOption.hasDcError',
+        'error',
+        _.get(error, 'message'),
+        this.id,
+      );
       this.iterator.clearCurrentCommandSet();
     }
   }

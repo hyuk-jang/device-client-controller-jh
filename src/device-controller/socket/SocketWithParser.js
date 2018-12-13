@@ -40,7 +40,7 @@ class SocketWithParser extends AbstController {
    * @param {Object} client SerialPort Client
    */
   settingParser(client) {
-    // BU.CLI('settingParser');
+    // BU.CLI('settingParser', this.parserInfo);
     if (this.parserInfo !== undefined && this.parserInfo.parser !== undefined) {
       let stream = null;
       switch (this.parserInfo.parser) {
@@ -101,7 +101,11 @@ class SocketWithParser extends AbstController {
     client.on('error', error => {
       this.notifyError(error);
     });
-    await eventToPromise.multi(client, ['connect', 'connection', 'open'], ['close', 'error']);
+    await eventToPromise.multi(
+      client,
+      ['connect', 'connection', 'open'],
+      ['close', 'error'],
+    );
     this.client = client;
     return this.client;
   }

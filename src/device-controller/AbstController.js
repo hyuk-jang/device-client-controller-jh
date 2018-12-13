@@ -110,7 +110,7 @@ class AbstController extends EventEmitter {
   }
 
   notifyEvent(eventName) {
-    // BU.CLI('notifyEvent', eventName);
+    // BU.CLIS('notifyEvent', eventName, this.observers.length);
     this.observers.forEach(observer => {
       _.get(observer, 'onEvent') && observer.onEvent(eventName);
     });
@@ -175,7 +175,7 @@ class AbstController extends EventEmitter {
    * @param {*} data 각 controller에서 수신된 데이터
    */
   notifyData(data) {
-    // BU.CLI('notifyData', data, data.length);
+    // BU.CLI('notifyData', data, this.observers.length);
     this.observers.forEach(observer => {
       _.get(observer, 'onData') && observer.onData(data);
     });

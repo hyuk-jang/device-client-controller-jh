@@ -11,8 +11,9 @@ const AbstManager = require('../device-manager/AbstManager');
  * @param {string} eventType event, data, error
  * @param {string=} dataTitle log event Type
  * @param {*=} data
+ * @param {Date=} date
  */
-async function writeLogFile(logObj, path, eventType, dataTitle, data) {
+async function writeLogFile(logObj, path, eventType, dataTitle, data, date = new Date()) {
   // BU.CLIS(path, eventType, dataTitle, data, _.get(logObj, path));
   let filePath = BU.convertDateToText(new Date(), '', 2);
 
@@ -80,6 +81,7 @@ async function writeLogFile(logObj, path, eventType, dataTitle, data) {
       const isWrite = await BU.appendFile(
         `./log/device-client/${eventType}/${filePath}.log`,
         `${id} : ${dataTitle} --> ${realData}`,
+        date,
       );
 
       return isWrite;
