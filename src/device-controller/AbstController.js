@@ -110,7 +110,7 @@ class AbstController extends EventEmitter {
   }
 
   notifyEvent(eventName) {
-    // BU.CLIS('notifyEvent', eventName, this.observers.length);
+    BU.CLI(`notifyEvent ${eventName}`, this.configInfo);
     this.observers.forEach(observer => {
       _.get(observer, 'onEvent') && observer.onEvent(eventName);
     });

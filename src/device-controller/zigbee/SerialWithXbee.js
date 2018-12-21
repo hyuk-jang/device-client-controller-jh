@@ -2,6 +2,8 @@ const _ = require('lodash');
 const Serialport = require('serialport');
 const eventToPromise = require('event-to-promise');
 
+const { BU } = require('base-util-jh');
+
 const xbeeApi = require('xbee-api');
 const AbstController = require('../AbstController');
 
@@ -22,7 +24,22 @@ class SerialWithXbee extends AbstController {
 
     const foundInstance = _.find(instanceList, { id: this.port });
     if (_.isEmpty(foundInstance)) {
-      this.xbeeAPI = new xbeeApi.XBeeAPI(this.xbeeConfig);
+      this.xbeeAPI = new xbeeApi.XBeeAPI({
+        // default options:
+        api_mode: 1, // [1, 2]; 1 is default, 2 is with escaping (set ATAP=2)
+        module: 'ZigBee', // ["802.15.4", "ZNet", "ZigBee", "Any"]; This does nothing, yet!
+        raw_frames: false, // [true, false]; If set to true, only raw byte frames are
+        //   emitted (after validation) but not parsed to objects.
+        convert_adc: true, // [true, false]; If false, do not convert adc value to millivolt.
+        vref_adc: 1200, // (int); Set the value to convert adc value to millivolt.
+        parser_buffer_size: 512, // (int); size of the package parser buffer. 512 co
+        //   when receiving A LOT of packets, you might want to decrease
+        //   this to a smaller value (but typically not less than 128)
+        builder_buffer_size: 512, // (int); size of the package builder buffer.
+        //   when sending A LOT of packets, you might want to decrease
+        //   this to a smaller value (but typically not less than 128)
+      });
+      // this.xbeeAPI = new xbeeApi.XBeeAPI(this.xbeeConfig);
       this.configInfo = {
         port: this.port,
         baud_rate: this.baud_rate,
@@ -60,6 +77,7 @@ class SerialWithXbee extends AbstController {
         }
         // console.log('Node identifier:', String.fromCharCode(frameObj.commandData));
       } else {
+        // BU.CLI(frameObj);
         return this.notifyData(frameObj);
         // This is some other frame
       }

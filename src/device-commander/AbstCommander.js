@@ -65,8 +65,9 @@ class AbstCommander {
    * @desc Log 파일 생성 처리 때문에 async/await 사용함.
    * Manager에게 Msg를 보내어 명령 진행 의사 결정을 취함
    * @param {string} key 요청 key
+   * @param {*=} receiveData 요청 받은 데이터
    */
-  async requestTakeAction(key) {}
+  async requestTakeAction(key, receiveData) {}
 
   /* Device Controller에서 수신 --> 장치에서 일괄 이벤트 발생 */
   /**

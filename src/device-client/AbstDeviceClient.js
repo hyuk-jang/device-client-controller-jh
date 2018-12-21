@@ -176,7 +176,9 @@ class AbstDeviceClient extends EventEmitter {
    */
   get systemErrorList() {
     // BU.CLI(this.commander.systemErrorList);
-    return this.commander.systemErrorList === undefined ? [] : this.commander.systemErrorList;
+    return this.commander.systemErrorList === undefined
+      ? []
+      : this.commander.systemErrorList;
   }
 
   /* Client가 요청 */
@@ -233,10 +235,11 @@ class AbstDeviceClient extends EventEmitter {
    * @desc Log 파일 생성 처리 때문에 async/await 사용함.
    * Manager에게 Msg를 보내어 명령 진행 의사 결정을 취함
    * @param {string} key 요청 key
+   * @param {*=} receiveData 요청 받은 데이터
    */
-  async requestTakeAction(key) {
+  async requestTakeAction(key, receiveData) {
     try {
-      return await this.commander.requestTakeAction(key);
+      return await this.commander.requestTakeAction(key, receiveData);
     } catch (error) {
       throw error;
     }

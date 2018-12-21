@@ -230,7 +230,7 @@ class Manager extends AbstManager {
     this.updateOperationStatus(definedOperationStatus.REQUEST_CMD);
 
     BU.CLI('transferCommandToDevice', currentCommand.data);
-    writeLogFile(
+    await writeLogFile(
       this,
       'config.logOption.hasTransferCommand',
       'data',

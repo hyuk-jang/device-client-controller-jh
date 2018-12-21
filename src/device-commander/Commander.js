@@ -15,7 +15,11 @@ const AbstMediator = require('../device-mediator/AbstMediator');
 const AbstManager = require('../device-manager/AbstManager');
 const AbstDeviceClient = require('../device-client/AbstDeviceClient');
 
-const { writeLogFile, getDefaultControlInfo, getDefaultLogOption } = require('../util/dcUtil');
+const {
+  writeLogFile,
+  getDefaultControlInfo,
+  getDefaultLogOption,
+} = require('../util/dcUtil');
 
 const instanceList = [];
 
@@ -94,7 +98,13 @@ class Commander extends AbstCommander {
     try {
       // 오브젝트가 아니라면 자동으로 생성
       if (_.isObject(commandSet)) {
-        const findSetKeyList = ['cmdList', 'commander', 'commandId', 'rank', 'currCmdIndex'];
+        const findSetKeyList = [
+          'cmdList',
+          'commander',
+          'commandId',
+          'rank',
+          'currCmdIndex',
+        ];
 
         const hasTypeCommandSet = _.eq(
           findSetKeyList.length,
@@ -224,13 +234,13 @@ class Commander extends AbstCommander {
    * @desc Log 파일 생성 처리 때문에 async/await 사용함.
    * Manager에게 Msg를 보내어 명령 진행 의사 결정을 취함
    * @param {string} key 요청 key
-   *
+   * @param {*=} receiveData 요청 받은 데이터
    */
-  async requestTakeAction(key) {
+  async requestTakeAction(key, receiveData) {
     // BU.CLI('requestTakeAction', key);
     try {
       if (_.has(definedCommanderResponse, key)) {
-        return await this.manager.requestTakeAction(this, key);
+        return await this.manager.requestTakeAction(this, key, receiveData);
       }
       throw new Error(`${key} is not a valid control command.`);
     } catch (error) {

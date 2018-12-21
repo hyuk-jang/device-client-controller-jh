@@ -36,8 +36,9 @@ class Manager extends AbstManager {
    * 응답받은 데이터에 문제가 있거나 다른 사유로 명령을 재 전송하고자 할 경우(3회까지 가능)
    * @param {AbstCommander} commander
    * @param {string} commanderResponse
+   * @param {*} receiveData 수신 받은 데이터
    */
-  async requestTakeAction(commander, commanderResponse) {
+  requestTakeAction(commander, commanderResponse, receiveData) {
     const { currentCommandSet } = this.iterator;
     const { DONE, ERROR, NEXT, RETRY, WAIT } = definedCommanderResponse;
 
@@ -46,18 +47,18 @@ class Manager extends AbstManager {
 
     // 응답 결과가 Done 일 경우에만 Log 남김
     if (_.eq(commanderResponse, DONE)) {
-      await writeLogFile(
+      BU.CLI(receiveData);
+      writeLogFile(
         this,
         'config.logOption.hasReceiveData',
         'data',
         'onData',
-        _.get(this, 'currentData.data'),
-        _.get(this, 'currentData.date'),
+        receiveData,
       );
     }
 
     if (_.isEmpty(currentCommandSet)) {
-      await writeLogFile(
+      writeLogFile(
         this,
         'config.logOption.hasDcError',
         'error',
@@ -70,7 +71,7 @@ class Manager extends AbstManager {
     // 현재 진행중인 명령 객체와 일치해야지만 가능
     if (_.isEqual(currentCommandSet.commander, commander)) {
       // BU.CLI('requestTakeAction', commanderResponse);
-      await writeLogFile(
+      writeLogFile(
         this,
         'config.logOption.hasCommanderResponse',
         'data',
@@ -173,7 +174,7 @@ class Manager extends AbstManager {
     };
     // this.iterator.currentReceiver &&
     // 데이터 수신이 이루어지고 해당 데이터에 대한 Commander의 응답을 기다리는 중
-    this.updateOperationStatus(definedOperationStatus.RECEIVE_WAIT_PROCESSING_DATA);
+    // this.updateOperationStatus(definedOperationStatus.RECEIVE_WAIT_PROCESSING_DATA);
 
     const receiver = this.iterator.currentReceiver;
     // BU.CLI(receiver);
@@ -215,7 +216,7 @@ class Manager extends AbstManager {
    * 명령의 전송 가능 여부 체크는 requestProcessingCommand() 메소드에서 수행하므로 별도로 체크하지 않음
    * 명령 전송 실패 에러가 발생할 경우 requestProcessingCommand()로 이동
    */
-  async transferCommandToDevice() {
+  transferCommandToDevice() {
     // 타이머가 동작 중이라면 이전 명령 타이머 해제
     if (this.operationTimer instanceof Timeout) {
       clearTimeout(this.operationTimer);
@@ -262,7 +263,8 @@ class Manager extends AbstManager {
       // throw new Error('The transfer request timed out.');
     }, currentCommand.commandExecutionTimeoutMs || 1000);
 
-    await this.deviceController.write(currentMsg);
+    this.deviceController.write(currentMsg);
+    // await this.deviceController.write(currentMsg);
 
     // 이미 에러처리를 하였다면 실행하지 않음
     if (isWriteFailed === 1) return false;
