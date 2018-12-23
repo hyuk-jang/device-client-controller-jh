@@ -1,6 +1,5 @@
 const _ = require('lodash');
 const net = require('net');
-const eventToPromise = require('event-to-promise');
 
 const { BU } = require('base-util-jh');
 
@@ -52,34 +51,39 @@ class Socket extends AbstController {
   async connect() {
     // BU.log('Try Connect : ', this.port);
     /** 접속 중인 상태라면 접속 시도하지 않음 */
-    if (!_.isEmpty(this.client)) {
-      throw new Error(`Already connected. ${this.port}`);
-    }
+    return new Promise((resolve, reject) => {
+      if (!_.isEmpty(this.client)) {
+        reject(new Error(`Already connected. ${this.port}`));
+      }
 
-    const client = net.createConnection(this.port, this.host);
-    client.on('data', bufferData => {
-      this.notifyData(bufferData);
-    });
+      const client = net.createConnection({
+        port: this.port,
+        host: this.host,
+      });
 
-    client.on('close', err => {
-      this.client = {};
-      this.notifyDisconnect(err);
-    });
+      client.on('data', bufferData => {
+        this.notifyData(bufferData);
+      });
 
-    client.on('end', () => {
-      console.log('Client disconnected', this.port);
-    });
+      client.on('connect', () => {
+        this.client = client;
+        resolve();
+      });
 
-    client.on('error', error => {
-      this.notifyError(error);
+      client.on('close', err => {
+        this.client = {};
+        this.notifyDisconnect(err);
+      });
+
+      client.on('end', () => {
+        // console.log('Client disconnected');
+      });
+
+      client.on('error', error => {
+        reject(error);
+        this.notifyError(error);
+      });
     });
-    await eventToPromise.multi(
-      client,
-      ['connect', 'connection', 'open'],
-      ['close', 'error'],
-    );
-    this.client = client;
-    return this.client;
   }
 
   /**

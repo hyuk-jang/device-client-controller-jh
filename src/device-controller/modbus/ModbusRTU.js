@@ -1,5 +1,4 @@
 const _ = require('lodash');
-const eventToPromise = require('event-to-promise');
 
 // create an empty modbus client
 const ModRTU = require('modbus-serial');
@@ -53,7 +52,10 @@ class ModbusRTU extends AbstController {
           resData = await this.client.readDiscreteInputs(address, modbusData.dataLength);
           break;
         case 3:
-          resData = await this.client.readHoldingRegisters(address, modbusData.dataLength);
+          resData = await this.client.readHoldingRegisters(
+            address,
+            modbusData.dataLength,
+          );
           break;
         case 4:
           resData = await this.client.readInputRegisters(address, modbusData.dataLength);
@@ -89,45 +91,26 @@ class ModbusRTU extends AbstController {
   }
 
   /** 장치 접속 시도 */
-  async connect() {
-    // BU.CLI('connect');
-    /** 접속 중인 상태라면 접속 시도하지 않음 */
-    if (!_.isEmpty(this.client)) {
-      throw new Error(`Already connected. ${this.port}`);
-    }
+  connect() {
+    BU.log('Try Connect : ', this.port);
+    return new Promise((resolve, reject) => {
+      /** 접속 중인 상태라면 접속 시도하지 않음 */
+      if (!_.isEmpty(this.client)) {
+        reject(new Error(`Already connected. ${this.port}`));
+      }
 
-    const client = new ModRTU();
+      const client = new ModRTU();
 
-    // client.connectRTU(
-    //   this.port,
-    //   {
-    //     baudRate: this.baud_rate,
-    //   },
-    //   hasError => {
-    //     BU.CLI(hasError);
-    //     if (hasError) {
-    //       this.client = {};
-    //       this.notifyDisconnect(hasError);
-    //       this.emit('close');
-    //       return;
-    //     }
-    //     this.emit('connect');
-    //   },
-    // );
-
-    client
-      .connectRTUBuffered(this.port, { baudRate: this.baud_rate })
-      .then(() => this.emit('connect'))
-      .catch(this.emit('close'));
-
-    // BU.CLI(result);
-
-    await eventToPromise.multi(this, ['connect', 'connection', 'open'], ['close', 'error']);
-
-    /** @type {ModRTU} */
-    this.client = client;
-    // BU.CLIN(this.client);
-    return this.client;
+      client
+        .connectRTUBuffered(this.port, { baudRate: this.baud_rate })
+        .then(() => {
+          this.client = client;
+          resolve();
+        })
+        .catch(err => {
+          reject(err);
+        });
+    });
   }
 
   /**

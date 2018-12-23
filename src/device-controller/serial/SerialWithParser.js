@@ -20,7 +20,11 @@ class SerialWithParser extends AbstController {
 
     const foundInstance = _.find(instanceList, { id: this.port });
     if (_.isEmpty(foundInstance)) {
-      this.configInfo = { port: this.port, baud_rate: this.baud_rate, parser: this.parserInfo };
+      this.configInfo = {
+        port: this.port,
+        baud_rate: this.baud_rate,
+        parser: this.parserInfo,
+      };
       instanceList.push({ id: this.port, instance: this });
       this.setInit();
     } else {
@@ -96,7 +100,7 @@ class SerialWithParser extends AbstController {
     });
   }
 
-  async connect() {
+  connect() {
     // BU.CLI('connect');
     /** 접속 중인 상태라면 접속 시도하지 않음 */
     if (!_.isEmpty(this.client)) {
@@ -104,6 +108,7 @@ class SerialWithParser extends AbstController {
     }
     const client = new Serialport(this.port, {
       baudRate: this.baud_rate,
+      autoOpen: false,
     });
 
     this.settingParser(client);
@@ -117,9 +122,16 @@ class SerialWithParser extends AbstController {
       this.notifyError(error);
     });
 
-    await eventToPromise.multi(client, ['open'], ['error', 'close']);
-    this.client = client;
-    return this.client;
+    return new Promise((resolve, reject) => {
+      client.open(err => {
+        if (err) {
+          reject(err);
+        } else {
+          this.client = client;
+          resolve();
+        }
+      });
+    });
   }
 
   /**

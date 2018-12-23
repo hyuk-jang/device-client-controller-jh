@@ -229,7 +229,7 @@ class Manager extends AbstManager {
     // 명령 전송을 기다림
     this.updateOperationStatus(definedOperationStatus.REQUEST_CMD);
 
-    BU.CLI('transferCommandToDevice', currentCommand.data);
+    // BU.CLI('transferCommandToDevice', currentCommand.data);
     writeLogFile(
       this,
       'config.logOption.hasTransferCommand',
