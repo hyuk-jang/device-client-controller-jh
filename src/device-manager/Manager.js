@@ -44,8 +44,8 @@ class Manager extends AbstManager {
     // 지정된 내용이 아니라면 처리하지 않음.
     if (!_.includes([DONE, NEXT, RETRY, ERROR], commanderResponse)) return false;
 
-    // 응답 결과가 Done 일 경우에만 Log 남김
-    if (_.eq(commanderResponse, DONE)) {
+    // ID가 존재하지 않을 경우 -> 순차 처리 일 경우 , 응답 결과가 Done 일 경우
+    if (!_.has(this.id, 'id') || _.eq(commanderResponse, DONE)) {
       await writeLogFile(
         this,
         'config.logOption.hasReceiveData',
