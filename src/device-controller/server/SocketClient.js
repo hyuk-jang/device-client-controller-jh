@@ -70,10 +70,16 @@ class SocketClient extends AbstController {
       BU.CLI('기존 연결 제거');
       this.isDestroying = true;
       this.client.destroy();
-      setTimeout(() => {
+
+      setImmediate(() => {
         this.isDestroying = false;
         this.setPassiveClient(client);
-      }, 1);
+      });
+
+      // setTimeout(() => {
+      //   this.isDestroying = false;
+      //   this.setPassiveClient(client);
+      // }, 1);
     } else {
       client.on('data', bufferData => {
         this.notifyData(bufferData);

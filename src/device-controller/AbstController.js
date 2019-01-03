@@ -10,8 +10,6 @@ const {
   DISCONNECT,
 } = require('default-intelligence').dccFlagModel.definedControlEvent;
 
-const AbstManager = require('../device-manager/AbstManager');
-
 const { writeLogFile } = require('../util/dcUtil');
 
 class AbstController extends EventEmitter {
@@ -30,7 +28,7 @@ class AbstController extends EventEmitter {
     // 초기 상태는 undefined
     this.hasConnect;
     this.connectTimer;
-    this.connectIntervalTime = 1000 * 20;
+    this.connectIntervalTime = 1000 * 60;
 
     this.hasConnectionAttempt = false;
 
@@ -59,6 +57,7 @@ class AbstController extends EventEmitter {
         writeLogFile(this, 'mainConfig.logOption.hasDcEvent', 'event', 'doConnect()');
         await this.connect();
 
+        // BU.CLI('Failed Connect')
         // 장치 연결 요청이 완료됐으나 연결 객체가 없다면 예외 발생
         if (_.isEmpty(this.client)) {
           throw new Error('Try Connect To Device Error');
@@ -67,8 +66,9 @@ class AbstController extends EventEmitter {
       // 장치와 접속이 되었다고 알림
       return this.notifyConnect();
     } catch (error) {
+      // BU.CLI(error);
       // 장치 접속 요청 실패 이벤트 발생
-      // this.notifyError(error);
+      this.notifyDisconnect(error);
       // 새로운 타이머 할당
       if (_.get(this.mainConfig.controlInfo, 'hasReconnect') === true) {
         this.connectTimer = new CU.Timer(() => {
@@ -135,6 +135,7 @@ class AbstController extends EventEmitter {
   notifyDisconnect() {
     writeLogFile(this, 'mainConfig.logOption.hasDcEvent', 'event', 'notifyDisconnect');
     // 장치와의 연결이 계속해제된 상태였다면 이벤트를 보내지 않음
+    // BU.CLIS(this.hasConnect, _.isEmpty(this.client));
     if (this.hasConnect !== false && _.isEmpty(this.client)) {
       // BU.CLI('notifyClose', this.hasConnect);
       this.hasConnect = false;

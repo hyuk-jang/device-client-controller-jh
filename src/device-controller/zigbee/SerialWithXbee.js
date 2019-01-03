@@ -119,8 +119,6 @@ class SerialWithXbee extends AbstController {
       autoOpen: false,
     });
 
-    this.settingXbee(client);
-
     client.on('close', err => {
       this.client = {};
       this.notifyDisconnect(err);
@@ -135,6 +133,7 @@ class SerialWithXbee extends AbstController {
         if (err) {
           reject(err);
         } else {
+          this.settingXbee(client);
           this.client = client;
           resolve();
         }

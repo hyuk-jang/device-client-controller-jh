@@ -111,8 +111,6 @@ class SerialWithParser extends AbstController {
       autoOpen: false,
     });
 
-    this.settingParser(client);
-
     client.on('close', err => {
       this.client = {};
       this.notifyDisconnect(err);
@@ -127,6 +125,7 @@ class SerialWithParser extends AbstController {
         if (err) {
           reject(err);
         } else {
+          this.settingParser(client);
           this.client = client;
           resolve();
         }

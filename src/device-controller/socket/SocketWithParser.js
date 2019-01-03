@@ -90,9 +90,8 @@ class SocketWithParser extends AbstController {
         host: this.host,
       });
 
-      this.settingParser(client);
-
       client.on('connect', () => {
+        this.settingParser(client);
         this.client = client;
         resolve();
       });
