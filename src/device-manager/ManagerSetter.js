@@ -13,6 +13,8 @@ const Serial = require('../device-controller/serial/Serial');
 const SerialWithXbee = require('../device-controller/zigbee/SerialWithXbee');
 const SocketWithParser = require('../device-controller/socket/SocketWithParser');
 const Socket = require('../device-controller/socket/Socket');
+const UDP = require('../device-controller/udp/UDP');
+const UDPWithParser = require('../device-controller/udp/UDPWithParser');
 const ModbusRTU = require('../device-controller/modbus/ModbusRTU');
 const ModbusTCP = require('../device-controller/modbus/ModbusTCP');
 
@@ -63,6 +65,16 @@ class ManagerSetter extends Manager {
             break;
           default:
             Controller = Socket;
+            break;
+        }
+        break;
+      case 'udp':
+        switch (connectInfo.subType) {
+          case 'parser':
+            Controller = UDPWithParser;
+            break;
+          default:
+            Controller = UDP;
             break;
         }
         break;

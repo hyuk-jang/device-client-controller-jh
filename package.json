@@ -32,6 +32,7 @@
   "dependencies": {
     "base-util-jh": "^1.2.1",
     "bluebird": "^3.5.3",
+    "buffer-split": "^1.0.0",
     "default-intelligence": "^0.1.6",
     "event-to-promise": "^0.8.0",
     "lodash": "^4.17.11",
