@@ -117,6 +117,12 @@ class ModbusTCP extends AbstController {
   /**
    * Close Connect
    */
-  async disconnect() {}
+  async disconnect() {
+    if (!_.isEmpty(this.client)) {
+      this.client.close();
+    } else {
+      this.notifyDisconnect();
+    }
+  }
 }
 module.exports = ModbusTCP;

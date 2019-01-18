@@ -139,10 +139,9 @@ class SerialWithParser extends AbstController {
   async disconnect() {
     if (!_.isEmpty(this.client)) {
       this.client.close();
-      await eventToPromise.multi(this.client, ['close'], ['error', 'disconnectError']);
-      return this.client;
+    } else {
+      this.notifyDisconnect();
     }
-    return this.client;
   }
 }
 module.exports = SerialWithParser;

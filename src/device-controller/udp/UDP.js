@@ -40,18 +40,20 @@ class UDP extends AbstController {
    */
   write(msg) {
     // BU.CLI(msg);
-    this.client.send(msg, 0, msg.length, this.port, this.host, err => {
-      if (err) {
-        // console.log('UDP message send error', err);
-        return Promise.reject(err);
-      }
-      console.log('메세지 전송 성공');
-      return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      this.client.send(msg, 0, msg.length, this.port, this.host, err => {
+        if (err) {
+          console.log('UDP message send error', err);
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
     });
   }
 
   /** 장치 접속 시도 */
-  async connect() {
+  connect() {
     // BU.CLI('Try Connect : ', this.port);
     /** 접속 중인 상태라면 접속 시도하지 않음 */
     return new Promise((resolve, reject) => {
@@ -64,7 +66,7 @@ class UDP extends AbstController {
       client.send('', 0, 0, this.port, this.host);
 
       client.on('message', (msg, rinfo) => {
-        console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+        // console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
         this.notifyData(msg);
       });
 
@@ -90,10 +92,11 @@ class UDP extends AbstController {
    * Close Connect
    */
   async disconnect() {
+    // BU.CLI('disconnect');
     if (!_.isEmpty(this.client)) {
-      this.client.close(() => this.client);
+      this.client.close();
     } else {
-      return this.client;
+      this.notifyDisconnect();
     }
   }
 }

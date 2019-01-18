@@ -2,6 +2,8 @@ const _ = require('lodash');
 const dgram = require('dgram');
 const bsplit = require('buffer-split');
 
+const { BU } = require('base-util-jh');
+
 const AbstController = require('../AbstController');
 
 /** @type {Array.<{id: constructorSocket, instance: UDPWithParser}>} */
@@ -43,17 +45,21 @@ class UDPWithParser extends AbstController {
    * @return {promise} Promise 반환 객체
    */
   write(msg) {
-    this.client.send(msg, 0, msg.length, this.port, this.host, err => {
-      if (err) {
-        // console.log('UDP message send error', err);
-        return Promise.reject(err);
-      }
-      return Promise.resolve();
+    // BU.CLI('write');
+    return new Promise((resolve, reject) => {
+      this.client.send(msg, 0, msg.length, this.port, this.host, err => {
+        if (err) {
+          console.log('UDP message send error', err);
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
     });
   }
 
   /** 장치 접속 시도 */
-  async connect() {
+  connect() {
     // BU.CLI('Try Connect : ', this.port);
     /** 접속 중인 상태라면 접속 시도하지 않음 */
     return new Promise((resolve, reject) => {
@@ -93,16 +99,19 @@ class UDPWithParser extends AbstController {
       });
 
       client.on('listening', () => {
+        // BU.CLI('listening');
         this.client = client;
         resolve();
       });
 
       client.on('close', err => {
+        // BU.CLI('close');
         this.client = {};
         this.notifyDisconnect(err);
       });
 
       client.on('error', error => {
+        // BU.CLI('error');
         client.close();
         reject(error);
         this.notifyError(error);
@@ -114,10 +123,11 @@ class UDPWithParser extends AbstController {
    * Close Connect
    */
   async disconnect() {
+    // BU.CLI('disconnect');
     if (!_.isEmpty(this.client)) {
-      this.client.close(() => this.client);
+      this.client.close();
     } else {
-      return this.client;
+      this.notifyDisconnect();
     }
   }
 }

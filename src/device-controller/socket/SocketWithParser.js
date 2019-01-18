@@ -117,9 +117,9 @@ class SocketWithParser extends AbstController {
    */
   async disconnect() {
     if (!_.isEmpty(this.client)) {
-      this.client.destroy(() => this.client);
+      this.client.destroy();
     } else {
-      return this.client;
+      this.notifyDisconnect();
     }
   }
 }
