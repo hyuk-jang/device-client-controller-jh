@@ -38,6 +38,10 @@ class ModbusRTU extends AbstController {
   async write(modbusData) {
     // unitId 설정
     try {
+      if (_.isEmpty(this.client)) {
+        throw new Error('The client did not connect.');
+      }
+
       const { fnCode, unitId, address } = modbusData;
       // BU.CLIS(fnCode, unitId, address);
       // BU.CLINS(this.client);

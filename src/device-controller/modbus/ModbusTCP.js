@@ -41,6 +41,10 @@ class ModbusTCP extends AbstController {
   async write(mRtuInfo) {
     // unitId 설정
     try {
+      if (_.isEmpty(this.client)) {
+        throw new Error('The client did not connect.');
+      }
+
       // BU.CLI(mRtuInfo);
       await this.client.setID(mRtuInfo.unitId);
       const values = _.values(mRtuInfo.params);

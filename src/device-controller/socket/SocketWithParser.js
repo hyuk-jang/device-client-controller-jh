@@ -69,6 +69,10 @@ class SocketWithParser extends AbstController {
    */
   write(msg) {
     // BU.CLI(msg);
+    if (_.isEmpty(this.client)) {
+      return Promise.reject(new Error('The client did not connect.'));
+    }
+
     const res = this.client.write(msg);
     if (res) {
       return Promise.resolve();

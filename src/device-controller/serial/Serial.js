@@ -34,6 +34,10 @@ class Serial extends AbstController {
    * @return {Promise} Promise 반환 객체
    */
   write(msg) {
+    if (_.isEmpty(this.client)) {
+      return Promise.reject(new Error('The client did not connect.'));
+    }
+
     return new Promise((resolve, reject) => {
       this.client.write(msg, err => {
         reject(err);
