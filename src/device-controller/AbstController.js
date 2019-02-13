@@ -51,7 +51,7 @@ class AbstController extends EventEmitter {
     }
     timer.pause();
     try {
-      BU.CLI('doConnect()', this.configInfo);
+      // BU.CLI('doConnect()', this.configInfo);
       // 장치 접속 관리 객체가 없다면 접속 수행
       if (_.isEmpty(this.client)) {
         writeLogFile(this, 'mainConfig.logOption.hasDcEvent', 'event', 'doConnect()');

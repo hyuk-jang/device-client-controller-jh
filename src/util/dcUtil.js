@@ -14,7 +14,7 @@ const AbstManager = require('../device-manager/AbstManager');
  * @param {Date=} date
  */
 async function writeLogFile(logObj, path, eventType, dataTitle, data, date = new Date()) {
-  // BU.CLIS(path, eventType, dataTitle, data, _.get(logObj, path));
+  // BU.CLIS(path, eventType, dataTitle, data, _.get(logObj, path), BU.IsJsonString(data));
   let filePath = BU.convertDateToText(new Date(), '', 2);
 
   if (_.get(logObj, path)) {
@@ -34,7 +34,7 @@ async function writeLogFile(logObj, path, eventType, dataTitle, data, date = new
     ) {
       const commanderId = _.get(logObj, 'iterator.currentReceiver.id', '');
       filePath = `${id}/${filePath}`;
-      id = `M: ${id}\tC: ${commanderId}`;
+      id = _.eq(id, commanderId) ? commanderId : `M: ${id}\tC: ${commanderId}`;
     }
 
     if (data === undefined) {
@@ -44,6 +44,8 @@ async function writeLogFile(logObj, path, eventType, dataTitle, data, date = new
       );
     } else {
       let realData = '';
+
+      // BU.IsJsonString(data) && (data = JSON.parse(data));
 
       if (Buffer.isBuffer(data)) {
         // // FIXME: Hex 파일 형태로 저장할 경우 보완
@@ -57,7 +59,7 @@ async function writeLogFile(logObj, path, eventType, dataTitle, data, date = new
         // xbee 저장
         if (eventType === 'data' && dataTitle === 'onData' && BU.IsJsonString(realData)) {
           const parseData = JSON.parse(realData);
-          // BU.CLI(parseData);
+          BU.CLI(parseData);
           if (_.get(parseData, 'data.type') === 'Buffer') {
             parseData.data = Buffer.from(parseData.data).toString();
             realData = JSON.stringify(parseData);
