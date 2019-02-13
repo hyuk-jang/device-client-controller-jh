@@ -45,7 +45,10 @@ class Manager extends AbstManager {
     if (!_.includes([DONE, NEXT, RETRY, ERROR], commanderResponse)) return false;
 
     // ID가 존재하지 않을 경우 -> 순차 처리 일 경우 , 응답 결과가 Done 일 경우
-    if (!_.has(this.id, 'id') || _.eq(commanderResponse, DONE)) {
+    if (
+      (!_.has(this.id, 'id') || _.eq(commanderResponse, DONE)) &&
+      _.get(this, 'currentData.data')
+    ) {
       await writeLogFile(
         this,
         'config.logOption.hasReceiveData',
@@ -54,6 +57,10 @@ class Manager extends AbstManager {
         _.get(this, 'currentData.data'),
         _.get(this, 'currentData.date'),
       );
+
+      // 데이터를 기록한 후 수신 데이터 초기화
+      _.set(this, 'currentData.data', undefined);
+      _.set(this, 'currentData.data', undefined);
     }
 
     if (_.isEmpty(currentCommandSet)) {

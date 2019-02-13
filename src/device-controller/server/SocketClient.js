@@ -95,7 +95,7 @@ class SocketClient extends AbstController {
       });
 
       client.on('error', error => {
-        BU.CLI(error);
+        // BU.CLI(error);
         if (_.has(this.client, 'destroy')) {
           this.client.destroy();
           this.client = {};
