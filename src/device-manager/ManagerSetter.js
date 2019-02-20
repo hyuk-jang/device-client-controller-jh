@@ -36,7 +36,8 @@ class ManagerSetter extends Manager {
 
     const { connect_info: connectInfo = {} } = config;
     // _.assign(connectInfo, { key: BU.GUID() });
-    this.id = connectInfo;
+    this.id = _.omit(connectInfo, 'id');
+    // this.id = connectInfo;
     // BU.CLI(config);
     switch (connectInfo.type) {
       case 'serial':
