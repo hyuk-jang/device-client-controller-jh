@@ -38,7 +38,9 @@ class Iterator {
   /** @return {AbstCommander} */
   get currentReceiver() {
     const currItem = this.currentCommandSet;
-    return _.isEmpty(currItem) || _.isEmpty(currItem.commander) ? null : currItem.commander;
+    return _.isEmpty(currItem) || _.isEmpty(currItem.commander)
+      ? null
+      : currItem.commander;
   }
 
   /** @return {commandSet} */
@@ -109,7 +111,10 @@ class Iterator {
     if (!_.includes(_.map(this.aggregate.standbyCommandSetList, 'rank'), rank)) {
       this.aggregate.standbyCommandSetList.push({ rank, list: [cmdInfo] });
       // rank 순으로 정렬
-      this.aggregate.standbyCommandSetList = _.sortBy(this.aggregate.standbyCommandSetList, 'rank');
+      this.aggregate.standbyCommandSetList = _.sortBy(
+        this.aggregate.standbyCommandSetList,
+        'rank',
+      );
       // BU.CLIN(this.aggregate, 4);
     } else {
       // 저장된 rank 객체 배열에 삽입
@@ -187,7 +192,9 @@ class Iterator {
       );
 
       // 명령 삭제 중으로 상태 변경
-      this.manager.updateOperationStatus(definedOperationStatus.PROCESSING_DELETE_COMMAND);
+      this.manager.updateOperationStatus(
+        definedOperationStatus.PROCESSING_DELETE_COMMAND,
+      );
       // 명령 상태 점검. hasErrorHandling 값이 true라면 대기, 아니라면 다음 명령 수행
       this.manager.manageProcessingCommand();
     }
@@ -280,10 +287,12 @@ class Iterator {
     );
 
     // 지연 집합 확인
-    returnValue.delayCommandSetList = _.filter(this.aggregate.delayCommandSetList, commandSet =>
-      _(filterInfo)
-        .map((v, k) => _.isEqual(v, _.get(commandSet, k)))
-        .every(),
+    returnValue.delayCommandSetList = _.filter(
+      this.aggregate.delayCommandSetList,
+      commandSet =>
+        _(filterInfo)
+          .map((v, k) => _.isEqual(v, _.get(commandSet, k)))
+          .every(),
     );
 
     return returnValue;
@@ -345,7 +354,10 @@ class Iterator {
         // 현재 진행중인 명령의 우선 순위를 체크
         const { rank: currentSetRank } = currentCommandSet;
         // 현재 진행중인 명령이 긴급 명령(Rank 0)이 아니라면 긴급 명령이 존재하는지 체크
-        if (currentSetRank !== definedCommandSetRank.EMERGENCY && _.isNumber(currentSetRank)) {
+        if (
+          currentSetRank !== definedCommandSetRank.EMERGENCY &&
+          _.isNumber(currentSetRank)
+        ) {
           // 긴급 명령이 존재하는지 체크
           if (this.convertStandbyStorageToArray(definedCommandSetRank.EMERGENCY).length) {
             const currProcessStorage = _.find(this.aggregate.standbyCommandSetList, {
