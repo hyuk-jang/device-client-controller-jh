@@ -1,14 +1,14 @@
 const _ = require('lodash');
-const net = require('net');
+const dgram = require('dgram');
 
 const { BU } = require('base-util-jh');
 
 const AbstController = require('../AbstController');
 
-/** @type {Array.<{id: constructorSocket, instance: Socket}>} */
+/** @type {Array.<{id: constructorSocket, instance: UDP}>} */
 const instanceList = [];
 /** Class Socket 접속 클라이언트 클래스 */
-class Socket extends AbstController {
+class UDP extends AbstController {
   /**
    * Socket Client 접속 설정 정보
    * @param {deviceInfo} mainConfig
@@ -40,36 +40,37 @@ class Socket extends AbstController {
    */
   write(msg) {
     // BU.CLI(msg);
-    if (_.isEmpty(this.client)) {
-      return Promise.reject(new Error('The client did not connect.'));
-    }
-
-    const res = this.client.write(msg);
-    if (res) {
-      return Promise.resolve();
-    }
-    return Promise.reject(res);
+    return new Promise((resolve, reject) => {
+      this.client.send(msg, 0, msg.length, this.port, this.host, err => {
+        if (err) {
+          console.log('UDP message send error', err);
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
   }
 
   /** 장치 접속 시도 */
-  async connect() {
-    // BU.log('Try Connect : ', this.port);
+  connect() {
+    // BU.CLI('Try Connect : ', this.port);
     /** 접속 중인 상태라면 접속 시도하지 않음 */
     return new Promise((resolve, reject) => {
       if (!_.isEmpty(this.client)) {
         reject(new Error(`Already connected. ${this.port}`));
       }
 
-      const client = net.createConnection({
-        port: this.port,
-        host: this.host,
+      const client = dgram.createSocket('udp4');
+
+      client.send('', 0, 0, this.port, this.host);
+
+      client.on('message', (msg, rinfo) => {
+        // console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+        this.notifyData(msg);
       });
 
-      client.on('data', bufferData => {
-        this.notifyData(bufferData);
-      });
-
-      client.on('connect', () => {
+      client.on('listening', () => {
         this.client = client;
         resolve();
       });
@@ -79,11 +80,8 @@ class Socket extends AbstController {
         this.notifyDisconnect(err);
       });
 
-      client.on('end', () => {
-        // console.log('Client disconnected');
-      });
-
       client.on('error', error => {
+        client.close();
         reject(error);
         this.notifyError(error);
       });
@@ -94,12 +92,13 @@ class Socket extends AbstController {
    * Close Connect
    */
   async disconnect() {
+    // BU.CLI('disconnect');
     if (!_.isEmpty(this.client)) {
-      this.client.destroy();
+      this.client.close();
     } else {
       this.notifyDisconnect();
     }
   }
 }
 
-module.exports = Socket;
+module.exports = UDP;

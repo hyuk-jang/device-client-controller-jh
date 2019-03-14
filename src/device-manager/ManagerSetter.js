@@ -13,6 +13,8 @@ const Serial = require('../device-controller/serial/Serial');
 const SerialWithXbee = require('../device-controller/zigbee/SerialWithXbee');
 const SocketWithParser = require('../device-controller/socket/SocketWithParser');
 const Socket = require('../device-controller/socket/Socket');
+const UDP = require('../device-controller/udp/UDP');
+const UDPWithParser = require('../device-controller/udp/UDPWithParser');
 const ModbusRTU = require('../device-controller/modbus/ModbusRTU');
 const ModbusTCP = require('../device-controller/modbus/ModbusTCP');
 
@@ -27,15 +29,19 @@ class ManagerSetter extends Manager {
   /** Manager를 초기화 처리 */
   /** Builder에서 요청 메소드 */
   /** @param {deviceInfo} config */
-  setManager(config) {
+  setManager(config = {}) {
     /** @type {AbstController} */
     let deviceController = null;
     let Controller = null;
 
+    const { connect_info: connectInfo = {} } = config;
+    // _.assign(connectInfo, { key: BU.GUID() });
+    this.id = _.omit(connectInfo, 'id');
+    // this.id = connectInfo;
     // BU.CLI(config);
-    switch (config.connect_info.type) {
+    switch (connectInfo.type) {
       case 'serial':
-        switch (config.connect_info.subType) {
+        switch (connectInfo.subType) {
           case 'parser':
             Controller = SerialWithParser;
             break;
@@ -45,7 +51,7 @@ class ManagerSetter extends Manager {
         }
         break;
       case 'zigbee':
-        switch (config.connect_info.subType) {
+        switch (connectInfo.subType) {
           case 'xbee':
             Controller = SerialWithXbee;
             break;
@@ -54,7 +60,7 @@ class ManagerSetter extends Manager {
         }
         break;
       case 'socket':
-        switch (config.connect_info.subType) {
+        switch (connectInfo.subType) {
           case 'parser':
             Controller = SocketWithParser;
             break;
@@ -63,8 +69,18 @@ class ManagerSetter extends Manager {
             break;
         }
         break;
+      case 'udp':
+        switch (connectInfo.subType) {
+          case 'parser':
+            Controller = UDPWithParser;
+            break;
+          default:
+            Controller = UDP;
+            break;
+        }
+        break;
       case 'modbus':
-        switch (config.connect_info.subType) {
+        switch (connectInfo.subType) {
           case 'rtu':
             Controller = ModbusRTU;
             break;
@@ -82,13 +98,14 @@ class ManagerSetter extends Manager {
     if (_.isNull(Controller)) {
       throw new Error('There is no such device.');
     } else {
-      deviceController = new Controller(config, config.connect_info);
+      deviceController = new Controller(config, connectInfo);
     }
-    // Controller의 접속 정보를 ID로 함
-    this.id = deviceController.configInfo;
 
     // 해당 장치가 이미 존재하는지 체크
-    const foundInstance = _.find(instanceList, instanceInfo => _.isEqual(instanceInfo.id, this.id));
+    const foundInstance = _.find(instanceList, instanceInfo =>
+      _.isEqual(instanceInfo.id, this.id),
+    );
+
     // 장치가 존재하지 않는다면 instanceList에 삽입하고 deviceController에 등록
     if (_.isEmpty(foundInstance)) {
       // observer 등록
@@ -123,15 +140,17 @@ class ManagerSetter extends Manager {
    * @param {deviceInfo} config
    * @param {string} siteUUID
    */
-  setPassiveManager(config, siteUUID) {
+  setPassiveManager(config = {}, siteUUID) {
     /** @type {AbstController} */
     let deviceController = null;
     let Controller = null;
 
+    const { connect_info: connectInfo = {} } = config;
+
     // BU.CLI(config);
-    switch (config.connect_info.type) {
+    switch (connectInfo.type) {
       case 'socket':
-        switch (config.connect_info.subType) {
+        switch (connectInfo.subType) {
           default:
             Controller = SocketClient;
             break;
@@ -150,7 +169,9 @@ class ManagerSetter extends Manager {
     // Controller의 접속 정보를 ID로 함
     this.id = siteUUID;
     // 해당 매니저가 이미 존재하는지 체크
-    const foundInstance = _.find(instanceList, instanceInfo => _.isEqual(instanceInfo.id, this.id));
+    const foundInstance = _.find(instanceList, instanceInfo =>
+      _.isEqual(instanceInfo.id, this.id),
+    );
     if (_.isEmpty(foundInstance)) {
       // observer 등록
       deviceController.attach(this);
@@ -189,6 +210,7 @@ class ManagerSetter extends Manager {
 
   /** Iterator 정의 */
   createIterator() {
+    /** @type {Iterator} */
     this.iterator = new Iterator(this);
   }
 

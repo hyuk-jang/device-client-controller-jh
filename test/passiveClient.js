@@ -41,9 +41,11 @@ class Receiver extends DCC {
   updatedDcEventOnDevice(dcEvent) {
     const { eventName, eventMsg } = dcEvent;
     // if(eventName !== definedControlEvent.ERROR){
-    BU.CLIS(eventName, eventMsg);
+    // BU.CLIS(eventName, eventMsg);
     if (eventName === definedControlEvent.CONNECT) {
+      // BU.debugConsole(5);
       testConnectCount += 1;
+      // BU.CLI(testConnectCount);
     }
     if (eventName === definedControlEvent.DISCONNECT) {
       testDisconnectCount += 1;
@@ -176,9 +178,9 @@ async function init() {
     console.error(err);
   });
 
-  // Listen 된 Socket Server로 접속 시도. 첫 시도만 connect Event가 발생해야함
+  // Listen 된 Socket Server로 접속 시도.
   connectSocketServer(socketServerPort, 0);
-  connectSocketServer(socketServerPort, 1);
+  BU.CLI(testConnectCount);
 
   // Socket SErver 로 접속한 CLient bindingPassiveClient 처리할 시간을 부여
   await Promise.delay(100);

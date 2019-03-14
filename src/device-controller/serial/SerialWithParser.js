@@ -20,7 +20,11 @@ class SerialWithParser extends AbstController {
 
     const foundInstance = _.find(instanceList, { id: this.port });
     if (_.isEmpty(foundInstance)) {
-      this.configInfo = { port: this.port, baud_rate: this.baud_rate, parser: this.parserInfo };
+      this.configInfo = {
+        port: this.port,
+        baud_rate: this.baud_rate,
+        parser: this.parserInfo,
+      };
       instanceList.push({ id: this.port, instance: this });
       this.setInit();
     } else {
@@ -88,6 +92,10 @@ class SerialWithParser extends AbstController {
    * @return {Promise} Promise 반환 객체
    */
   write(msg) {
+    if (_.isEmpty(this.client)) {
+      return Promise.reject(new Error('The client did not connect.'));
+    }
+
     return new Promise((resolve, reject) => {
       this.client.write(msg, err => {
         reject(err);
@@ -96,7 +104,7 @@ class SerialWithParser extends AbstController {
     });
   }
 
-  async connect() {
+  connect() {
     // BU.CLI('connect');
     /** 접속 중인 상태라면 접속 시도하지 않음 */
     if (!_.isEmpty(this.client)) {
@@ -104,9 +112,8 @@ class SerialWithParser extends AbstController {
     }
     const client = new Serialport(this.port, {
       baudRate: this.baud_rate,
+      autoOpen: false,
     });
-
-    this.settingParser(client);
 
     client.on('close', err => {
       this.client = {};
@@ -117,9 +124,17 @@ class SerialWithParser extends AbstController {
       this.notifyError(error);
     });
 
-    await eventToPromise.multi(client, ['open'], ['error', 'close']);
-    this.client = client;
-    return this.client;
+    return new Promise((resolve, reject) => {
+      client.open(err => {
+        if (err) {
+          reject(err);
+        } else {
+          this.settingParser(client);
+          this.client = client;
+          resolve();
+        }
+      });
+    });
   }
 
   /**
@@ -128,10 +143,9 @@ class SerialWithParser extends AbstController {
   async disconnect() {
     if (!_.isEmpty(this.client)) {
       this.client.close();
-      await eventToPromise.multi(this.client, ['close'], ['error', 'disconnectError']);
-      return this.client;
+    } else {
+      this.notifyDisconnect();
     }
-    return this.client;
   }
 }
 module.exports = SerialWithParser;

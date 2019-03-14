@@ -2,6 +2,8 @@ const _ = require('lodash');
 const Serialport = require('serialport');
 const eventToPromise = require('event-to-promise');
 
+const { BU } = require('base-util-jh');
+
 const xbeeApi = require('xbee-api');
 const AbstController = require('../AbstController');
 
@@ -22,8 +24,27 @@ class SerialWithXbee extends AbstController {
 
     const foundInstance = _.find(instanceList, { id: this.port });
     if (_.isEmpty(foundInstance)) {
-      this.xbeeAPI = new xbeeApi.XBeeAPI(this.xbeeConfig);
-      this.configInfo = { port: this.port, baud_rate: this.baud_rate, xbeeConfig: this.xbeeConfig };
+      this.xbeeAPI = new xbeeApi.XBeeAPI({
+        // default options:
+        api_mode: 1, // [1, 2]; 1 is default, 2 is with escaping (set ATAP=2)
+        module: 'ZigBee', // ["802.15.4", "ZNet", "ZigBee", "Any"]; This does nothing, yet!
+        raw_frames: false, // [true, false]; If set to true, only raw byte frames are
+        //   emitted (after validation) but not parsed to objects.
+        convert_adc: true, // [true, false]; If false, do not convert adc value to millivolt.
+        vref_adc: 1200, // (int); Set the value to convert adc value to millivolt.
+        parser_buffer_size: 512, // (int); size of the package parser buffer. 512 co
+        //   when receiving A LOT of packets, you might want to decrease
+        //   this to a smaller value (but typically not less than 128)
+        builder_buffer_size: 512, // (int); size of the package builder buffer.
+        //   when sending A LOT of packets, you might want to decrease
+        //   this to a smaller value (but typically not less than 128)
+      });
+      // this.xbeeAPI = new xbeeApi.XBeeAPI(this.xbeeConfig);
+      this.configInfo = {
+        port: this.port,
+        baud_rate: this.baud_rate,
+        xbeeConfig: this.xbeeConfig,
+      };
       instanceList.push({ id: this.port, instance: this });
       this.setInit();
     } else {
@@ -41,6 +62,7 @@ class SerialWithXbee extends AbstController {
 
     // All frames parsed by the XBee will be emitted here
     this.xbeeAPI.parser.on('data', frame => {
+      // BU.CLI(frame);
       /** @type {xbeeApi_0x88|xbeeApi_0x8B|xbeeApi_0x90} */
       const frameObj = frame;
       if (frameObj.type === 0x8b) {
@@ -48,14 +70,15 @@ class SerialWithXbee extends AbstController {
           // This frame is definitely the response!
           this.notifyError(
             new Error(
-              `The frameId is not correct. Request Id: ${this.currentFrameId}, Response Id: ${
-                frameObj.id
-              }`,
+              `The frameId is not correct. Request Id: ${
+                this.currentFrameId
+              }, Response Id: ${frameObj.id}`,
             ),
           );
         }
         // console.log('Node identifier:', String.fromCharCode(frameObj.commandData));
       } else {
+        // BU.CLI(frameObj.remote64, frameObj.data.toString());
         return this.notifyData(frameObj);
         // This is some other frame
       }
@@ -67,33 +90,34 @@ class SerialWithXbee extends AbstController {
    * @param {xbeeApi_0x10} frameObj 전송 데이터
    * @return {Promise} Promise 반환 객체
    */
-  async write(frameObj) {
+  write(frameObj) {
+    // BU.CLI('write', frameObj);
     if (_.isEmpty(this.client)) {
       throw new Error(`The device is not connected. ${this.port}`);
     }
 
-    this.currentFrameId = frameObj.id;
+    return new Promise((resolve, reject) => {
+      this.currentFrameId = frameObj.id;
 
-    this.xbeeAPI.builder.write(frameObj);
-
-    /** @type {xbeeApi_0x8B} */
-    const frameData = await eventToPromise(this.client, 'data');
-    if (frameData.deliveryStatus === 0) {
-      throw new Error('Data transfer failed');
-    }
-    return true;
+      const isWrite = this.xbeeAPI.builder.write(frameObj);
+      if (isWrite) {
+        resolve();
+      } else {
+        reject(isWrite);
+      }
+    });
   }
 
-  async connect() {
+  connect() {
+    // BU.CLIS('connect', this.port, this.baud_rate);
     /** 접속 중인 상태라면 접속 시도하지 않음 */
     if (!_.isEmpty(this.client)) {
       throw new Error(`Already connected. ${this.port}`);
     }
     const client = new Serialport(this.port, {
       baudRate: this.baud_rate,
+      autoOpen: false,
     });
-
-    this.settingXbee(client);
 
     client.on('close', err => {
       this.client = {};
@@ -104,9 +128,17 @@ class SerialWithXbee extends AbstController {
       this.notifyError(error);
     });
 
-    await eventToPromise.multi(client, ['open'], ['error', 'close']);
-    this.client = client;
-    return this.client;
+    return new Promise((resolve, reject) => {
+      client.open(err => {
+        if (err) {
+          reject(err);
+        } else {
+          this.settingXbee(client);
+          this.client = client;
+          resolve();
+        }
+      });
+    });
   }
 
   /**
@@ -115,10 +147,34 @@ class SerialWithXbee extends AbstController {
   async disconnect() {
     if (!_.isEmpty(this.client)) {
       this.client.close();
-      await eventToPromise.multi(this.client, ['close'], ['error', 'disconnectError']);
-      return this.client;
+    } else {
+      this.notifyDisconnect();
     }
-    return this.client;
   }
 }
 module.exports = SerialWithXbee;
+
+// if __main process
+if (require !== undefined && require.main === module) {
+  const serialport = new SerialWithXbee({}, { port: 'COM2', baudRate: 9600 });
+  // setImmediate(() =>
+  setTimeout(() => {
+    // serialport.write({
+    //   destination64: '0013A20040F7B47E',
+    //   data: '@sts',
+    //   id: '01',
+    //   type: 0x10,
+    // });
+  }, 5000);
+  // );
+
+  // serialport.connect().then(() => {
+  //   console.log('18');
+  //   serialport.write({
+  //     destination64: '0013A20040F7B47E',
+  //     data: '@sts',
+  //     id: '01',
+  //     type: 0x10,
+  //   });
+  // });
+}

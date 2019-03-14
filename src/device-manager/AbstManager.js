@@ -1,10 +1,7 @@
 const _ = require('lodash');
 const { BU } = require('base-util-jh');
-const eventToPromise = require('event-to-promise');
 
 const EventEmitter = require('events');
-const AbstCommander = require('../device-commander/AbstCommander');
-const AbstMediator = require('../device-mediator/AbstMediator');
 
 class AbstManager extends EventEmitter {
   constructor() {
@@ -49,11 +46,13 @@ class AbstManager extends EventEmitter {
   async transferCommandToDevice() {}
 
   /**
-   * Manager에게 Msg를 보내어 명령 진행 의사 결정을 취함
-   * @param {string} key 요청 key
-   *
+   * @desc Log 파일 생성 처리 때문에 async/await 사용함.
+   * updateData를 통해 전달받은 데이터에 대한 Commander의 응답을 받을 메소드
+   * 응답받은 데이터에 문제가 있거나 다른 사유로 명령을 재 전송하고자 할 경우(3회까지 가능)
+   * @param {AbstCommander} commander
+   * @param {string} commanderResponse
    */
-  requestTakeAction(key) {}
+  async requestTakeAction(commander, commanderResponse) {}
 
   /**
    * 명령 추가
@@ -70,11 +69,14 @@ class AbstManager extends EventEmitter {
   deleteCommandSet(commandId) {}
 
   /**
-   * 찾고자 하는 정보 AND 연산
-   * @param {{commander: AbstCommander, commandId: string=}} searchInfo
+   * Commander와 연결된 Manager에서 Filtering 요건과 충족되는 모든 명령 저장소 가져옴.
+   * @param {Object} filterInfo Filtering 정보. 해당 내역이 없다면 Commander와 관련된 전체 명령 추출
+   * @param {AbstCommander} filterInfo.commander
+   * @param {string=} filterInfo.commandId 명령 ID.
+   * @param {number=} filterInfo.rank 명령 Rank
    * @return {commandStorage}
    */
-  findCommandStorage(searchInfo) {}
+  filterCommandStorage(filterInfo) {}
 
   /**
    * Device Controller에서 새로운 이벤트가 발생되었을 경우 알림
@@ -105,7 +107,7 @@ class AbstManager extends EventEmitter {
         errorInfo: new Error(eventName),
         spreader: this,
       };
-      this.iterator.deleteAllCommandSet(returnDcError);
+      this.iterator.deleteCommandSet(null, returnDcError);
     }
   }
 

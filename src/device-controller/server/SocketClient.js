@@ -58,9 +58,9 @@ class SocketClient extends AbstController {
    * @param {net.Socket} client
    */
   setPassiveClient(client) {
-    BU.CLI('setPassiveClient', this.configInfo);
+    // BU.CLI('setPassiveClient', this.configInfo);
 
-    BU.CLI(this.isDestroying);
+    // BU.CLI(this.isDestroying);
     if (this.isDestroying) {
       BU.CLI('기존 접속 종료 중...');
       return false;
@@ -70,10 +70,16 @@ class SocketClient extends AbstController {
       BU.CLI('기존 연결 제거');
       this.isDestroying = true;
       this.client.destroy();
-      setTimeout(() => {
+
+      setImmediate(() => {
         this.isDestroying = false;
         this.setPassiveClient(client);
-      }, 1);
+      });
+
+      // setTimeout(() => {
+      //   this.isDestroying = false;
+      //   this.setPassiveClient(client);
+      // }, 1);
     } else {
       client.on('data', bufferData => {
         this.notifyData(bufferData);
@@ -89,7 +95,7 @@ class SocketClient extends AbstController {
       });
 
       client.on('error', error => {
-        BU.CLI(error);
+        // BU.CLI(error);
         if (_.has(this.client, 'destroy')) {
           this.client.destroy();
           this.client = {};

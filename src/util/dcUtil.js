@@ -11,9 +11,10 @@ const AbstManager = require('../device-manager/AbstManager');
  * @param {string} eventType event, data, error
  * @param {string=} dataTitle log event Type
  * @param {*=} data
+ * @param {Date=} date
  */
-async function writeLogFile(logObj, path, eventType, dataTitle, data) {
-  // BU.CLIS(path, eventType, dataTitle, data, _.get(logObj, path));
+async function writeLogFile(logObj, path, eventType, dataTitle, data, date = new Date()) {
+  // BU.CLIS(path, eventType, dataTitle, data, _.get(logObj, path), BU.IsJsonString(data));
   let filePath = BU.convertDateToText(new Date(), '', 2);
 
   if (_.get(logObj, path)) {
@@ -33,7 +34,7 @@ async function writeLogFile(logObj, path, eventType, dataTitle, data) {
     ) {
       const commanderId = _.get(logObj, 'iterator.currentReceiver.id', '');
       filePath = `${id}/${filePath}`;
-      id = `M: ${id}\tC: ${commanderId}`;
+      id = _.eq(id, commanderId) ? commanderId : `M: ${id}\tC: ${commanderId}`;
     }
 
     if (data === undefined) {
@@ -43,6 +44,8 @@ async function writeLogFile(logObj, path, eventType, dataTitle, data) {
       );
     } else {
       let realData = '';
+
+      // BU.IsJsonString(data) && (data = JSON.parse(data));
 
       if (Buffer.isBuffer(data)) {
         // // FIXME: Hex 파일 형태로 저장할 경우 보완
@@ -56,7 +59,7 @@ async function writeLogFile(logObj, path, eventType, dataTitle, data) {
         // xbee 저장
         if (eventType === 'data' && dataTitle === 'onData' && BU.IsJsonString(realData)) {
           const parseData = JSON.parse(realData);
-          // BU.CLI(parseData);
+          BU.CLI(parseData);
           if (_.get(parseData, 'data.type') === 'Buffer') {
             parseData.data = Buffer.from(parseData.data).toString();
             realData = JSON.stringify(parseData);
@@ -80,6 +83,7 @@ async function writeLogFile(logObj, path, eventType, dataTitle, data) {
       const isWrite = await BU.appendFile(
         `./log/device-client/${eventType}/${filePath}.log`,
         `${id} : ${dataTitle} --> ${realData}`,
+        date,
       );
 
       return isWrite;
@@ -124,8 +128,6 @@ function initManager(manager, commander) {
   manager.deviceController.client = { alive: true };
   // 작업중인 상태 X
   manager.hasPerformCommand = false;
-  // 명령 저장소는 테스트전 청소 처리
-  manager.iterator.clearAllCommandSetStorage();
 }
 exports.initManager = initManager;
 
@@ -134,7 +136,6 @@ exports.initManager = initManager;
  */
 function getDefaultControlInfo() {
   return {
-    hasOneAndOne: false,
     hasReconnect: false,
     hasErrorHandling: false,
   };

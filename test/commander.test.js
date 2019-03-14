@@ -47,16 +47,16 @@ describe('Request Execution Command', function() {
   // 1. Builder를 이용하여 Commnader, Mediator, Manager 생성
   // 2. Mnager 객체 생성
   it.skip('Commander Constuction', done => {
-    const con_1 = _.cloneDeep(constructorInfo);
-    const con_2 = _.cloneDeep(constructorInfo);
+    const const1 = _.cloneDeep(constructorInfo);
+    const const2 = _.cloneDeep(constructorInfo);
 
-    con_1.target_id = '홍길동 1';
-    con_2.target_id = '홍길동 2';
+    const1.target_id = '홍길동 1';
+    const2.target_id = '홍길동 2';
 
-    const manager_A = new Manager(con_1);
-    initManager(manager_A);
-    const commander_A = new Commander(con_1);
-    commander_A.manager = manager_A;
+    const manager = new Manager(const1);
+    initManager(manager);
+    const commander = new Commander(const1);
+    commander.manager = manager;
 
     done();
   });
@@ -139,7 +139,7 @@ describe('Request Execution Command', function() {
 
   // 1. 자동명령 생성 수행 테스트(Rank:2, CmdList: 3, timeout:1000)
   // 2. 자동명령 생성 수행 테스트(Rank:2, CmdList: 1, timeout:1000)
-  // 3. 명령 수행 findCommandStorage() 검증 테스트
+  // 3. 명령 수행 filterCommandStorage() 검증 테스트
   it('Automation Execution', async () => {
     const construct = _.cloneDeep(constructorInfo);
     construct.target_id = '홍길동 2';
@@ -175,9 +175,9 @@ describe('Request Execution Command', function() {
     secondCommandSet.commandId = 'step_2';
     commander.executeCommand(secondCommandSet);
 
-    // 3. findCommandStorage() 검증
+    // 3. filterCommandStorage() 검증
     // (1) commander, commandId로 수행
-    const foundFirstCommandSet = commander.findCommandStorage({
+    const foundFirstCommandSet = commander.filterCommandStorage({
       commander,
       commandId: firstCommandSet.commandId,
     });
@@ -187,7 +187,7 @@ describe('Request Execution Command', function() {
     expect(foundFirstCommandSetStandby.list.length).to.eq(0);
     expect(_.isEmpty(foundFirstCommandSet.delayCommandSetList)).to.eq(true);
 
-    const foundSecondCommandSet = commander.findCommandStorage({
+    const foundSecondCommandSet = commander.filterCommandStorage({
       commander,
       commandId: secondCommandSet.commandId,
     });
@@ -198,7 +198,7 @@ describe('Request Execution Command', function() {
     expect(_.isEmpty(foundSecondCommandSet.delayCommandSetList)).to.eq(true);
 
     // (2) commander
-    const foundCommandSet = commander.findCommandStorage({ commander });
+    const foundCommandSet = commander.filterCommandStorage({ commander });
     expect(foundCommandSet.currentCommandSet).to.eq(firstCommandSet);
     const foundCommandSetStandby = _.head(foundCommandSet.standbyCommandSetList);
     expect(foundCommandSetStandby.rank).to.eq(2);

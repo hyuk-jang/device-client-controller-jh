@@ -6,9 +6,6 @@ const {
   definedCommandSetMessage,
 } = require('default-intelligence').dccFlagModel;
 
-const Manager = require('./Manager');
-const AbstCommander = require('../device-commander/AbstCommander');
-
 const Timeout = setTimeout(function() {}, 0).constructor;
 
 class Iterator {
@@ -41,7 +38,9 @@ class Iterator {
   /** @return {AbstCommander} */
   get currentReceiver() {
     const currItem = this.currentCommandSet;
-    return _.isEmpty(currItem) || _.isEmpty(currItem.commander) ? null : currItem.commander;
+    return _.isEmpty(currItem) || _.isEmpty(currItem.commander)
+      ? null
+      : currItem.commander;
   }
 
   /** @return {commandSet} */
@@ -66,7 +65,7 @@ class Iterator {
       }
       const nextIndex = currentCommandSet.currCmdIndex + 1;
       const cmd = currentCommandSet.cmdList[nextIndex];
-      return cmd === undefined || cmd === '' || _.isEmpty(cmd) ? null : cmd;
+      return _.isEmpty(cmd) ? null : cmd;
     } catch (error) {
       return null;
     }
@@ -87,9 +86,24 @@ class Iterator {
   }
 
   /**
+   * 현재 진행중인 명령 초기화
+   * @return {void}
+   */
+  clearCurrentCommandSet() {
+    // BU.CLI('clearCurrentCommandSet');
+    if (!_.isEmpty(this.currentCommandSet)) {
+      // 에러가 존재하고 받을 대상이 있다면 전송
+      this.currentCommandSet.commandExecutionTimer instanceof Timeout &&
+        clearTimeout(this.currentCommandSet.commandExecutionTimer);
+    }
+
+    this.aggregate.currentCommandSet = {};
+  }
+
+  /**
    * @param {commandSet} cmdInfo 추가할 명령
    */
-  addCmd(cmdInfo) {
+  addCommandSet(cmdInfo) {
     // BU.CLI(cmdInfo);
     const { rank } = cmdInfo;
     // BU.CLIN(cmdInfo);
@@ -97,7 +111,10 @@ class Iterator {
     if (!_.includes(_.map(this.aggregate.standbyCommandSetList, 'rank'), rank)) {
       this.aggregate.standbyCommandSetList.push({ rank, list: [cmdInfo] });
       // rank 순으로 정렬
-      this.aggregate.standbyCommandSetList = _.sortBy(this.aggregate.standbyCommandSetList, 'rank');
+      this.aggregate.standbyCommandSetList = _.sortBy(
+        this.aggregate.standbyCommandSetList,
+        'rank',
+      );
       // BU.CLIN(this.aggregate, 4);
     } else {
       // 저장된 rank 객체 배열에 삽입
@@ -109,27 +126,77 @@ class Iterator {
 
   /**
    * 수행 명령 리스트에 등록된 명령을 취소
-   * @param {string} commandId 명령을 취소 할 command Id
+   * @param {string=} commandId 명령을 취소 할 command Id
+   * @param {dcError=} dcError
    * @return {void}
    */
-  deleteCmd(commandId) {
-    // BU.CLI('deleteCmd 수행', commandId);
-    // 명령 대기 리스트 삭제
-    this.aggregate.standbyCommandSetList.forEach(rank => {
-      _.remove(rank.list, { commandId });
+  deleteCommandSet(commandId = null, dcError = null) {
+    const hasAllDelete = _.isNil(commandId);
+    // BU.CLI('deleteCommandSet 수행', commandId);
+    _.forEach(this.aggregate.standbyCommandSetList, item => {
+      _.remove(item.list, commandInfo => {
+        // BU.CLIN(commandInfo);
+        if (hasAllDelete || _.eq(commandId, commandInfo.commandId)) {
+          this.manager.sendMessageToCommander(
+            definedCommandSetMessage.COMMANDSET_DELETE,
+            _.get(dcError, 'errorInfo'),
+            {
+              commandSetInfo: commandInfo,
+              receiver: commandInfo.commander,
+            },
+          );
+          return true;
+        }
+        return false;
+      });
     });
 
-    // 명령 예약 리스트 삭제
-    this.aggregate.delayCommandSetList = _.reject(this.aggregate.delayCommandSetList, cmdInfo => {
-      if (cmdInfo.commandId === commandId) {
-        cmdInfo.commandQueueReturnTimer && cmdInfo.commandQueueReturnTimer.pause();
+    // 지연 명령 대기열에 존재하는 명령 삭제
+    _.remove(this.aggregate.delayCommandSetList, commandInfo => {
+      // 타이머가 존재한다면 제거
+      commandInfo.commandQueueReturnTimer && commandInfo.commandQueueReturnTimer.pause();
+      if (hasAllDelete || _.eq(commandId, commandInfo.commandId)) {
+        this.manager.sendMessageToCommander(
+          definedCommandSetMessage.COMMANDSET_DELETE,
+          _.get(dcError, 'errorInfo'),
+          {
+            commandSetInfo: commandInfo,
+            receiver: commandInfo.commander,
+          },
+        );
+        return true;
       }
+      return false;
     });
 
-    // 현재 명령을 삭제 요청 할 경우 시스템에 해당 명령 삭제 상태로 교체
-    if (this.currentCommandSet.commandId === commandId) {
-      this.aggregate.currentCommandSet.operationStatus =
-        definedOperationStatus.PROCESSING_DELETE_COMMAND;
+    // 대기 중 명령과 지연 명령의 삭제 처리가 끝난 후 현재 명령 삭제 상태 체크 및 진행
+    if (hasAllDelete || this.currentCommandSet.commandId === commandId) {
+      this.deleteCurrentCommandSet(dcError);
+    }
+  }
+
+  /**
+   * 현재 진행 중인 명령을 삭제 처리
+   * 현재 명령을 수행하는 도중 에러가 발생할 경우 실행. 현재 진행중인 명령 초기화하고 다음 명령 수행
+   * @param {dcError} dcError
+   * @return {void}
+   */
+  deleteCurrentCommandSet(dcError) {
+    // BU.CLI('clearCurrentCommandSet');
+    if (!_.isEmpty(this.currentCommandSet)) {
+      // 현재 명령이 삭제되었다고 Commander에게 Message를 보냄.
+      this.manager.sendMessageToCommander(
+        definedCommandSetMessage.COMMANDSET_DELETE,
+        _.get(dcError, 'errorInfo'),
+        { commandSetInfo: this.currentCommandSet, receiver: this.currentReceiver },
+      );
+
+      // 명령 삭제 중으로 상태 변경
+      this.manager.updateOperationStatus(
+        definedOperationStatus.PROCESSING_DELETE_COMMAND,
+      );
+      // 명령 상태 점검. hasErrorHandling 값이 true라면 대기, 아니라면 다음 명령 수행
+      this.manager.manageProcessingCommand();
     }
   }
 
@@ -175,11 +242,19 @@ class Iterator {
   }
 
   /**
-   * 찾고자 하는 정보 AND 연산
-   * @param {{commander: AbstCommander, commandId: string=}} searchInfo
+   * Commander와 연결된 Manager에서 Filtering 요건과 충족되는 모든 명령 저장소 가져옴.
+   * @param {Object} filterInfo Filtering 정보. 해당 내역이 없다면 Commander와 관련된 전체 명령 추출
+   * @param {AbstCommander} filterInfo.commander
+   * @param {string=} filterInfo.commandId 명령 ID.
+   * @param {number=} filterInfo.rank 명령 Rank
    * @return {commandStorage}
    */
-  findCommandStorage(searchInfo) {
+  filterCommandStorage(filterInfo) {
+    // 적절치 못한 인자 값이 있다면 제거
+    _.forEach(filterInfo, (v, k) => {
+      _.isNil(v) && _.unset(filterInfo, k);
+    });
+
     /** @type {commandStorage} */
     const returnValue = {
       currentCommandSet: {},
@@ -187,80 +262,68 @@ class Iterator {
       standbyCommandSetList: [],
     };
 
-    // CurrentSet 확인
-    const hasEqualCurrentSet = _.isEqual(this.currentCommandSet.commander, searchInfo.commander);
-    if (hasEqualCurrentSet) {
-      const hasTrue = _.isString(searchInfo.commandId)
-        ? _.eq(this.currentCommandSet.commandId, searchInfo.commandId)
-        : true;
-      if (hasTrue) {
-        returnValue.currentCommandSet = this.currentCommandSet;
-      }
+    // filter 정보와 현재 수행 명령 객체 정보가 같다면
+    if (
+      _(filterInfo)
+        .map((v, k) => _.isEqual(v, _.get(this.currentCommandSet, k)))
+        .every()
+    ) {
+      returnValue.currentCommandSet = this.currentCommandSet;
     }
-    // 대기 집합 확인
-    this.aggregate.standbyCommandSetList.forEach(commandStorageInfo => {
-      const addObj = { rank: commandStorageInfo.rank, list: [] };
 
-      addObj.list = _.filter(commandStorageInfo.list, commandSet => {
-        const hasEqualStandbySet = _.isEqual(commandSet.commander, searchInfo.commander);
-        if (hasEqualStandbySet) {
-          const hasTrue = _.isString(searchInfo.commandId)
-            ? _.eq(commandSet.commandId, searchInfo.commandId)
-            : true;
-          return hasTrue;
-        }
-        return false;
-      });
-      returnValue.standbyCommandSetList.push(addObj);
-    });
+    // 대기 집합 확인
+    returnValue.standbyCommandSetList = this.aggregate.standbyCommandSetList.map(
+      commandStorageInfo => {
+        const standbyCommandSet = _.clone(commandStorageInfo);
+
+        standbyCommandSet.list = _.filter(standbyCommandSet.list, commandSet =>
+          _(filterInfo)
+            .map((v, k) => _.isEqual(v, _.get(commandSet, k)))
+            .every(),
+        );
+
+        return standbyCommandSet;
+      },
+    );
+
     // 지연 집합 확인
-    returnValue.delayCommandSetList = _.filter(this.aggregate.delayCommandSetList, commandSet => {
-      const hasEqualDelaySet = _.isEqual(commandSet.commander, searchInfo.commander);
-      if (hasEqualDelaySet) {
-        const hasTrue = _.isString(searchInfo.commandId)
-          ? _.eq(commandSet.commandId, searchInfo.commandId)
-          : true;
-        return hasTrue;
-      }
-      return false;
-    });
+    returnValue.delayCommandSetList = _.filter(
+      this.aggregate.delayCommandSetList,
+      commandSet =>
+        _(filterInfo)
+          .map((v, k) => _.isEqual(v, _.get(commandSet, k)))
+          .every(),
+    );
+
     return returnValue;
   }
 
   /**
    * standbyCommandSetList에서 검색 조건에 맞는 commandSet 를 돌려줌
-   * @param {{rank: number, commandId: string}} searchInfo or 검색
-   * @return {Array.<commandSet>}
+   * @param {number|string=} value Number: Rank or String: commandId
+   * @return {commandSet[]}
    */
-  findStandbyCommandSetList(searchInfo) {
-    // BU.CLI('findStandbyCommandSetList', searchInfo);
+  convertStandbyStorageToArray(value) {
     let returnValue = [];
 
-    // searchInfo.rank가 숫자고 해당 Rank가 등록되어 있다면 검색 수행
-    if (_.isNumber(searchInfo.rank)) {
-      const fountIt = _.chain(this.aggregate.standbyCommandSetList)
-        .find({ rank: searchInfo.rank })
-        .get('list')
+    // Rank 검색 rank가 숫자고 해당 Rank가 등록되어 있다면 검색 수행
+    if (_.isNumber(value)) {
+      returnValue = _.chain(this.aggregate.standbyCommandSetList)
+        .find({ rank: value })
+        .get('list', [])
         .value();
-
-      returnValue = _.isArray(fountIt) ? _.concat(returnValue, fountIt) : returnValue;
     }
 
-    if (_.isString(searchInfo.commandId) && searchInfo.commandId) {
+    // commandId 검색
+    if (_.isString(value)) {
       _.forEach(this.aggregate.standbyCommandSetList, rankInfo => {
-        const foundIt = _.filter(rankInfo.list, { commandId: searchInfo.commandId });
-        returnValue = _.concat(returnValue, foundIt);
+        returnValue = _(rankInfo.list)
+          .filter({ commandId: value })
+          .concat(returnValue)
+          .value();
       });
     }
-    return _.union(returnValue);
-  }
-
-  /**
-   * Reserved List에서 commandId가 동일한 commandSet 을 돌려줌
-   * @param {string} commandId 명령 Id
-   */
-  findDelayCommandSetList(commandId) {
-    return _.find(this.aggregate.delayCommandSetList, { commandId });
+    return returnValue;
   }
 
   /**
@@ -270,17 +333,15 @@ class Iterator {
    * 다음 명령이 존재하지 않을 경우 getNextRank() 수행
    * getNextRank()가 존재할 경우 명령 객체 교체
    * 현재 진행 중인 명령 리스트 Index 1 증가하고 다음 진행해야할 명령 반환
-   * @return {void} 다음 진행해야할 명령이 존재한다면 true, 없다면 false
+   * @return {void}
    */
   changeNextCommand() {
     // BU.CLI('changeNextCommand');
     try {
-      const { currentCommandSet } = this;
+      const { currentCommandSet, nextCommandSet } = this;
       // 현재 진행중인 명령이 비어있다면 다음 순위 명령을 가져옴
       if (_.isEmpty(currentCommandSet) || this.nextCommand === null) {
         // BU.CLI('다음 명령이 존재하지 않죠?', this.nextCommand);
-        // 다음 명령이 존재할 경우
-        const { nextCommandSet } = this;
         // 다음 수행할 Rank가 없다면 false 반환
         if (_.isEmpty(nextCommandSet)) {
           throw new ReferenceError('The following command does not exist.');
@@ -291,15 +352,14 @@ class Iterator {
         // 명령 인덱스 증가
         currentCommandSet.currCmdIndex += 1;
         // 현재 진행중인 명령의 우선 순위를 체크
-        const currentSetRank = this.currentCommandSet.rank;
+        const { rank: currentSetRank } = currentCommandSet;
         // 현재 진행중인 명령이 긴급 명령(Rank 0)이 아니라면 긴급 명령이 존재하는지 체크
-        if (currentSetRank !== definedCommandSetRank.EMERGENCY && _.isNumber(currentSetRank)) {
-          const foundList = this.findStandbyCommandSetList({
-            rank: definedCommandSetRank.EMERGENCY,
-          });
-          // 만약 긴급 명령이 존재한다면
-          if (foundList.length) {
-            // 진행 중인 자료를 이동
+        if (
+          currentSetRank !== definedCommandSetRank.EMERGENCY &&
+          _.isNumber(currentSetRank)
+        ) {
+          // 긴급 명령이 존재하는지 체크
+          if (this.convertStandbyStorageToArray(definedCommandSetRank.EMERGENCY).length) {
             const currProcessStorage = _.find(this.aggregate.standbyCommandSetList, {
               rank: currentSetRank,
             });
@@ -333,166 +393,6 @@ class Iterator {
       // 명령 집합에서 첫번째 목록을 process로 가져오고 해당 배열에서 제거
       this.aggregate.currentCommandSet = standbyCommandSetList.list.shift();
     }
-  }
-
-  /**
-   * 현재 진행중인 명령 초기화
-   * @return {void}
-   */
-  clearCurrentCommandSet() {
-    // BU.CLI('clearCurrentCommandSet');
-    if (!_.isEmpty(this.currentCommandSet)) {
-      // 에러가 존재하고 받을 대상이 있다면 전송
-      this.currentCommandSet.commandExecutionTimer instanceof Timeout &&
-        clearTimeout(this.currentCommandSet.commandExecutionTimer);
-    }
-
-    this.aggregate.currentCommandSet = {};
-  }
-
-  /**
-   * FIXME: 명령 삭제 시 Client User와의 상호 작용 처리 필요
-   * 삭제하고자 하는 정보 AND 연산
-   * @param {{commander: AbstCommander, commandId: string=}} searchInfo
-   */
-  clearCommandSet(searchInfo) {
-    // CurrentSet 확인 후  삭제 요청
-    const hasEqualCurrentSet = _.isEqual(this.currentCommandSet.commander, searchInfo.commander);
-    if (hasEqualCurrentSet) {
-      const hasTrue = _.isString(searchInfo.commandId)
-        ? _.eq(this.currentCommandSet.commandId, searchInfo.commandId)
-        : true;
-      if (hasTrue) {
-        this.deleteCmd(searchInfo.commandId);
-      }
-    }
-    // 대기 집합 확인 후 삭제
-    this.aggregate.standbyCommandSetList.forEach(commandStorageInfo => {
-      _.remove(commandStorageInfo.list, commandSet => {
-        const hasEqualStandbySet = _.isEqual(commandSet.commander, searchInfo.commander);
-        if (hasEqualStandbySet) {
-          return _.isString(searchInfo.commandId)
-            ? _.eq(commandSet.commandId, searchInfo.commandId)
-            : true;
-        }
-        return false;
-      });
-    });
-    // 지연 집합 확인 후 삭제
-    _.remove(this.aggregate.delayCommandSetList, commandSet => {
-      const hasEqualDelaySet = _.isEqual(commandSet.commander, searchInfo.commander);
-      if (hasEqualDelaySet) {
-        return _.isString(searchInfo.commandId)
-          ? _.eq(commandSet.commandId, searchInfo.commandId)
-          : true;
-      }
-      return false;
-    });
-  }
-
-  /** 모든 명령을 초기화 */
-
-  /**
-   * 모든 명령을 초기화
-   * param 값에 따라 Commander에게 초기화 하는 이유를 보냄.
-   * @param {dcError} dcError
-   */
-  clearAllCommandSetStorage(dcError) {
-    // BU.CLI('clearAllCommandSetStorage');
-    // 현재 수행중인 명령 삭제
-    this.clearCurrentCommandSet(dcError);
-
-    // 명령 대기열에 존재하는 명령 삭제
-    _.forEach(this.aggregate.standbyCommandSetList, item => {
-      _.dropWhile(item.list, commandInfo => {
-        // BU.CLIN(commandInfo);
-        if (_.isError(_.get(dcError, 'errorInfo')) && commandInfo.commander) {
-          dcError.commandSet = commandInfo;
-          commandInfo.commander.onDcError(dcError);
-        }
-        return true;
-      });
-    });
-
-    // 지연 명령 대기열에 존재하는 명령 삭제
-    _.dropWhile(this.aggregate.delayCommandSetList, commandInfo => {
-      commandInfo.commandQueueReturnTimer && commandInfo.commandQueueReturnTimer.pause();
-      if (_.isError(_.get(dcError, 'errorInfo')) && commandInfo.commander) {
-        dcError.commandSet = commandInfo;
-        commandInfo.commander.onDcError(dcError);
-      }
-      return true;
-    });
-  }
-
-  /**
-   * @desc 장치와의 접속이 끊어졌을 경우
-   * 현재 명령을 수행하는 도중 에러가 발생할 경우 실행. 현재 진행중인 명령 초기화하고 다음 명령 수행
-   * @param {dcError} dcError
-   * @return {void}
-   */
-  deleteCurrentCommandSet(dcError) {
-    // BU.CLI('clearCurrentCommandSet');
-    if (!_.isEmpty(this.currentCommandSet)) {
-      // dcError에 현재 명령 구성 붙임
-
-      // 현재 명령이 삭제되었다고 알려줌
-      // NOTE: onDcMessage 발생. requestTakeAction 처리 하면 안됨
-      this.manager.sendMessageToCommander(
-        definedCommandSetMessage.COMMANDSET_DELETE,
-        dcError.errorInfo,
-        { commandSetInfo: this.currentCommandSet, receiver: this.currentReceiver },
-      );
-
-      // Timer 및 현재 명령 셋 해제
-      this.clearCurrentCommandSet();
-
-      // 에러 핸들링을 하지 않는다면 다음 명령 수행 요청
-      if (_.get(this.currentCommandSet.controlInfo, 'hasErrorHandling') === false) {
-        this.manager.nextCommand();
-      } else {
-        // 현재 명령 수행 중 여부를 false 바꿈 (addCommandSet 메소드에서의 명령 추가를 위함)
-        this.manager.hasPerformCommand = false;
-      }
-    }
-  }
-
-  /**
-   * @desc 장치와의 접속이 끊어졌을 경우
-   * 현재 요청 중인 모든 명령을 취소 처리하고 명령 종료 메시지 보냄
-   * @param {dcError} dcError
-   * @return {void}
-   */
-  deleteAllCommandSet(dcError) {
-    // 명령 대기열에 존재하는 명령 삭제
-    _.forEach(this.aggregate.standbyCommandSetList, item => {
-      _.remove(item.list, commandInfo => {
-        // BU.CLIN(commandInfo);
-        this.manager.sendMessageToCommander(
-          definedCommandSetMessage.COMMANDSET_DELETE,
-          dcError.errorInfo,
-          { commandSetInfo: commandInfo, receiver: commandInfo.commander },
-        );
-
-        return true;
-      });
-    });
-
-    // 지연 명령 대기열에 존재하는 명령 삭제
-    _.remove(this.aggregate.delayCommandSetList, commandInfo => {
-      commandInfo.commandQueueReturnTimer && commandInfo.commandQueueReturnTimer.pause();
-      this.manager.sendMessageToCommander(
-        definedCommandSetMessage.COMMANDSET_DELETE,
-        dcError.errorInfo,
-        { commandSetInfo: commandInfo, receiver: commandInfo.commander },
-      );
-
-      return true;
-    });
-
-    this.deleteCurrentCommandSet(dcError);
-    // BU.CLIN(_.map(this.aggregate.standbyCommandSetList, 'list'));
-    // BU.CLIN(this.aggregate.currentCommandSet, 'list');
   }
 
   /**

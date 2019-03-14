@@ -29,16 +29,30 @@ class AbstIterator {
   get nextCommandSet() {}
 
   /**
+   * 현재 진행중인 명령 초기화
+   * @param {dcError} dcError
+   * @return {void}
+   */
+  clearCurrentCommandSet(dcError) {}
+
+  /**
    * @param {commandSet} cmdInfo 추가할 명령
    */
-  addCmd(cmdInfo) {}
+  addCommandSet(cmdInfo) {}
 
   /**
    * 수행 명령 리스트에 등록된 명령을 취소
    * @param {string} commandId 명령을 취소 할 command Id
    * @return {void}
    */
-  deleteCmd(commandId) {}
+  deleteCommandSet(commandId) {}
+
+  /**
+   * 현재 진행중인 명령 초기화하고 다음 명령 수행
+   * @param {dcError} dcError
+   * @return {void}
+   */
+  deleteCurrentCommandSet(dcError) {}
 
   /**
    * Current Process Item의 delayExecutionTimeoutMs 유무를 확인,
@@ -48,17 +62,21 @@ class AbstIterator {
   moveToReservedCmdList() {}
 
   /**
-   * standbyCommandSetList에서 검색 조건에 맞는 commandSet 를 돌려줌
-   * @param {{rank: number, commandId: string}} searchInfo or 검색
-   * @return {Array.<commandSet>}
+   * Commander와 연결된 Manager에서 Filtering 요건과 충족되는 모든 명령 저장소 가져옴.
+   * @param {Object} filterInfo Filtering 정보. 해당 내역이 없다면 Commander와 관련된 전체 명령 추출
+   * @param {AbstCommander} filterInfo.commander
+   * @param {string=} filterInfo.commandId 명령 ID.
+   * @param {number=} filterInfo.rank 명령 Rank
+   * @return {commandStorage}
    */
-  findStandbyCommandSetList(searchInfo) {}
+  filterCommandStorage(filterInfo) {}
 
   /**
-   * Reserved List에서 commandId가 동일한 commandSet 을 돌려줌
-   * @param {string} commandId 명령 Id
+   * standbyCommandSetList에서 검색 조건에 맞는 commandSet 를 돌려줌
+   * @param {number|string=} value Number: Rank or String: commandId
+   * @return {commandSet[]}
    */
-  findDelayCommandSetList(commandId) {}
+  convertStandbyStorageToArray(convertConfig) {}
 
   /**
    * @description 다음 진행 할 명령을 Process에 할당.
@@ -78,33 +96,9 @@ class AbstIterator {
   changeNextCommandSet(standbyCommandSetList) {}
 
   /**
-   * 현재 진행중인 명령 초기화
-   * @param {dcError} dcError
-   * @return {void}
+   * 현재 진행중인 명령이 끝났는지 여부
+   * @return {boolean}
    */
-  clearCurrentCommandSet(dcError) {}
-
-  /**
-   * 모든 명령을 초기화
-   * param 값에 따라 Commander에게 초기화 하는 이유를 보냄.
-   * @param {dcError} dcError
-   */
-  clearAllCommandSetStorage(dcError) {}
-
-  /**
-   * @desc 장치와의 접속이 끊어졌을 경우
-   * 현재 명령을 수행하는 도중 에러가 발생할 경우 실행. 현재 진행중인 명령 초기화하고 다음 명령 수행
-   * @param {dcError} dcError
-   * @return {void}
-   */
-  deleteCurrentCommandSet(dcError) {}
-
-  /**
-   * @desc 장치와의 접속이 끊어졌을 경우
-   * 현재 요청 중인 모든 명령을 취소 처리하고 명령 종료 메시지 보냄
-   * @param {dcError} dcError
-   * @return {void}
-   */
-  deleteAllCommandSet(dcError) {}
+  isDone() {}
 }
 module.exports = AbstIterator;

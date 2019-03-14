@@ -1,5 +1,4 @@
 const _ = require('lodash');
-const eventToPromise = require('event-to-promise');
 // create an empty modbus client
 const ModRTU = require('modbus-serial');
 const { BU } = require('base-util-jh');
@@ -42,6 +41,10 @@ class ModbusTCP extends AbstController {
   async write(mRtuInfo) {
     // unitId 설정
     try {
+      if (_.isEmpty(this.client)) {
+        throw new Error('The client did not connect.');
+      }
+
       // BU.CLI(mRtuInfo);
       await this.client.setID(mRtuInfo.unitId);
       const values = _.values(mRtuInfo.params);
@@ -64,33 +67,66 @@ class ModbusTCP extends AbstController {
   }
 
   /** 장치 접속 시도 */
-  async connect() {
-    /** 접속 중인 상태라면 접속 시도하지 않음 */
-    if (!_.isEmpty(this.client)) {
-      throw new Error(`Already connected. ${this.port}`);
-    }
-
-    const client = new ModRTU();
-    // const hasErr = await client.connectTCP(this.host, {port: this.port}, hasError => {
-    client.connectTCP(this.host, { port: this.port }, hasError => {
-      if (hasError) {
-        this.client = {};
-        this.notifyDisconnect(hasError);
-        this.emit('close');
-        return;
+  connect() {
+    BU.log('Try Connect : ', this.port);
+    return new Promise((resolve, reject) => {
+      /** 접속 중인 상태라면 접속 시도하지 않음 */
+      if (!_.isEmpty(this.client)) {
+        reject(new Error(`Already connected. ${this.port}`));
       }
-      this.emit('connect');
-    });
 
-    await eventToPromise.multi(this, ['connect', 'connection', 'open'], ['close', 'error']);
-    /** @type {ModRTU} */
-    this.client = client;
-    return this.client;
+      const client = new ModRTU();
+
+      client
+        .connectTCP(this.host, { port: this.port })
+        .then(() => {
+          this.client = client;
+          resolve();
+        })
+        .catch(err => {
+          reject(err);
+        });
+    });
   }
+
+  // /** 장치 접속 시도 */
+  // async connect() {
+  //   /** 접속 중인 상태라면 접속 시도하지 않음 */
+  //   if (!_.isEmpty(this.client)) {
+  //     throw new Error(`Already connected. ${this.port}`);
+  //   }
+
+  //   const client = new ModRTU();
+  //   // const hasErr = await client.connectTCP(this.host, {port: this.port}, hasError => {
+  //   client.connectTCP(this.host, { port: this.port }, hasError => {
+  //     if (hasError) {
+  //       this.client = {};
+  //       this.notifyDisconnect(hasError);
+  //       this.emit('close');
+  //       return;
+  //     }
+  //     this.emit('connect');
+  //   });
+
+  //   await eventToPromise.multi(
+  //     this,
+  //     ['connect', 'connection', 'open'],
+  //     ['close', 'error'],
+  //   );
+  //   /** @type {ModRTU} */
+  //   this.client = client;
+  //   return this.client;
+  // }
 
   /**
    * Close Connect
    */
-  async disconnect() {}
+  async disconnect() {
+    if (!_.isEmpty(this.client)) {
+      this.client.close();
+    } else {
+      this.notifyDisconnect();
+    }
+  }
 }
 module.exports = ModbusTCP;

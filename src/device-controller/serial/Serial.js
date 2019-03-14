@@ -1,6 +1,6 @@
+const { BU } = require('base-util-jh');
 const _ = require('lodash');
 const Serialport = require('serialport');
-const eventToPromise = require('event-to-promise');
 
 const AbstController = require('../AbstController');
 
@@ -34,6 +34,10 @@ class Serial extends AbstController {
    * @return {Promise} Promise 반환 객체
    */
   write(msg) {
+    if (_.isEmpty(this.client)) {
+      return Promise.reject(new Error('The client did not connect.'));
+    }
+
     return new Promise((resolve, reject) => {
       this.client.write(msg, err => {
         reject(err);
@@ -43,7 +47,7 @@ class Serial extends AbstController {
   }
 
   /** 장치 접속 시도 */
-  async connect() {
+  connect() {
     /** 접속 중인 상태라면 접속 시도하지 않음 */
     if (!_.isEmpty(this.client)) {
       throw new Error(`Already connected. ${this.port}`);
@@ -51,6 +55,7 @@ class Serial extends AbstController {
 
     const client = new Serialport(this.port, {
       baudRate: this.baud_rate,
+      autoOpen: false,
     });
 
     client.on('data', bufferData => {
@@ -71,9 +76,16 @@ class Serial extends AbstController {
       this.notifyError(error);
     });
 
-    await eventToPromise.multi(client, ['open'], ['error', 'close']);
-    this.client = client;
-    return this.client;
+    return new Promise((resolve, reject) => {
+      client.open(err => {
+        if (err) {
+          reject(err);
+        } else {
+          this.client = client;
+          resolve();
+        }
+      });
+    });
   }
 
   /**
@@ -82,10 +94,102 @@ class Serial extends AbstController {
   async disconnect() {
     if (!_.isEmpty(this.client)) {
       this.client.close();
-      await eventToPromise.multi(this.client, ['close'], ['error', 'disconnectError']);
-      return this.client;
+    } else {
+      this.notifyDisconnect();
     }
-    return this.client;
   }
 }
 module.exports = Serial;
+
+if (require !== undefined && require.main === module) {
+  const serialport = new Serial({}, { port: 'COM2', baudRate: 9600 });
+  // setTimeout(() => {
+  //   serialport.write(
+  //     Buffer.from([
+  //       0x7e,
+  //       0x00,
+  //       0x12,
+  //       0x10,
+  //       0x01,
+  //       0x00,
+  //       0x13,
+  //       0xa2,
+  //       0x00,
+  //       0x40,
+  //       0xf7,
+  //       0xb4,
+  //       0x7e,
+  //       0xff,
+  //       0xfe,
+  //       0x00,
+  //       0x00,
+  //       0x40,
+  //       0x73,
+  //       0x74,
+  //       0x73,
+  //       0x39,
+  //     ]),
+  //   );
+  // }, 2000);
+
+  // serialport.connect();
+
+  // setTimeout(() => {
+  //   serialport.write(
+  //     Buffer.from([
+  //       0x7e,
+  //       0x00,
+  //       0x12,
+  //       0x10,
+  //       0x01,
+  //       0x00,
+  //       0x13,
+  //       0xa2,
+  //       0x00,
+  //       0x40,
+  //       0xf7,
+  //       0xb4,
+  //       0x7e,
+  //       0xff,
+  //       0xfe,
+  //       0x00,
+  //       0x00,
+  //       0x40,
+  //       0x73,
+  //       0x74,
+  //       0x73,
+  //       0x39,
+  //     ]),
+  //   );
+  // }, 1000);
+
+  serialport.connect().then(() => {
+    console.log('18');
+    serialport.write(
+      Buffer.from([
+        0x7e,
+        0x00,
+        0x12,
+        0x10,
+        0x01,
+        0x00,
+        0x13,
+        0xa2,
+        0x00,
+        0x40,
+        0xf7,
+        0xb4,
+        0x7e,
+        0xff,
+        0xfe,
+        0x00,
+        0x00,
+        0x40,
+        0x73,
+        0x74,
+        0x73,
+        0x39,
+      ]),
+    );
+  });
+}
