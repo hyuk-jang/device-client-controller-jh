@@ -64,22 +64,34 @@ class SerialWithXbee extends AbstController {
     this.xbeeAPI.parser.on('data', frame => {
       // BU.CLI(frame);
       /** @type {xbeeApi_0x88|xbeeApi_0x8B|xbeeApi_0x90} */
-      const frameObj = frame;
-      if (frameObj.type === 0x8b) {
-        if (frameObj.id !== this.currentFrameId) {
+      const frameInfo = frame;
+
+      // remote16 주소를 찾지 못하였다면 전송 실패라고 판단.
+      if (frameInfo.remote16 === 'fffd') {
+        return this.notifyTransferFail(frameInfo);
+      }
+
+      if (frameInfo.type === 0x8b) {
+        if (frameInfo.id !== this.currentFrameId) {
           // This frame is definitely the response!
-          this.notifyError(
-            new Error(
-              `The frameId is not correct. Request Id: ${
-                this.currentFrameId
-              }, Response Id: ${frameObj.id}`,
-            ),
+          BU.CLI(
+            `The frameId is not correct. Request Id: ${
+              this.currentFrameId
+            }, Response Id: ${frameInfo.id}`,
           );
+
+          // this.notifyError(
+          //   new Error(
+          //     `The frameId is not correct. Request Id: ${
+          //       this.currentFrameId
+          //     }, Response Id: ${frameInfo.id}`,
+          //   ),
+          // );
         }
         // console.log('Node identifier:', String.fromCharCode(frameObj.commandData));
       } else {
         // BU.CLI(frameObj.remote64, frameObj.data.toString());
-        return this.notifyData(frameObj);
+        return this.notifyData(frameInfo);
         // This is some other frame
       }
     });

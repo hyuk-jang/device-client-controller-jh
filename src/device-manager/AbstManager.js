@@ -124,14 +124,21 @@ class AbstManager extends EventEmitter {
       BU.log('Not set Responder --> Completed Data', data);
     } else {
       /** @type {dcData} */
-      const returnValue = {
+      const dcDataInfo = {
         data,
         commandSet: this.iterator.currentCommandSet,
         spreader: this,
       };
-      receiver.receiveDcData(returnValue);
+      receiver.onDcData(dcDataInfo);
     }
   }
+
+  /**
+   * 장치로 데이터 전송은 정상적으로 이루어졌으나 실제적으로 해당 장치로 닿지 못할경우 발생
+   * @desc Zigbee XbeeAPI에서 사용됨.
+   * @param {*} data
+   */
+  onTranferFail(data) {}
 
   // Setter 부분
   /**

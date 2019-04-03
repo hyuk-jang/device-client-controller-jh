@@ -183,6 +183,18 @@ class AbstController extends EventEmitter {
   }
 
   /**
+   * @desc zigbee Xbee에서 사용됨.
+   * 메시지 전송 실패 시 재 전송을 위해 알려줌
+   */
+  notifyTransferFail(msg) {
+    writeLogFile(this, 'mainConfig.logOption.hasReceiveData', 'data', 'onData', msg);
+
+    this.observers.forEach(observer => {
+      _.get(observer, 'onTranferFail') && observer.onTranferFail(msg);
+    });
+  }
+
+  /**
    * 접속한 client를 설정
    * @param {*} client
    */

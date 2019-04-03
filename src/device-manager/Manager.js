@@ -55,11 +55,9 @@ class Manager extends AbstManager {
         'data',
         'onData',
         _.get(this, 'currentData.data'),
-        _.get(this, 'currentData.date'),
       );
 
       // 데이터를 기록한 후 수신 데이터 초기화
-      _.set(this, 'currentData.data', undefined);
       _.set(this, 'currentData.data', undefined);
     }
 
@@ -212,6 +210,28 @@ class Manager extends AbstManager {
         spreader: this,
       };
       receiver.onDcData(returnValue);
+    }
+  }
+
+  /**
+   * 장치로 데이터 전송은 정상적으로 이루어졌으나 실제적으로 해당 장치로 닿지 못할경우 발생
+   * @desc Zigbee XbeeAPI에서 사용됨.
+   * @param {*} data
+   * FIXME: 상황에 따라 재시도를 결정하고자 할 경우 컨트롤 변수 추가 및 제어 로직 변경 필요
+   */
+  onTranferFail(data) {
+    // 현재 전송중인 Commander가 존재한다면 재전송
+    if (this.iterator.currentReceiver) {
+      // 전송 실패로 받은 데이터를 현재 데이터로 정의
+      this.currentData = {
+        data,
+        date: new Date(),
+      };
+      // 재전송 요청
+      this.requestTakeAction(
+        this.iterator.currentReceiver,
+        definedCommanderResponse.RETRY,
+      );
     }
   }
 
