@@ -121,7 +121,7 @@ class ManagerSetter extends Manager {
         id: this.id,
         instance: this,
       });
-      this.retryChance = 3; // 데이터 유효성 검사가 실패, 데이터 수신 에러가 있을 경우 3회까지 ProcessCmd 재전송
+      this.retryChance = 5; // 데이터 유효성 검사가 실패, 데이터 수신 에러가 있을 경우 3회까지 ProcessCmd 재전송
       /**
        * @type {commandStorage}
        */
@@ -186,7 +186,7 @@ class ManagerSetter extends Manager {
         id: this.id,
         instance: this,
       });
-      this.retryChance = 3; // 데이터 유효성 검사가 실패, 데이터 수신 에러가 있을 경우 3회까지 ProcessCmd 재전송
+      this.retryChance = 5; // 데이터 유효성 검사가 실패, 데이터 수신 에러가 있을 경우 3회까지 ProcessCmd 재전송
       /**
        * @type {commandStorage}
        */

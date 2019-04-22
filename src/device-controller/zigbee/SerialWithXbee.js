@@ -66,12 +66,12 @@ class SerialWithXbee extends AbstController {
       /** @type {xbeeApi_0x88|xbeeApi_0x8B|xbeeApi_0x90} */
       const frameInfo = frame;
 
-      // remote16 주소를 찾지 못하였다면 전송 실패라고 판단.
-      if (frameInfo.remote16 === 'fffd') {
-        return this.notifyTransferFail(frameInfo);
-      }
-
       if (frameInfo.type === 0x8b) {
+        // remote16 주소를 찾지 못하였다면 전송 실패라고 판단.
+        if (frameInfo.remote16 === 'fffd') {
+          // this.xbeeAPI.builder.write(this.currentFrame);
+          return this.notifyTransferFail(frameInfo);
+        }
         if (frameInfo.id !== this.currentFrameId) {
           // This frame is definitely the response!
           BU.CLI(
@@ -110,6 +110,7 @@ class SerialWithXbee extends AbstController {
 
     return new Promise((resolve, reject) => {
       this.currentFrameId = frameObj.id;
+      // this.currentFrame = frameObj;
 
       const isWrite = this.xbeeAPI.builder.write(frameObj);
       if (isWrite) {

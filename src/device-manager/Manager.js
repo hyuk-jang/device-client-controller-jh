@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const Promise = require('bluebird');
 
 const { BU } = require('base-util-jh');
 
@@ -75,13 +76,17 @@ class Manager extends AbstManager {
     // 현재 진행중인 명령 객체와 일치해야지만 가능
     if (_.isEqual(currentCommandSet.commander, commander)) {
       // BU.CLI('requestTakeAction', commanderResponse);
-      await writeLogFile(
-        this,
-        'config.logOption.hasCommanderResponse',
-        'data',
-        'commanderResponse',
-        commanderResponse,
-      );
+
+      // 재전송 요청일 경우에는 여기서 로그 남기지 않음
+      if (_.includes([DONE, ERROR, NEXT, WAIT], commanderResponse)) {
+        await writeLogFile(
+          this,
+          'config.logOption.hasCommanderResponse',
+          'data',
+          'commanderResponse',
+          commanderResponse,
+        );
+      }
 
       switch (commanderResponse) {
         case definedCommanderResponse.DONE:
@@ -363,19 +368,25 @@ class Manager extends AbstManager {
   }
 
   /** @private 명령 재전송 처리 */
-  retryRequestProcessingCommand() {
-    let id = _.get(this, 'id', '');
-    const commanderId = _.get(this, 'iterator.currentReceiver.id', '');
-    id = `M: ${id}\tC: ${commanderId}`;
-    BU.CLI('retryWrite', `${id}: this.retryChance`);
+  async retryRequestProcessingCommand() {
+    // let id = _.get(this, 'id', '');
+    // const commanderId = _.get(this, 'iterator.currentReceiver.id', '');
+    // id = `M: ${id}\tC: ${commanderId}`;
+    // BU.CLI('retryWrite', `${id}: this.retryChance`);
     // BU.CLI(this.iterator.currentCommand)
     this.retryChance -= 1;
-    if (this.retryChance > 0) {
+    if (this.retryChance >= 0) {
       // 0.01 초 지연 시간을 두지 않음
-      // return Promise.delay(10).then(() => {
+      await writeLogFile(
+        this,
+        'config.logOption.hasCommanderResponse',
+        'data',
+        'commanderResponse',
+        definedCommanderResponse.RETRY,
+      );
+      // await Promise.delay(100);
       this.requestProcessingCommand();
-      // });
-    } else if (this.retryChance === 0) {
+    } else if (this.retryChance < 0) {
       // 3번 재도전 실패시 다음 명령 수행
       this.updateOperationStatus(definedOperationStatus.E_RETRY_MAX);
       return this.manageProcessingCommand();
@@ -629,7 +640,7 @@ class Manager extends AbstManager {
       // BU.CLIN(currProcessCmdInfo);
       // BU.CLI(currCmd);
       // 현재 아무런 명령이 존재하지 않을 경우
-      this.retryChance = 3;
+      this.retryChance = 5;
       // BU.CLIN(currentCommandSet);
       if (_.isEmpty(currentCommandSet)) {
         // 명령 집합 이동
