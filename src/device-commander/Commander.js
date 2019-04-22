@@ -52,6 +52,9 @@ class Commander extends AbstCommander {
         instance: this,
       });
 
+      /** 명령 재시도 횟수 설정 */
+      this.setRetryChance = _.get(config, 'connect_info.retryChance', 0);
+
       // BU.CLI(this);
     } else {
       throw new Error(`I have a device with the same id. ${config.target_id}`);
@@ -317,7 +320,7 @@ class Commander extends AbstCommander {
       'config.logOption.hasDcError',
       'error',
       _.get(dcError.errorInfo, 'message'),
-      _.get(dcError.errorInfo, 'stack'),
+      // _.get(dcError.errorInfo, 'stack'),
     );
 
     return this.user && this.user.onDcError(dcError);

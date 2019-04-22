@@ -10,6 +10,8 @@ class AbstCommander {
     this.mediator = null;
     /** @type {AbstDeviceClient} */
     this.user = null;
+    /** 명령 재시도 횟수 설정 */
+    this.setRetryChance = 0;
   }
 
   /* Mediator에서 Set 함 */

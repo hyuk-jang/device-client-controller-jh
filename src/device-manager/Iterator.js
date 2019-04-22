@@ -106,7 +106,6 @@ class Iterator {
   addCommandSet(cmdInfo) {
     // BU.CLI(cmdInfo);
     const { rank } = cmdInfo;
-    // BU.CLIN(cmdInfo);
     // 명령 rank가 등록되어있지 않다면 신규로 등록
     if (!_.includes(_.map(this.aggregate.standbyCommandSetList, 'rank'), rank)) {
       this.aggregate.standbyCommandSetList.push({ rank, list: [cmdInfo] });

@@ -68,7 +68,7 @@ async function writeLogFile(logObj, path, eventType, dataTitle, data, date = new
           realData = data.toString('hex');
         }
       } else if (data instanceof Error) {
-        realData = data;
+        realData = data.message;
       } else if (Buffer.isBuffer(_.get(data, 'data'))) {
         // xbee
         realData = _.clone(data);
