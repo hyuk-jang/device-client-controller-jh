@@ -135,7 +135,7 @@ class Commander extends AbstCommander {
   generationAutoCommand(cmd) {
     /** @type {commandSet} */
     const commandSetInfo = {
-      integratedUUID: null,
+      wrapCmdUUID: null,
       rank: definedCommandSetRank.SECOND,
       commandId: null,
       commandType: null,
