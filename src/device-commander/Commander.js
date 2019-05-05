@@ -21,7 +21,7 @@ const {
   getDefaultLogOption,
 } = require('../util/dcUtil');
 
-const instanceList = [];
+// const instanceList = [];
 
 // 시스템 에러는 2개로 정해둠.
 const troubleList = [
@@ -35,31 +35,31 @@ class Commander extends AbstCommander {
   /** @param {deviceInfo} config */
   constructor(config) {
     super();
-    const foundInstance = _.find(instanceList, {
-      id: config.target_id,
-    });
-    if (_.isEmpty(foundInstance)) {
-      this.config = config;
-      this.id = config.target_id;
-      this.category = config.target_category || 'etc';
-      this.controlInfo = config.controlInfo || getDefaultControlInfo();
-      /** Commander를 명령하는 Client 객체 */
-      /** @type {AbstDeviceClient} */
-      this.user = config.getUser() || null;
-      this.logOption = config.logOption || getDefaultLogOption();
-      instanceList.push({
-        id: config.target_id,
-        instance: this,
-      });
+    // const foundInstance = _.find(instanceList, {
+    //   id: config.target_id,
+    // });
+    // if (_.isEmpty(foundInstance)) {
+    this.config = config;
+    this.id = config.target_id;
+    this.category = config.target_category || 'etc';
+    this.controlInfo = config.controlInfo || getDefaultControlInfo();
+    /** Commander를 명령하는 Client 객체 */
+    /** @type {AbstDeviceClient} */
+    this.user = config.getUser() || null;
+    this.logOption = config.logOption || getDefaultLogOption();
+    // instanceList.push({
+    //   id: config.target_id,
+    //   instance: this,
+    // });
 
-      /** 명령 재시도 횟수 설정 */
-      this.setRetryChance = _.get(config, 'connect_info.retryChance', 0);
+    /** 명령 재시도 횟수 설정 */
+    this.setRetryChance = _.get(config, 'connect_info.retryChance', 0);
 
-      // BU.CLI(this);
-    } else {
-      throw new Error(`I have a device with the same id. ${config.target_id}`);
-      // return foundInstance.instance;
-    }
+    // BU.CLI(this);
+    // } else {
+    //   // throw new Error(`I have a device with the same id. ${config.target_id}`);
+    //   return foundInstance.instance;
+    // }
 
     /** @type {AbstManager} */
     this.manager = {};
