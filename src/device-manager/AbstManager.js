@@ -63,10 +63,9 @@ class AbstManager extends EventEmitter {
 
   /**
    * 수행 명령 리스트에 등록된 명령을 취소
-   * @param {string} commandId 명령을 취소 할 command Id
-   * @return {commandStorage}
+   * @param {searchCommandSet} searchCommandSet 명령 취소 정보
    */
-  deleteCommandSet(commandId) {}
+  deleteCommandSet(searchCommandSet) {}
 
   /**
    * Commander와 연결된 Manager에서 Filtering 요건과 충족되는 모든 명령 저장소 가져옴.

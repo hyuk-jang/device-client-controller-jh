@@ -59,9 +59,9 @@ class AbstCommander {
 
   /**
    * 수행 명령 리스트에 등록된 명령을 취소
-   * @param {string} commandId 명령을 취소 할 command Id
+   * @param {searchCommandSet} searchCommandSet 명령 취소 정보
    */
-  deleteCommandSet(commandId) {}
+  deleteCommandSet(searchCommandSet) {}
 
   /**
    * @desc Log 파일 생성 처리 때문에 async/await 사용함.
