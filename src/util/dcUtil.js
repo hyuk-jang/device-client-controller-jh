@@ -57,7 +57,7 @@ async function writeLogFile(logObj, path, eventType, dataTitle, data, date = new
         // xbee 저장
         if (eventType === 'data' && dataTitle === 'onData' && BU.IsJsonString(realData)) {
           const parseData = JSON.parse(realData);
-          BU.CLI(parseData);
+          // BU.CLI(parseData);
           if (_.get(parseData, 'data.type') === 'Buffer') {
             parseData.data = Buffer.from(parseData.data).toString();
             realData = JSON.stringify(parseData);
