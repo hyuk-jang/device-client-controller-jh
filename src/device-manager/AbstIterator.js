@@ -42,10 +42,9 @@ class AbstIterator {
 
   /**
    * 수행 명령 리스트에 등록된 명령을 취소
-   * @param {string} commandId 명령을 취소 할 command Id
-   * @return {void}
+   * @param {searchCommandSet} searchCommandSet 명령 취소 정보
    */
-  deleteCommandSet(commandId) {}
+  deleteCommandSet(searchCommandSet) {}
 
   /**
    * 현재 진행중인 명령 초기화하고 다음 명령 수행

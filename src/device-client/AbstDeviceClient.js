@@ -225,10 +225,10 @@ class AbstDeviceClient extends EventEmitter {
 
   /**
    * 수행 명령 리스트에 등록된 명령을 취소
-   * @param {string} commandId 명령을 취소 할 command Id
+   * @param {searchCommandSet} searchCommandSet 명령 취소 정보
    */
-  deleteCommandSet(commandId) {
-    return this.commander.deleteCommandSet(commandId);
+  deleteCommandSet(searchCommandSet) {
+    return this.commander.deleteCommandSet(searchCommandSet);
   }
 
   /**

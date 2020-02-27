@@ -23,15 +23,13 @@ async function writeLogFile(logObj, path, eventType, dataTitle, data, date = new
       id = _.get(logObj, 'iterator.currentReceiver.id', '');
     }
 
+    const dataTypes = ['onData', 'transferData', 'commanderResponse'];
+
     if (eventType === 'event') {
       const observerList = _.get(logObj, 'observers', []);
       const idList = _.union(observerList.map(observer => _.get(observer, 'id', '')));
       id = JSON.stringify(idList);
-    } else if (
-      dataTitle === 'onData' ||
-      dataTitle === 'transferData' ||
-      dataTitle === 'commanderResponse'
-    ) {
+    } else if (_.includes(dataTypes, dataTitle)) {
       const commanderId = _.get(logObj, 'iterator.currentReceiver.id', '');
       filePath = `${id}/${filePath}`;
       id = _.eq(id, commanderId) ? commanderId : `M: ${id}\tC: ${commanderId}`;
@@ -59,7 +57,7 @@ async function writeLogFile(logObj, path, eventType, dataTitle, data, date = new
         // xbee 저장
         if (eventType === 'data' && dataTitle === 'onData' && BU.IsJsonString(realData)) {
           const parseData = JSON.parse(realData);
-          BU.CLI(parseData);
+          // BU.CLI(parseData);
           if (_.get(parseData, 'data.type') === 'Buffer') {
             parseData.data = Buffer.from(parseData.data).toString();
             realData = JSON.stringify(parseData);
@@ -68,7 +66,7 @@ async function writeLogFile(logObj, path, eventType, dataTitle, data, date = new
           realData = data.toString('hex');
         }
       } else if (data instanceof Error) {
-        realData = data;
+        realData = data.message;
       } else if (Buffer.isBuffer(_.get(data, 'data'))) {
         // xbee
         realData = _.clone(data);

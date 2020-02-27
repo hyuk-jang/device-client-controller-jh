@@ -106,7 +106,6 @@ class Iterator {
   addCommandSet(cmdInfo) {
     // BU.CLI(cmdInfo);
     const { rank } = cmdInfo;
-    // BU.CLIN(cmdInfo);
     // 명령 rank가 등록되어있지 않다면 신규로 등록
     if (!_.includes(_.map(this.aggregate.standbyCommandSetList, 'rank'), rank)) {
       this.aggregate.standbyCommandSetList.push({ rank, list: [cmdInfo] });
@@ -126,17 +125,33 @@ class Iterator {
 
   /**
    * 수행 명령 리스트에 등록된 명령을 취소
-   * @param {string=} commandId 명령을 취소 할 command Id
+   * @param {searchCommandSet=} searchCommandSet 명령 취소 정보
    * @param {dcError=} dcError
    * @return {void}
    */
-  deleteCommandSet(commandId = null, dcError = null) {
-    const hasAllDelete = _.isNil(commandId);
+  deleteCommandSet(searchCommandSet = null, dcError = null) {
+    const isAllDelete = _.isNil(searchCommandSet);
     // BU.CLI('deleteCommandSet 수행', commandId);
     _.forEach(this.aggregate.standbyCommandSetList, item => {
       _.remove(item.list, commandInfo => {
         // BU.CLIN(commandInfo);
-        if (hasAllDelete || _.eq(commandId, commandInfo.commandId)) {
+
+        let isDelete = false;
+
+        // 모두 삭제가 아니라면 삭제 인자인지 검증
+        if (!isAllDelete && _.isObject(searchCommandSet)) {
+          isDelete = true;
+          // 검색 조건 목록 순회
+          _.forEach(searchCommandSet, (value, key) => {
+            // 명령 객체와 일치하지 않는 정보가 있다면 delete false
+            if (!_.eq(commandInfo[key], value)) {
+              isDelete = false;
+            }
+          });
+        }
+
+        // if (isAllDelete || _.eq(commandId, commandInfo.commandId)) {
+        if (isAllDelete || isDelete) {
           this.manager.sendMessageToCommander(
             definedCommandSetMessage.COMMANDSET_DELETE,
             _.get(dcError, 'errorInfo'),
@@ -154,8 +169,24 @@ class Iterator {
     // 지연 명령 대기열에 존재하는 명령 삭제
     _.remove(this.aggregate.delayCommandSetList, commandInfo => {
       // 타이머가 존재한다면 제거
+
+      let isDelete = false;
+
+      // 모두 삭제가 아니라면 삭제 인자인지 검증
+      if (!isAllDelete && _.isObject(searchCommandSet)) {
+        isDelete = true;
+        // 검색 조건 목록 순회
+        _.forEach(searchCommandSet, (value, key) => {
+          // 명령 객체와 일치하지 않는 정보가 있다면 delete false
+          if (!_.eq(commandInfo[key], value)) {
+            isDelete = false;
+          }
+        });
+      }
+
       commandInfo.commandQueueReturnTimer && commandInfo.commandQueueReturnTimer.pause();
-      if (hasAllDelete || _.eq(commandId, commandInfo.commandId)) {
+      // if (isAllDelete || _.eq(commandId, commandInfo.commandId)) {
+      if (isAllDelete || isDelete) {
         this.manager.sendMessageToCommander(
           definedCommandSetMessage.COMMANDSET_DELETE,
           _.get(dcError, 'errorInfo'),
@@ -169,8 +200,23 @@ class Iterator {
       return false;
     });
 
+    let isDelete = false;
+
+    // 모두 삭제가 아니라면 삭제 인자인지 검증
+    if (!isAllDelete && _.isObject(searchCommandSet)) {
+      isDelete = true;
+      // 검색 조건 목록 순회
+      _.forEach(searchCommandSet, (value, key) => {
+        // 명령 객체와 일치하지 않는 정보가 있다면 delete false
+        if (!_.eq(this.currentCommandSet[key], value)) {
+          isDelete = false;
+        }
+      });
+    }
+
     // 대기 중 명령과 지연 명령의 삭제 처리가 끝난 후 현재 명령 삭제 상태 체크 및 진행
-    if (hasAllDelete || this.currentCommandSet.commandId === commandId) {
+    if (isAllDelete || isDelete) {
+      // if (isAllDelete || this.currentCommandSet.commandId === commandId) {
       this.deleteCurrentCommandSet(dcError);
     }
   }

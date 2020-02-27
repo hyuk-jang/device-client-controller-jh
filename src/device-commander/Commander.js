@@ -21,7 +21,7 @@ const {
   getDefaultLogOption,
 } = require('../util/dcUtil');
 
-const instanceList = [];
+// const instanceList = [];
 
 // 시스템 에러는 2개로 정해둠.
 const troubleList = [
@@ -35,28 +35,31 @@ class Commander extends AbstCommander {
   /** @param {deviceInfo} config */
   constructor(config) {
     super();
-    const foundInstance = _.find(instanceList, {
-      id: config.target_id,
-    });
-    if (_.isEmpty(foundInstance)) {
-      this.config = config;
-      this.id = config.target_id;
-      this.category = config.target_category || 'etc';
-      this.controlInfo = config.controlInfo || getDefaultControlInfo();
-      /** Commander를 명령하는 Client 객체 */
-      /** @type {AbstDeviceClient} */
-      this.user = config.getUser() || null;
-      this.logOption = config.logOption || getDefaultLogOption();
-      instanceList.push({
-        id: config.target_id,
-        instance: this,
-      });
+    // const foundInstance = _.find(instanceList, {
+    //   id: config.target_id,
+    // });
+    // if (_.isEmpty(foundInstance)) {
+    this.config = config;
+    this.id = config.target_id;
+    this.category = config.target_category || 'etc';
+    this.controlInfo = config.controlInfo || getDefaultControlInfo();
+    /** Commander를 명령하는 Client 객체 */
+    /** @type {AbstDeviceClient} */
+    this.user = config.getUser() || null;
+    this.logOption = config.logOption || getDefaultLogOption();
+    // instanceList.push({
+    //   id: config.target_id,
+    //   instance: this,
+    // });
 
-      // BU.CLI(this);
-    } else {
-      throw new Error(`I have a device with the same id. ${config.target_id}`);
-      // return foundInstance.instance;
-    }
+    /** 명령 재시도 횟수 설정 */
+    this.setRetryChance = _.get(config, 'connect_info.retryChance', 0);
+
+    // BU.CLI(this);
+    // } else {
+    //   // throw new Error(`I have a device with the same id. ${config.target_id}`);
+    //   return foundInstance.instance;
+    // }
 
     /** @type {AbstManager} */
     this.manager = {};
@@ -132,7 +135,7 @@ class Commander extends AbstCommander {
   generationAutoCommand(cmd) {
     /** @type {commandSet} */
     const commandSetInfo = {
-      integratedUUID: null,
+      wrapCmdUUID: null,
       rank: definedCommandSetRank.SECOND,
       commandId: null,
       commandType: null,
@@ -224,10 +227,10 @@ class Commander extends AbstCommander {
 
   /**
    * 수행 명령 리스트에 등록된 명령을 취소
-   * @param {string} commandId 명령을 취소 할 command Id
+   * @param {searchCommandSet} searchCommandSet 명령 취소 정보
    */
-  deleteCommandSet(commandId) {
-    return this.manager.deleteCommandSet(commandId);
+  deleteCommandSet(searchCommandSet) {
+    return this.manager.deleteCommandSet(searchCommandSet);
   }
 
   /**
@@ -317,7 +320,7 @@ class Commander extends AbstCommander {
       'config.logOption.hasDcError',
       'error',
       _.get(dcError.errorInfo, 'message'),
-      _.get(dcError.errorInfo, 'stack'),
+      // _.get(dcError.errorInfo, 'stack'),
     );
 
     return this.user && this.user.onDcError(dcError);

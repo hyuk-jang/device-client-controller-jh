@@ -47,6 +47,7 @@ class SocketWithParser extends AbstController {
           stream = client.pipe(split(this.parserInfo.option));
           stream.on('data', data => {
             data += this.parserInfo.option;
+            // BU.CLI(data);
             this.notifyData(data);
           });
           break;
