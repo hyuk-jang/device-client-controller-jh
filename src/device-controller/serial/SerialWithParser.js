@@ -47,7 +47,7 @@ class SerialWithParser extends AbstController {
             }),
           );
           parser.on('data', data => {
-            this.notifyData(Buffer.concat([data, this.parserInfo.option]));
+            this.notifyData(data);
           });
           break;
         case 'byteLengthParser':
