@@ -11,7 +11,7 @@ const {
 
 const AbstManager = require('./AbstManager');
 
-const Iterator = require('./AbstIterator');
+const CmdIterator = require('./AbstIterator');
 
 const { writeLogFile } = require('../util/dcUtil');
 
@@ -26,7 +26,7 @@ class Manager extends AbstManager {
     super();
 
     this.operationTimer;
-    /** @type {Iterator} */
+    /** @type {CmdIterator} */
     this.iterator;
   }
 
@@ -132,7 +132,7 @@ class Manager extends AbstManager {
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */
   addCommandSet(commandSet) {
-    // BU.CLIN(commandSet);
+    // BU.CLIN(commandSet, 1);
     // DeviceController 의 client가 빈 객체라면 연결이 해제된걸로 판단
     if (_.isEmpty(this.deviceController.client)) {
       throw new Error('The device is not connected.');
@@ -618,18 +618,24 @@ class Manager extends AbstManager {
   nextCommand() {
     // BU.CLI('nextCommand');
     try {
-      const { currentCommandSet, nextCommandSet } = this.iterator;
+      // const { currentCommandSet, nextCommandSet } = this.iterator;
+      // // 현재 아무런 명령이 존재하지 않을 경우
+      // if (_.isEmpty(currentCommandSet)) {
+      //   // 명령 집합 이동
+      //   this.iterator.changeNextCommandSet(nextCommandSet);
 
-      // 현재 아무런 명령이 존재하지 않을 경우
-      if (_.isEmpty(currentCommandSet)) {
-        // 명령 집합 이동
-        this.iterator.changeNextCommandSet(nextCommandSet);
-        this.sendMessageToCommander(definedCommandSetMessage.COMMANDSET_EXECUTION_START);
-        // 현재 수행할 명령 요청
-        return this.requestProcessingCommand();
-      }
+      //   // BU.CLIN(this.iterator.aggregate, 3);
+      //   BU.error(this.iterator.currentCommandSet.commandName);
+
+      //   // BU.CLIN(this.iterator.currentCommandSet, 2);
+      //   this.sendMessageToCommander(definedCommandSetMessage.COMMANDSET_EXECUTION_START);
+      //   // 현재 수행할 명령 요청
+      //   return this.requestProcessingCommand();
+      // }
       // 다음 명령이 존재할 경우
       this.iterator.changeNextCommand();
+      this.sendMessageToCommander(definedCommandSetMessage.COMMANDSET_EXECUTION_START);
+      // BU.log(this.iterator.currentCommandSet.commandName);
 
       return this.requestProcessingCommand();
     } catch (error) {
