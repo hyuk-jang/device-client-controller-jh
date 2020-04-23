@@ -634,6 +634,20 @@ class Manager extends AbstManager {
       // }
       // 다음 명령이 존재할 경우
       this.iterator.changeNextCommand();
+      // BU.CLIN(
+      //   this.iterator.commandSetStorage.standbyCommandSetList.map(
+      //     info => info.list.length,
+      //   ),
+      // );
+      // BU.CLIN(
+      //   _.pick(this.iterator.currentCommandSet, [
+      //     'commandId',
+      //     'commandName',
+      //     'rank',
+      //     // 'cmdList'
+      //   ]),
+      //   1,
+      // );
       this.sendMessageToCommander(definedCommandSetMessage.COMMANDSET_EXECUTION_START);
       // BU.log(this.iterator.currentCommandSet.commandName);
 
