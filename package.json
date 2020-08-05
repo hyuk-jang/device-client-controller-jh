@@ -1,6 +1,6 @@
 {
   "name": "device-client-controller-jh",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "",
   "main": "index.js",
   "directories": {
@@ -16,31 +16,31 @@
   "license": "ISC",
   "devDependencies": {
     "chai": "^4.2.0",
-    "docdash": "^1.0.3",
-    "dotenv": "^6.2.0",
-    "eslint": "^5.14.1",
-    "eslint-config-airbnb": "^17.1.1",
-    "eslint-config-prettier": "^4.0.0",
-    "eslint-import-resolver-node": "^0.3.2",
-    "eslint-plugin-import": "^2.16.0",
-    "eslint-plugin-jsx-a11y": "^6.2.1",
-    "eslint-plugin-prettier": "^3.0.1",
-    "eslint-plugin-react": "^7.12.4",
-    "jsdoc": "^3.6.3",
-    "mocha": "^6.0.0",
-    "prettier": "^1.16.4"
+    "docdash": "^1.2.0",
+    "dotenv": "^8.2.0",
+    "eslint": "^7.6.0",
+    "eslint-config-airbnb": "^18.2.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-import-resolver-node": "^0.3.4",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-jsx-a11y": "^6.3.1",
+    "eslint-plugin-prettier": "^3.1.4",
+    "eslint-plugin-react": "^7.20.5",
+    "jsdoc": "^3.6.5",
+    "mocha": "^8.1.1",
+    "prettier": "^2.0.5"
   },
   "dependencies": {
     "base-util-jh": "^1.2.6",
     "bluebird": "^3.7.2",
     "buffer-split": "^1.0.0",
-    "default-intelligence": "^0.1.7",
+    "default-intelligence": "^0.1.8",
     "event-to-promise": "^0.8.0",
-    "lodash": "^4.17.15",
-    "modbus-serial": "^7.7.3",
-    "serialport": "^8.0.6",
+    "lodash": "^4.17.19",
+    "modbus-serial": "^8.0.0",
+    "serialport": "^9.0.0",
     "split": "^1.0.1",
-    "uuid": "^3.3.3",
+    "uuid": "^8.3.0",
     "xbee-api": "^0.6.0"
   }
 }

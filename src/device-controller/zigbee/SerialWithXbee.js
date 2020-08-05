@@ -75,9 +75,7 @@ class SerialWithXbee extends AbstController {
         if (frameInfo.id !== this.currentFrameId) {
           // This frame is definitely the response!
           BU.CLI(
-            `The frameId is not correct. Request Id: ${
-              this.currentFrameId
-            }, Response Id: ${frameInfo.id}`,
+            `The frameId is not correct. Request Id: ${this.currentFrameId}, Response Id: ${frameInfo.id}`,
           );
 
           // this.notifyError(
@@ -91,7 +89,11 @@ class SerialWithXbee extends AbstController {
         // console.log('Node identifier:', String.fromCharCode(frameObj.commandData));
       } else {
         // BU.CLI(frameObj.remote64, frameObj.data.toString());
+        // FIXME: 바로 데이터를 보낸 후 다음 명령 요청 시 간헐적으로 지그비에서 이전 데이터를 보내는 경우가 있음.
+        // 1ms 지연 후 반환
+        // setTimeout(() => {
         return this.notifyData(frameInfo);
+        // }, 1);
         // This is some other frame
       }
     });
@@ -108,17 +110,34 @@ class SerialWithXbee extends AbstController {
       throw new Error(`The device is not connected. ${this.port}`);
     }
 
-    return new Promise((resolve, reject) => {
-      this.currentFrameId = frameObj.id;
-      // this.currentFrame = frameObj;
+    const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-      const isWrite = this.xbeeAPI.builder.write(frameObj);
-      if (isWrite) {
-        resolve();
-      } else {
-        reject(isWrite);
-      }
-    });
+    return wait(1).then(
+      () =>
+        new Promise((resolve, reject) => {
+          this.currentFrameId = frameObj.id;
+          // this.currentFrame = frameObj;
+
+          const isWrite = this.xbeeAPI.builder.write(frameObj);
+          if (isWrite) {
+            resolve();
+          } else {
+            reject(isWrite);
+          }
+        }),
+    );
+
+    // return new Promise((resolve, reject) => {
+    //   this.currentFrameId = frameObj.id;
+    //   // this.currentFrame = frameObj;
+
+    //   const isWrite = this.xbeeAPI.builder.write(frameObj);
+    //   if (isWrite) {
+    //     resolve();
+    //   } else {
+    //     reject(isWrite);
+    //   }
+    // });
   }
 
   connect() {
