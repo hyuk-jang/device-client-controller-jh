@@ -1,32 +1,42 @@
 class AbstIterator {
-  constructor() {}
-
   /**
    * 현재 진행 중인 명령 객체에 진행 할 명령이 존재하는 지
    * @return {commandInfo} 다음 명령 존재시 : true, 없을 시: false
    */
-  get currentCommand() {}
+  get currentCommand() {
+    return undefined;
+  }
 
   /** @return {AbstCommander} */
-  get currentReceiver() {}
+  get currentReceiver() {
+    return undefined;
+  }
 
   /** @return {commandSet} */
-  get currentCommandSet() {}
+  get currentCommandSet() {
+    return undefined;
+  }
 
   /** @return {commandStorage} */
-  get commandSetStorage() {}
+  get commandSetStorage() {
+    return undefined;
+  }
 
   /**
    * 현재 진행 중인 명령 객체를 기준으로 다음 수행 명령이 존재하는지 체크
    * @return {boolean} 다음 명령 존재시 : true, 없을 시: false
    */
-  get nextCommand() {}
+  get nextCommand() {
+    return undefined;
+  }
 
   /**
    * 다음 명령 수행 집합 존재 체크
    * @return {commandStorage}
    */
-  get nextCommandSet() {}
+  get nextCommandSet() {
+    return undefined;
+  }
 
   /**
    * 현재 진행중인 명령 초기화

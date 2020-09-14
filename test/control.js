@@ -5,7 +5,12 @@ const eventToPromise = require('event-to-promise');
 const EventEmitter = require('events');
 
 const { BU, CU } = require('base-util-jh');
-const { definedControlEvent } = require('default-intelligence').dccFlagModel;
+
+const {
+  di: {
+    dccFlagModel: { definedControlEvent },
+  },
+} = require('../src/module').dccFlagModel;
 
 const AbstDeviceClient = require('../src/device-client/AbstDeviceClient');
 const AbstMediator = require('../src/device-mediator/AbstMediator');
@@ -114,9 +119,7 @@ async function init() {
   await eventToPromise(receiver, definedControlEvent.CONNECT);
   if (abstController.requestConnectCount !== 1) {
     throw new Error(
-      `Expected abstController.requestConnectCount === 1, But ${
-        abstController.requestConnectCount
-      }`,
+      `Expected abstController.requestConnectCount === 1, But ${abstController.requestConnectCount}`,
     );
   }
   // requestConnectCount: 1, connectCount: 1,  disconnectCount: 0
@@ -143,9 +146,7 @@ async function init() {
   BU.CLI('##################################');
   if (abstController.requestConnectCount !== 2) {
     throw new Error(
-      `Expected abstController.requestConnectCount === 2, But ${
-        abstController.requestConnectCount
-      }`,
+      `Expected abstController.requestConnectCount === 2, But ${abstController.requestConnectCount}`,
     );
   }
 
@@ -166,9 +167,7 @@ async function init() {
   // client가 존재할 경우 connect() 호출을 하지 않음
   if (abstController.requestConnectCount !== 2) {
     throw new Error(
-      `Expected abstController.requestConnectCount === 2, But ${
-        abstController.requestConnectCount
-      }`,
+      `Expected abstController.requestConnectCount === 2, But ${abstController.requestConnectCount}`,
     );
   }
 
@@ -207,9 +206,7 @@ async function init() {
   }
   if (abstController.requestConnectCount !== 3) {
     throw new Error(
-      `Expected abstController.requestConnectCount === 3, But ${
-        abstController.requestConnectCount
-      }`,
+      `Expected abstController.requestConnectCount === 3, But ${abstController.requestConnectCount}`,
     );
   }
   abstController.client = {
@@ -227,9 +224,7 @@ async function init() {
   }
   if (abstController.requestConnectCount !== 3) {
     throw new Error(
-      `Expected abstController.requestConnectCount === 3, But ${
-        abstController.requestConnectCount
-      }`,
+      `Expected abstController.requestConnectCount === 3, But ${abstController.requestConnectCount}`,
     );
   }
 

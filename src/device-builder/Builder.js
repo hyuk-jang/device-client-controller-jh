@@ -21,17 +21,13 @@ class Builder extends AbstBuilder {
    * @return {{deviceCommander: AbstCommander, deviceManager: AbstManager}}
    */
   setDeviceClient(config) {
-    try {
-      const deviceManager = this.setDeviceManager(config);
-      const deviceCommander = this.setDeviceCommnader(config);
-      deviceCommander.manager = deviceManager;
+    const deviceManager = this.setDeviceManager(config);
+    const deviceCommander = this.setDeviceCommnader(config);
+    deviceCommander.manager = deviceManager;
 
-      this.mediator.setColleague(deviceCommander, deviceManager);
+    this.mediator.setColleague(deviceCommander, deviceManager);
 
-      return { deviceCommander, deviceManager };
-    } catch (error) {
-      throw error;
-    }
+    return { deviceCommander, deviceManager };
   }
 
   /**
@@ -41,17 +37,13 @@ class Builder extends AbstBuilder {
    * @return {{deviceCommander: AbstCommander, deviceManager: AbstManager}}
    */
   setPassiveClient(config, siteUUID) {
-    try {
-      const deviceManager = this.setPassiveManager(config, siteUUID);
-      const deviceCommander = this.setDeviceCommnader(config);
-      deviceCommander.manager = deviceManager;
+    const deviceManager = this.setPassiveManager(config, siteUUID);
+    const deviceCommander = this.setDeviceCommnader(config);
+    deviceCommander.manager = deviceManager;
 
-      this.mediator.setColleague(deviceCommander, deviceManager);
+    this.mediator.setColleague(deviceCommander, deviceManager);
 
-      return { deviceCommander, deviceManager };
-    } catch (error) {
-      throw error;
-    }
+    return { deviceCommander, deviceManager };
   }
 
   // /**

@@ -1,13 +1,6 @@
 const _ = require('lodash');
-const Promise = require('bluebird');
 
 const { BU } = require('base-util-jh');
-
-const {
-  definedCommanderResponse,
-  definedCommandSetMessage,
-  definedOperationStatus,
-} = require('default-intelligence').dccFlagModel;
 
 const AbstManager = require('./AbstManager');
 
@@ -18,7 +11,17 @@ const { writeLogFile } = require('../util/dcUtil');
 const Socket = require('../device-controller/socket/Socket');
 const SocketWithParser = require('../device-controller/socket/SocketWithParser');
 
-const Timeout = setTimeout(function() {}, 0).constructor;
+const {
+  di: {
+    dccFlagModel: {
+      definedCommanderResponse,
+      definedCommandSetMessage,
+      definedOperationStatus,
+    },
+  },
+} = require('../module');
+
+const Timeout = setTimeout(function () {}, 0).constructor;
 
 /** @class DeviceManager */
 class Manager extends AbstManager {
@@ -84,7 +87,7 @@ class Manager extends AbstManager {
           this,
           'config.logOption.hasCommanderResponse',
           'data',
-          'commanderResponse',
+          'O',
           commanderResponse,
         );
       }
@@ -259,7 +262,7 @@ class Manager extends AbstManager {
       this,
       'config.logOption.hasTransferCommand',
       'data',
-      'transferData',
+      'W',
       currentCommand.data,
     );
 
@@ -279,6 +282,7 @@ class Manager extends AbstManager {
     // 전송 요청은 1초안에 이루어져야 함
     const transferTimer = setTimeout(() => {
       // 전송 요청에 성공하였다면 아래의 행동을 취하지 않음. setTimeout과 write 메소드간의 시간 차 때문에 생기는 현상 해결을 위한 조치
+      BU.CLI('여기냐', currentMsg);
       if (isWriteFailed === 0) return false;
       isWriteFailed = 1;
 
@@ -289,7 +293,9 @@ class Manager extends AbstManager {
     await this.deviceController.write(currentMsg);
 
     // 이미 에러처리를 하였다면 실행하지 않음
-    if (isWriteFailed === 1) return false;
+    if (isWriteFailed === 1) {
+      return false;
+    }
 
     isWriteFailed = 0;
     // 전송 요청 해제
@@ -377,7 +383,7 @@ class Manager extends AbstManager {
         this,
         'config.logOption.hasCommanderResponse',
         'data',
-        'commanderResponse',
+        'O',
         definedCommanderResponse.RETRY,
       );
       // await Promise.delay(100);

@@ -23,7 +23,7 @@ async function writeLogFile(logObj, path, eventType, dataTitle, data, date = new
       id = _.get(logObj, 'iterator.currentReceiver.id', '');
     }
 
-    const dataTypes = ['onData', 'transferData', 'commanderResponse'];
+    const dataTypes = ['onData', 'W', 'O'];
 
     if (eventType === 'event') {
       const observerList = _.get(logObj, 'observers', []);
@@ -80,7 +80,7 @@ async function writeLogFile(logObj, path, eventType, dataTitle, data, date = new
       }
       const isWrite = await BU.appendFile(
         `./log/device-client/${eventType}/${filePath}.log`,
-        `${id} : ${dataTitle} --> ${realData}`,
+        `${id} : ${dataTitle} > ${realData}`,
         date,
       );
 

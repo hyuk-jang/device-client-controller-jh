@@ -26,7 +26,9 @@ class AbstCommander {
   /** Device Client에서 요청하는 부분 */
 
   /** 장치의 연결이 되어있는지 여부 @return {boolean} */
-  get hasConnectedDevice() {}
+  get hasConnectedDevice() {
+    return false;
+  }
 
   /**
    * 장치로 명령을 내림
@@ -68,8 +70,9 @@ class AbstCommander {
    * Manager에게 Msg를 보내어 명령 진행 의사 결정을 취함
    * @param {string} key 요청 key
    * @param {*=} receiveData 요청 받은 데이터
+   * @return {Promise}
    */
-  async requestTakeAction(key, receiveData) {}
+  requestTakeAction(key, receiveData) {}
 
   /* Device Controller에서 수신 --> 장치에서 일괄 이벤트 발생 */
   /**

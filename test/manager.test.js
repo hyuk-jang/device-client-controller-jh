@@ -8,11 +8,12 @@ const { BU, CU } = require('base-util-jh');
 global._ = _;
 global.BU = BU;
 global.CU = CU;
+
 const {
-  definedCommandSetRank,
-  definedCommanderResponse,
-  definedOperationStatus,
-} = require('default-intelligence').dccFlagModel;
+  di: {
+    dccFlagModel: { definedCommanderResponse, definedCommandSetRank },
+  },
+} = require('../src/module').dccFlagModel;
 
 const { EMERGENCY, FIRST, SECOND, THIRD } = definedCommandSetRank;
 const { DONE, ERROR, NEXT, RETRY, WAIT } = definedCommanderResponse;
@@ -49,7 +50,7 @@ function makeManager() {
   return manager;
 }
 
-describe.only('Device Manager Test', function() {
+describe.only('Device Manager Test', function () {
   this.timeout(20000);
 
   const commander = {
@@ -299,7 +300,9 @@ describe.only('Device Manager Test', function() {
     expect(currCommandSet.currCmdIndex).to.eq(0);
     const { delayCommandSetList } = manager.iterator.aggregate;
     expect(delayCommandSetList).to.length(1);
-    expect(_.head(delayCommandSetList).commandQueueReturnTimer.getStateRunning()).to.eq(true);
+    expect(_.head(delayCommandSetList).commandQueueReturnTimer.getStateRunning()).to.eq(
+      true,
+    );
 
     // CurrRank 완료 처리
     await manager.requestTakeAction(commander, DONE);
@@ -335,7 +338,6 @@ describe.only('Device Manager Test', function() {
   // 3. 장치 접속 해제 'Disconnect' 발생 시 테스트 [addCommand(), 명렁 처리]
   it.skip('Behavior Operation Status', async () => {
     const manager = makeManager();
-    
   });
 });
 

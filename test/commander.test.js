@@ -10,10 +10,14 @@ global.BU = BU;
 global.CU = CU;
 
 const {
-  definedCommanderResponse,
-  definedCommandSetMessage,
-  definedCommandSetRank,
-} = require('default-intelligence').dccFlagModel;
+  di: {
+    dccFlagModel: {
+      definedCommanderResponse,
+      definedCommandSetMessage,
+      definedCommandSetRank,
+    },
+  },
+} = require('../src/module').dccFlagModel;
 
 const AbstDeviceClient = require('../src/device-client/AbstDeviceClient');
 
@@ -42,7 +46,7 @@ const constructorInfo = {
   },
 };
 
-describe('Request Execution Command', function() {
+describe('Request Execution Command', function () {
   this.timeout(10000);
   // 1. Builder를 이용하여 Commnader, Mediator, Manager 생성
   // 2. Mnager 객체 생성
@@ -113,25 +117,39 @@ describe('Request Execution Command', function() {
     commander.executeCommand(firstCommandSet);
     commander.executeCommand(secondCommandSet);
     // 1[0]
-    expect(commander.manager.iterator.currentCommandSet.commandId).to.eq(firstCommandSet.commandId);
+    expect(commander.manager.iterator.currentCommandSet.commandId).to.eq(
+      firstCommandSet.commandId,
+    );
     await Promise.delay(commandExecutionTimeoutMs / 2);
     commander.executeCommand(thirdCommandSet);
     await Promise.delay(commandExecutionTimeoutMs / 2);
     // 3[0]
-    expect(commander.manager.iterator.currentCommandSet.commandId).to.eq(thirdCommandSet.commandId);
-    expect(_.isEqual(manager.iterator.currentCommand, _.nth(thirdCmd.cmdList, 0))).to.eq(true);
+    expect(commander.manager.iterator.currentCommandSet.commandId).to.eq(
+      thirdCommandSet.commandId,
+    );
+    expect(_.isEqual(manager.iterator.currentCommand, _.nth(thirdCmd.cmdList, 0))).to.eq(
+      true,
+    );
     // 3[1]
     await Promise.delay(commandExecutionTimeoutMs);
-    expect(_.isEqual(manager.iterator.currentCommand, _.nth(thirdCmd.cmdList, 1))).to.eq(true);
+    expect(_.isEqual(manager.iterator.currentCommand, _.nth(thirdCmd.cmdList, 1))).to.eq(
+      true,
+    );
     // 2[0]
     await Promise.delay(commandExecutionTimeoutMs);
-    expect(_.isEqual(manager.iterator.currentCommand, _.nth(secondCmd.cmdList, 0))).to.eq(true);
+    expect(_.isEqual(manager.iterator.currentCommand, _.nth(secondCmd.cmdList, 0))).to.eq(
+      true,
+    );
     // 1[1]
     await Promise.delay(commandExecutionTimeoutMs);
-    expect(_.isEqual(manager.iterator.currentCommand, _.nth(firstCmd.cmdList, 1))).to.eq(true);
+    expect(_.isEqual(manager.iterator.currentCommand, _.nth(firstCmd.cmdList, 1))).to.eq(
+      true,
+    );
     // 2[1]
     await Promise.delay(delayExecutionTimeoutMs);
-    expect(_.isEqual(manager.iterator.currentCommand, _.nth(secondCmd.cmdList, 1))).to.eq(true);
+    expect(_.isEqual(manager.iterator.currentCommand, _.nth(secondCmd.cmdList, 1))).to.eq(
+      true,
+    );
 
     await Promise.delay(commandExecutionTimeoutMs);
     expect(_.isEmpty(commander.manager.iterator.currentCommandSet)).to.eq(true);
@@ -182,7 +200,9 @@ describe('Request Execution Command', function() {
       commandId: firstCommandSet.commandId,
     });
     expect(foundFirstCommandSet.currentCommandSet).to.eq(firstCommandSet);
-    const foundFirstCommandSetStandby = _.head(foundFirstCommandSet.standbyCommandSetList);
+    const foundFirstCommandSetStandby = _.head(
+      foundFirstCommandSet.standbyCommandSetList,
+    );
     expect(foundFirstCommandSetStandby.rank).to.eq(2);
     expect(foundFirstCommandSetStandby.list.length).to.eq(0);
     expect(_.isEmpty(foundFirstCommandSet.delayCommandSetList)).to.eq(true);
@@ -192,7 +212,9 @@ describe('Request Execution Command', function() {
       commandId: secondCommandSet.commandId,
     });
     expect(_.isEmpty(foundSecondCommandSet.currentCommandSet)).to.eq(true);
-    const foundSecondCommandSetStandby = _.head(foundSecondCommandSet.standbyCommandSetList);
+    const foundSecondCommandSetStandby = _.head(
+      foundSecondCommandSet.standbyCommandSetList,
+    );
     expect(foundSecondCommandSetStandby.rank).to.eq(2);
     expect(_.head(foundSecondCommandSetStandby.list)).to.eq(secondCommandSet);
     expect(_.isEmpty(foundSecondCommandSet.delayCommandSetList)).to.eq(true);
@@ -210,7 +232,9 @@ describe('Request Execution Command', function() {
 
     await Promise.delay(1000);
     // 2[0]
-    expect(manager.iterator.currentCommandSet.commandId).to.eq(secondCommandSet.commandId);
+    expect(manager.iterator.currentCommandSet.commandId).to.eq(
+      secondCommandSet.commandId,
+    );
     expect(manager.iterator.currentCommand.data).to.eq(cmd);
 
     await Promise.delay(1000);
@@ -219,7 +243,7 @@ describe('Request Execution Command', function() {
   });
 });
 
-describe('Handling Receive Data', function() {
+describe('Handling Receive Data', function () {
   this.timeout(5000);
   // 0. Test Commander, Test Controller를 선언
   // 1. Controller는 timeout/10 딜레이를 가지고 데이터 응답
@@ -240,7 +264,9 @@ describe('Handling Receive Data', function() {
     // 데이터를 쓰면 commandExecutionTimeoutMs/10 으로 응답처리
     manager.deviceController = {
       write: cmd => {
-        Promise.delay(commandExecutionTimeoutMs / 10).then(() => manager.onData(`data -> ${cmd}`));
+        Promise.delay(commandExecutionTimeoutMs / 10).then(() =>
+          manager.onData(`data -> ${cmd}`),
+        );
       },
       client: { alive: true },
     };
@@ -280,7 +306,8 @@ describe('Handling Receive Data', function() {
         }
       },
       /** @param {dcData} dcData */
-      onDcData: dcData => manager.requestTakeAction(testCommander, definedCommanderResponse.DONE),
+      onDcData: dcData =>
+        manager.requestTakeAction(testCommander, definedCommanderResponse.DONE),
     };
 
     /** @type {commandSet} */

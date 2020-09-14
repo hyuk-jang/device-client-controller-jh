@@ -3,14 +3,16 @@ const Promise = require('bluebird');
 const _ = require('lodash');
 
 const { BU, CU } = require('base-util-jh');
-const {
-  CONNECT,
-  DATA,
-  DEVICE_ERROR,
-  DISCONNECT,
-} = require('default-intelligence').dccFlagModel.definedControlEvent;
 
 const { writeLogFile } = require('../util/dcUtil');
+
+const {
+  di: {
+    dccFlagModel: {
+      definedControlEvent: { CONNECT, DISCONNECT },
+    },
+  },
+} = require('../module');
 
 class AbstController extends EventEmitter {
   /**
@@ -92,7 +94,7 @@ class AbstController extends EventEmitter {
    * @param {*} msgInfo 각 장치에 맞는 명령 정보
    * @return {Promise} 전송 성공시 Resolve, 실패시 Reject
    */
-  async write(msgInfo) {}
+  write(msgInfo) {}
 
   attach(observer) {
     // BU.CLI('Observer attached');

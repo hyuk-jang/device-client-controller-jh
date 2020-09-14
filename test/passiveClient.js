@@ -6,7 +6,11 @@ const EventEmitter = require('events');
 
 const { BU, CU } = require('base-util-jh');
 
-const { definedControlEvent } = require('default-intelligence').dccFlagModel;
+const {
+  di: {
+    dccFlagModel: { definedControlEvent },
+  },
+} = require('../src/module').dccFlagModel;
 
 const AbstDeviceClient = require('../src/device-client/AbstDeviceClient');
 // const ManagerSetter = require('../src/device-manager/ManagerSetter');
@@ -186,7 +190,9 @@ async function init() {
   await Promise.delay(100);
 
   if (testConnectCount !== 2) {
-    throw new Error(`Two connections must be opened. expect: 2, result: ${testConnectCount}`);
+    throw new Error(
+      `Two connections must be opened. expect: 2, result: ${testConnectCount}`,
+    );
   }
 
   await Promise.delay(500);
@@ -214,7 +220,9 @@ async function init() {
   }
 
   if (testDisconnectCount !== 2) {
-    throw new Error(`Two disConnect must be closed. expect: 2, result: ${testConnectCount}`);
+    throw new Error(
+      `Two disConnect must be closed. expect: 2, result: ${testConnectCount}`,
+    );
   }
 
   BU.CLI('Step 5 is Clear');
@@ -224,7 +232,9 @@ async function init() {
   await Promise.delay(100);
 
   if (testConnectCount !== 4) {
-    throw new Error(`Two connections must be opened. expect: 3, result: ${testConnectCount}`);
+    throw new Error(
+      `Two connections must be opened. expect: 3, result: ${testConnectCount}`,
+    );
   }
   BU.CLI('Step 6 is Clear');
 }

@@ -51,7 +51,7 @@ class SocketClient extends AbstController {
     return Promise.reject(res);
   }
 
-  async connect() {}
+  connect() {}
 
   /**
    * Socket Server로 접속한 Socket Client를 세팅

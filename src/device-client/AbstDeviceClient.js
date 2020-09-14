@@ -4,19 +4,23 @@ const EventEmitter = require('events');
 
 const { BU } = require('base-util-jh');
 
-const {
-  MODBUS,
-  definedCommanderResponse,
-  definedCommandSetMessage,
-  definedCommandSetRank,
-  definedControlEvent,
-  definedOperationError,
-} = require('default-intelligence').dccFlagModel;
-
 const Builder = require('../device-builder/Builder');
 const AbstCommander = require('../device-commander/AbstCommander');
 const AbstManager = require('../device-manager/AbstManager');
 const ManagerSetter = require('../device-manager/ManagerSetter');
+
+const {
+  di: {
+    dccFlagModel: {
+      MODBUS,
+      definedCommanderResponse,
+      definedCommandSetMessage,
+      definedCommandSetRank,
+      definedControlEvent,
+      definedOperationError,
+    },
+  },
+} = require('../module');
 
 class AbstDeviceClient extends EventEmitter {
   constructor() {
@@ -62,16 +66,11 @@ class AbstDeviceClient extends EventEmitter {
    * @param {deviceInfo} config
    */
   setDeviceClient(config) {
-    try {
-      // BU.CLI(config);
-      const builder = new Builder();
-      config.getUser = () => this;
-      const deviceClientInfo = builder.setDeviceClient(config);
-      this.commander = deviceClientInfo.deviceCommander;
-      this.manager = deviceClientInfo.deviceManager;
-    } catch (error) {
-      throw error;
-    }
+    const builder = new Builder();
+    config.getUser = () => this;
+    const deviceClientInfo = builder.setDeviceClient(config);
+    this.commander = deviceClientInfo.deviceCommander;
+    this.manager = deviceClientInfo.deviceManager;
   }
 
   /**
@@ -81,16 +80,11 @@ class AbstDeviceClient extends EventEmitter {
    * @param {string} siteUUID
    */
   setPassiveClient(config, siteUUID) {
-    try {
-      // BU.CLI(config);
-      const builder = new Builder();
-      config.getUser = () => this;
-      const deviceClientInfo = builder.setPassiveClient(config, siteUUID);
-      this.commander = deviceClientInfo.deviceCommander;
-      this.manager = deviceClientInfo.deviceManager;
-    } catch (error) {
-      throw error;
-    }
+    const builder = new Builder();
+    config.getUser = () => this;
+    const deviceClientInfo = builder.setPassiveClient(config, siteUUID);
+    this.commander = deviceClientInfo.deviceCommander;
+    this.manager = deviceClientInfo.deviceManager;
   }
 
   /**
@@ -99,13 +93,9 @@ class AbstDeviceClient extends EventEmitter {
    * @param {*} client setPassiveManager에 접속한 클라이언트
    */
   bindingPassiveClient(siteUUID, client) {
-    try {
-      // BU.CLI('bindingPassiveClient', siteUUID);
-      const managerSetter = new ManagerSetter();
-      managerSetter.bindingPassiveClient(siteUUID, client);
-    } catch (error) {
-      throw error;
-    }
+    // BU.CLI('bindingPassiveClient', siteUUID);
+    const managerSetter = new ManagerSetter();
+    managerSetter.bindingPassiveClient(siteUUID, client);
   }
 
   // Default
@@ -190,11 +180,7 @@ class AbstDeviceClient extends EventEmitter {
    */
   executeCommand(commandSet) {
     // BU.CLIN(commandSet);
-    try {
-      return this.commander.executeCommand(commandSet);
-    } catch (error) {
-      throw error;
-    }
+    return this.commander.executeCommand(commandSet);
   }
 
   /**
@@ -203,11 +189,7 @@ class AbstDeviceClient extends EventEmitter {
    * @return {commandSet}
    */
   generationAutoCommand(cmd) {
-    try {
-      return this.commander.generationAutoCommand(cmd);
-    } catch (error) {
-      throw error;
-    }
+    return this.commander.generationAutoCommand(cmd);
   }
 
   /**
@@ -216,11 +198,7 @@ class AbstDeviceClient extends EventEmitter {
    * @return {commandSet}
    */
   generationManualCommand(commandSetInfo) {
-    try {
-      return this.commander.generationManualCommand(commandSetInfo);
-    } catch (error) {
-      throw error;
-    }
+    return this.commander.generationManualCommand(commandSetInfo);
   }
 
   /**
@@ -238,11 +216,7 @@ class AbstDeviceClient extends EventEmitter {
    * @param {*=} receiveData 요청 받은 데이터
    */
   async requestTakeAction(key, receiveData) {
-    try {
-      return await this.commander.requestTakeAction(key, receiveData);
-    } catch (error) {
-      throw error;
-    }
+    await this.commander.requestTakeAction(key, receiveData);
   }
 
   /**

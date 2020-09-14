@@ -1,12 +1,13 @@
 const _ = require('lodash');
 const { BU, CU } = require('base-util-jh');
-const {
-  definedCommandSetRank,
-  definedOperationStatus,
-  definedCommandSetMessage,
-} = require('default-intelligence').dccFlagModel;
 
-const Timeout = setTimeout(function() {}, 0).constructor;
+const {
+  di: {
+    dccFlagModel: { definedOperationStatus, definedCommandSetMessage },
+  },
+} = require('../module');
+
+const Timeout = setTimeout(function () {}, 0).constructor;
 
 class Iterator {
   /** @param {Manager} deviceManager */
@@ -382,55 +383,51 @@ class Iterator {
    */
   changeNextCommand() {
     // BU.CLI('changeNextCommand');
-    try {
-      const { currentCommandSet, nextCommandSet } = this;
-      // 현재 명령셋이 존재하지 않거나 현재 명령셋의 다음 명령이 존재하지 않다면 명령셋 교체
-      if (_.isEmpty(currentCommandSet) || this.nextCommand === null) {
-        // BU.CLIN(
-        //   _.pick(currentCommandSet, [
-        //     'commandId',
-        //     'commandName',
-        //     'rank',
-        //     // 'cmdList'
-        //   ]),
-        //   1,
-        // );
-        return this.changeNextCommandSet(nextCommandSet);
-      }
-
-      // 다음 명령이 존재할 경우 해당 명령의 Rank보다 우선 순위의 Rank가 있는지 체크하고
-      // 존재할 경우 명령 교체 로직 실행
-
-      // 현재 수행 중인 명령 랭크
-      const { rank: currentSetRank } = currentCommandSet;
-
-      // BU.log(currentSetRank);
-
-      // 명령 인덱스 증가 (다음 명령 실행을 위함)
-      currentCommandSet.currCmdIndex += 1;
-
-      // 현재 진행 중인 명령의 우선 순위보다 높은 명령이 존재하는지 체크
-      const highRankCommandSet = this.aggregate.standbyCommandSetList.find(row => {
-        return row.list.length && row.rank < currentSetRank;
-      });
-
-      // BU.CLIN(highRankCommandSet, 1);
-
-      // 높은 명령이 존재할 경우 기존 명령 standByCommandList의 첫번째 인자로 이동
-      if (highRankCommandSet !== undefined) {
-        _.find(this.aggregate.standbyCommandSetList, {
-          rank: currentSetRank,
-        }).list.unshift(currentCommandSet);
-
-        // BU.CLI('명령 교체');
-        // 명령 교체
-        this.aggregate.currentCommandSet = highRankCommandSet.list.shift();
-      }
-
-      return this.aggregate.currentCommandSet;
-    } catch (error) {
-      throw error;
+    const { currentCommandSet, nextCommandSet } = this;
+    // 현재 명령셋이 존재하지 않거나 현재 명령셋의 다음 명령이 존재하지 않다면 명령셋 교체
+    if (_.isEmpty(currentCommandSet) || this.nextCommand === null) {
+      // BU.CLIN(
+      //   _.pick(currentCommandSet, [
+      //     'commandId',
+      //     'commandName',
+      //     'rank',
+      //     // 'cmdList'
+      //   ]),
+      //   1,
+      // );
+      return this.changeNextCommandSet(nextCommandSet);
     }
+
+    // 다음 명령이 존재할 경우 해당 명령의 Rank보다 우선 순위의 Rank가 있는지 체크하고
+    // 존재할 경우 명령 교체 로직 실행
+
+    // 현재 수행 중인 명령 랭크
+    const { rank: currentSetRank } = currentCommandSet;
+
+    // BU.log(currentSetRank);
+
+    // 명령 인덱스 증가 (다음 명령 실행을 위함)
+    currentCommandSet.currCmdIndex += 1;
+
+    // 현재 진행 중인 명령의 우선 순위보다 높은 명령이 존재하는지 체크
+    const highRankCommandSet = this.aggregate.standbyCommandSetList.find(row => {
+      return row.list.length && row.rank < currentSetRank;
+    });
+
+    // BU.CLIN(highRankCommandSet, 1);
+
+    // 높은 명령이 존재할 경우 기존 명령 standByCommandList의 첫번째 인자로 이동
+    if (highRankCommandSet !== undefined) {
+      _.find(this.aggregate.standbyCommandSetList, {
+        rank: currentSetRank,
+      }).list.unshift(currentCommandSet);
+
+      // BU.CLI('명령 교체');
+      // 명령 교체
+      this.aggregate.currentCommandSet = highRankCommandSet.list.shift();
+    }
+
+    return this.aggregate.currentCommandSet;
   }
 
   /**

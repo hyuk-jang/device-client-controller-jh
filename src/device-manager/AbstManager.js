@@ -27,14 +27,16 @@ class AbstManager extends EventEmitter {
 
   /**
    * Device가 접속되어 있는지 체크
-   * @return {boolean}
+   * @return {Promise<boolean>}
    */
   get hasConnected() {
     return !_.isEmpty(this.deviceController.client);
   }
 
-  // TODO
-  /** 장치와 연결을 해제하고자 할 경우 */
+  /**
+   * 장치와 연결을 해제하고자 할 경우
+   * @return {Promise<boolean>}
+   */
   async disconnect() {
     await this.deviceController.disconnect();
 
@@ -42,8 +44,11 @@ class AbstManager extends EventEmitter {
     return true;
   }
 
-  /** 장치에 메시지를 보내고자 할 경우 */
-  async transferCommandToDevice() {}
+  /**
+   * 장치에 메시지를 보내고자 할 경우
+   * @return {Promise}
+   */
+  transferCommandToDevice() {}
 
   /**
    * @desc Log 파일 생성 처리 때문에 async/await 사용함.
@@ -51,8 +56,9 @@ class AbstManager extends EventEmitter {
    * 응답받은 데이터에 문제가 있거나 다른 사유로 명령을 재 전송하고자 할 경우(3회까지 가능)
    * @param {AbstCommander} commander
    * @param {string} commanderResponse
+   * @return {Promise<boolean>}
    */
-  async requestTakeAction(commander, commanderResponse) {}
+  requestTakeAction(commander, commanderResponse) {}
 
   /**
    * 명령 추가

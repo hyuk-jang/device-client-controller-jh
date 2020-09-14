@@ -68,13 +68,9 @@ class Mediator extends AbstMediator {
    * @return {boolean} 성공 or 실패
    */
   requestAddCommandSet(cmdInfo) {
-    try {
-      const deviceManager = this.getDeviceManager(cmdInfo.commander);
-      // BU.CLIN(deviceManager);
-      return deviceManager.addCommandSet(cmdInfo);
-    } catch (error) {
-      throw error;
-    }
+    const deviceManager = this.getDeviceManager(cmdInfo.commander);
+    // BU.CLIN(deviceManager);
+    return deviceManager.addCommandSet(cmdInfo);
   }
 
   /**
@@ -97,13 +93,9 @@ class Mediator extends AbstMediator {
    * @return {commandStorage} Manager
    */
   getCommandStorage(deviceCommnader) {
-    try {
-      const deviceManager = this.getDeviceManager(deviceCommnader);
-      // BU.CLIN(deviceManager, 3);
-      return deviceManager.iterator.getAllItem();
-    } catch (error) {
-      throw error;
-    }
+    const deviceManager = this.getDeviceManager(deviceCommnader);
+    // BU.CLIN(deviceManager, 3);
+    return deviceManager.iterator.getAllItem();
   }
 
   /**
@@ -144,7 +136,9 @@ class Mediator extends AbstMediator {
   getDeviceCommander(deviceManager) {
     const foundIt = _.filter(this.relationList, { manager: deviceManager });
     if (_.isEmpty(foundIt)) {
-      throw new Error(`The Manager(${deviceManager.deviceController}) does not have a command`);
+      throw new Error(
+        `The Manager(${deviceManager.deviceController}) does not have a command`,
+      );
     }
     const commanderList = _.map(foundIt, 'commander');
     return commanderList;

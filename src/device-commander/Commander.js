@@ -1,15 +1,6 @@
 const _ = require('lodash');
 const { BU } = require('base-util-jh');
 
-const {
-  definedCommanderResponse,
-  definedCommandSetMessage,
-  definedCommandSetRank,
-  definedControlEvent,
-  definedOperationError,
-  definedOperationStatus,
-} = require('default-intelligence').dccFlagModel;
-
 const AbstCommander = require('./AbstCommander');
 const AbstMediator = require('../device-mediator/AbstMediator');
 const AbstManager = require('../device-manager/AbstManager');
@@ -21,7 +12,18 @@ const {
   getDefaultLogOption,
 } = require('../util/dcUtil');
 
-// const instanceList = [];
+const {
+  di: {
+    dccFlagModel: {
+      definedCommanderResponse,
+      definedCommandSetMessage,
+      definedCommandSetRank,
+      definedControlEvent,
+      definedOperationError,
+      definedOperationStatus,
+    },
+  },
+} = require('../module');
 
 // 시스템 에러는 2개로 정해둠.
 const troubleList = [
@@ -35,10 +37,7 @@ class Commander extends AbstCommander {
   /** @param {deviceInfo} config */
   constructor(config) {
     super();
-    // const foundInstance = _.find(instanceList, {
-    //   id: config.target_id,
-    // });
-    // if (_.isEmpty(foundInstance)) {
+
     this.config = config;
     this.id = config.target_id;
     this.category = config.target_category || 'etc';
@@ -47,19 +46,9 @@ class Commander extends AbstCommander {
     /** @type {AbstDeviceClient} */
     this.user = config.getUser() || null;
     this.logOption = config.logOption || getDefaultLogOption();
-    // instanceList.push({
-    //   id: config.target_id,
-    //   instance: this,
-    // });
 
     /** 명령 재시도 횟수 설정 */
     this.setRetryChance = _.get(config, 'connect_info.retryChance', 0);
-
-    // BU.CLI(this);
-    // } else {
-    //   // throw new Error(`I have a device with the same id. ${config.target_id}`);
-    //   return foundInstance.instance;
-    // }
 
     /** @type {AbstManager} */
     this.manager = {};
@@ -98,33 +87,26 @@ class Commander extends AbstCommander {
    * @return {boolean} 명령 추가 성공 or 실패. 연결된 장비의 연결이 끊어진 상태라면 명령 실행 불가
    */
   executeCommand(commandSet) {
-    try {
-      // 오브젝트가 아니라면 자동으로 생성
-      if (_.isObject(commandSet)) {
-        const findSetKeyList = [
-          'cmdList',
-          'commander',
-          'commandId',
-          'rank',
-          'currCmdIndex',
-        ];
+    // 오브젝트가 아니라면 자동으로 생성
+    if (_.isObject(commandSet)) {
+      const findSetKeyList = [
+        'cmdList',
+        'commander',
+        'commandId',
+        'rank',
+        'currCmdIndex',
+      ];
 
-        const hasTypeCommandSet = _.eq(
-          findSetKeyList.length,
-          _.chain(commandSet)
-            .keys()
-            .intersection(findSetKeyList)
-            .value().length,
-        );
-        if (hasTypeCommandSet) {
-          return this.manager.addCommandSet(commandSet);
-        }
-        throw new Error('Please check the command format.');
-      } else {
-        throw new Error('Please check the command format.');
+      const hasTypeCommandSet = _.eq(
+        findSetKeyList.length,
+        _.chain(commandSet).keys().intersection(findSetKeyList).value().length,
+      );
+      if (hasTypeCommandSet) {
+        return this.manager.addCommandSet(commandSet);
       }
-    } catch (error) {
-      throw error;
+      throw new Error('Please check the command format.');
+    } else {
+      throw new Error('Please check the command format.');
     }
   }
 
@@ -178,34 +160,30 @@ class Commander extends AbstCommander {
    * @param {requestCommandSet} requestCommandSet 자동완성 기능을 사용할 경우
    */
   generationManualCommand(requestCommandSet) {
-    try {
-      /** @type {commandSet} */
-      const commandSetInfo = this.generationAutoCommand();
+    /** @type {commandSet} */
+    const commandSetInfo = this.generationAutoCommand();
 
-      _.forEach(requestCommandSet, (cmd, key) => {
-        if (_.has(commandSetInfo, key)) {
-          commandSetInfo[key] = cmd;
-        } else {
-          throw new Error(`The requested key does not exist:${key}`);
-        }
-      });
+    _.forEach(requestCommandSet, (cmd, key) => {
+      if (_.has(commandSetInfo, key)) {
+        commandSetInfo[key] = cmd;
+      } else {
+        throw new Error(`The requested key does not exist:${key}`);
+      }
+    });
 
-      commandSetInfo.cmdList = requestCommandSet.cmdList;
-      // _.forEach(commandSetInfo.cmdList, cmdInfo => {
-      //   if(_.has(cmdInfo, 'data') &&  _.has(cmdInfo, 'commandExecutionTimeoutMs')){
-      //     commandInfo.cmdList.push(cmdInfo);
-      //   } else {
-      //     throw new Error('commandSetInfo 형식이 맞지 않습니다.');
-      //   }
-      // });
+    commandSetInfo.cmdList = requestCommandSet.cmdList;
+    // _.forEach(commandSetInfo.cmdList, cmdInfo => {
+    //   if(_.has(cmdInfo, 'data') &&  _.has(cmdInfo, 'commandExecutionTimeoutMs')){
+    //     commandInfo.cmdList.push(cmdInfo);
+    //   } else {
+    //     throw new Error('commandSetInfo 형식이 맞지 않습니다.');
+    //   }
+    // });
 
-      // 자동 생성
-      commandSetInfo.operationStatus = definedOperationStatus.WAIT;
-      commandSetInfo.commander = this;
-      return commandSetInfo;
-    } catch (error) {
-      throw error;
-    }
+    // 자동 생성
+    commandSetInfo.operationStatus = definedOperationStatus.WAIT;
+    commandSetInfo.commander = this;
+    return commandSetInfo;
   }
 
   /**
@@ -216,13 +194,8 @@ class Commander extends AbstCommander {
    * @return {commandStorage}
    */
   filterCommandStorage(filterInfo) {
-    try {
-      _.set(filterInfo, 'commander', this);
-      return this.manager.filterCommandStorage(filterInfo);
-      // BU.CLIN(commandStorage, 3);
-    } catch (error) {
-      throw error;
-    }
+    _.set(filterInfo, 'commander', this);
+    return this.manager.filterCommandStorage(filterInfo);
   }
 
   /**
@@ -240,14 +213,10 @@ class Commander extends AbstCommander {
    * @param {*=} receiveData 요청 받은 데이터
    */
   async requestTakeAction(key, receiveData) {
-    // BU.CLI('requestTakeAction', key);
-    try {
-      if (_.has(definedCommanderResponse, key)) {
-        return await this.manager.requestTakeAction(this, key, receiveData);
-      }
+    if (_.has(definedCommanderResponse, key)) {
+      await this.manager.requestTakeAction(this, key, receiveData);
+    } else {
       throw new Error(`${key} is not a valid control command.`);
-    } catch (error) {
-      throw error;
     }
   }
 
