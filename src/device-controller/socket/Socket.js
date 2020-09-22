@@ -16,10 +16,13 @@ class Socket extends AbstController {
    */
   constructor(mainConfig, connectInfo) {
     super(mainConfig);
-    this.port = connectInfo.port;
-    this.host = connectInfo.host || 'localhost';
+    const { connId = '', host = 'localhost', port, addConfigInfo } = connectInfo;
 
-    this.configInfo = { host: this.host, port: this.port };
+    this.port = port;
+    this.host = host;
+    this.parserInfo = addConfigInfo;
+
+    this.configInfo = { connId, host, port, parserInfo: this.parserInfo };
 
     const foundInstance = _.find(instanceList, instanceInfo =>
       _.isEqual(instanceInfo.id, this.configInfo),

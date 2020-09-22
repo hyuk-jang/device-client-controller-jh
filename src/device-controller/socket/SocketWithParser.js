@@ -16,12 +16,12 @@ class SocketWithParser extends AbstController {
    */
   constructor(mainConfig, connectInfo) {
     super(mainConfig);
-    this.port = connectInfo.port;
-    this.host = connectInfo.host || 'localhost';
-    this.parserInfo = connectInfo.addConfigInfo;
+    const { connId = '', host = 'localhost', port, addConfigInfo } = connectInfo;
+    this.port = port;
+    this.host = host;
+    this.parserInfo = addConfigInfo;
 
-    this.configInfo = { host: this.host, port: this.port, parserInfo: this.parserInfo };
-
+    this.configInfo = { connId, host, port, parserInfo: this.parserInfo };
     const foundInstance = _.find(instanceList, instanceInfo =>
       _.isEqual(instanceInfo.id, this.configInfo),
     );
