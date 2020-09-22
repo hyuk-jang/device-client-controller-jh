@@ -36,7 +36,8 @@ class ManagerSetter extends Manager {
 
     const { connect_info: connectInfo = {} } = config;
     // _.assign(connectInfo, { key: BU.GUID() });
-    this.id = _.omit(connectInfo, 'id');
+    // 재시도 횟수와 id는 connect_info 객체 식별 요소에서 제외
+    this.id = _.omit(connectInfo, ['id', 'retryChance']);
     // this.id = connectInfo;
     // BU.CLI(config);
     switch (connectInfo.type) {

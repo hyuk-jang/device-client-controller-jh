@@ -38,6 +38,9 @@ class AbstCommander {
    */
   executeCommand(commandSet) {}
 
+  /** 재시도 횟수 남아있는지 확인 */
+  isRetryExecute() {}
+
   /**
    * 장치를 제어하는 실제 명령만을 가지고 요청할 경우
    * @param {Buffer|string|undefined} cmdInfo 자동완성 기능을 사용할 경우

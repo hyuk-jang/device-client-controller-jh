@@ -110,6 +110,11 @@ class Commander extends AbstCommander {
     }
   }
 
+  /** 재시도 횟수 남아있는지 확인 */
+  isRetryExecute() {
+    return this.manager.retryChance > 0;
+  }
+
   /**
    * 장치를 제어하는 실제 명령만을 가지고 요청할 경우
    * @param {Buffer|string|Object} cmd 자동완성 기능을 사용할 경우
