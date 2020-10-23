@@ -21,6 +21,8 @@ class Socket extends AbstController {
     this.port = port;
     this.host = host;
     this.parserInfo = addConfigInfo;
+    // 장치 연결 타입
+    this.connectorType = net.Socket;
 
     this.configInfo = { connId, host, port, parserInfo: this.parserInfo };
 
@@ -41,7 +43,7 @@ class Socket extends AbstController {
    * @param {Buffer|String} 전송 데이터
    * @return {promise} Promise 반환 객체
    */
-  write(msg) {
+  async write(msg) {
     // BU.CLI(msg);
     if (_.isEmpty(this.client)) {
       return Promise.reject(new Error('The client did not connect.'));

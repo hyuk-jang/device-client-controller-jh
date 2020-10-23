@@ -18,17 +18,17 @@
     "chai": "^4.2.0",
     "docdash": "^1.2.0",
     "dotenv": "^8.2.0",
-    "eslint": "^7.9.0",
+    "eslint": "^7.11.0",
     "eslint-config-airbnb": "^18.2.0",
-    "eslint-config-prettier": "^6.11.0",
+    "eslint-config-prettier": "^6.14.0",
     "eslint-import-resolver-node": "^0.3.4",
-    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-jsx-a11y": "^6.3.1",
     "eslint-plugin-prettier": "^3.1.4",
-    "eslint-plugin-react": "^7.20.6",
-    "jsdoc": "^3.6.5",
-    "mocha": "^8.1.3",
-    "prettier": "^2.1.1"
+    "eslint-plugin-react": "^7.21.5",
+    "jsdoc": "^3.6.6",
+    "mocha": "^8.2.0",
+    "prettier": "^2.1.2"
   },
   "dependencies": {
     "base-util-jh": "^1.2.8",
@@ -38,7 +38,7 @@
     "event-to-promise": "^0.8.0",
     "lodash": "^4.17.20",
     "modbus-serial": "^8.0.1",
-    "serialport": "^9.0.1",
+    "serialport": "^9.0.2",
     "split": "^1.0.1",
     "uuid": "^8.3.0",
     "xbee-api": "^0.6.0"

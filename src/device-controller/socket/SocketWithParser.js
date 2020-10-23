@@ -21,6 +21,13 @@ class SocketWithParser extends AbstController {
     this.host = host;
     this.parserInfo = addConfigInfo;
 
+    // 누적 데이터 추적을 위한 버퍼
+    this.data = Buffer.alloc(0);
+    // 누적 데이터 추적 폐기를 위한 타이머
+    this.setTimer = null;
+    // 장치 연결 타입
+    this.connectorType = net.Socket;
+
     this.configInfo = { connId, host, port, parserInfo: this.parserInfo };
     const foundInstance = _.find(instanceList, instanceInfo =>
       _.isEqual(instanceInfo.id, this.configInfo),
@@ -36,7 +43,7 @@ class SocketWithParser extends AbstController {
 
   /**
    * Parser Pipe 를 붙임
-   * @param {Object} client SerialPort Client
+   * @param {net.Socket} client SerialPort Client
    */
   settingParser(client) {
     // BU.CLI('settingParser', this.parserInfo);
@@ -57,6 +64,34 @@ class SocketWithParser extends AbstController {
             this.notifyData(data);
           });
           break;
+        // FIXME: 임시로 해둠. stream 기능 사용해야함.
+        case 'byteLengthParser':
+          client.on('data', data => {
+            this.setTimer && clearTimeout(this.setTimer);
+            const { option: byteLength } = this.parserInfo;
+
+            this.data = Buffer.concat([this.data, data]);
+
+            if (this.data.length < byteLength) return false;
+
+            const currData = this.data.slice(0, byteLength);
+
+            this.data = this.data.slice(byteLength);
+
+            // 남아있는 잔여 데이터가 존재할 경우 타이머를 작동시켜 기존 시간내에 추가 데이터가 들어오지 않을 경우 비움
+            if (this.data.length) {
+              // 1초 내로 추가 데이터가 들어오지 않는다면 현재 데이터 비움
+              this.setTimer = setTimeout(() => {
+                this.data = Buffer.alloc(0);
+                this.setTimer = null;
+              }, 1000 * 1);
+            }
+
+            this.notifyData(currData);
+
+            client.destroy();
+          });
+          break;
         default:
           break;
       }
@@ -68,7 +103,7 @@ class SocketWithParser extends AbstController {
    * @param {Buffer|String} 전송 데이터
    * @return {promise} Promise 반환 객체
    */
-  write(msg) {
+  async write(msg) {
     // BU.CLI(msg);
     if (_.isEmpty(this.client)) {
       return Promise.reject(new Error('The client did not connect.'));
@@ -83,7 +118,7 @@ class SocketWithParser extends AbstController {
 
   /** 장치 접속 시도 */
   connect() {
-    BU.log('Try Connect : ', this.port);
+    // BU.log('Try Connect : ', this.port);
     /** 접속 중인 상태라면 접속 시도하지 않음 */
     return new Promise((resolve, reject) => {
       if (!_.isEmpty(this.client)) {
@@ -106,6 +141,10 @@ class SocketWithParser extends AbstController {
         this.notifyDisconnect(err);
       });
 
+      // client.on('data', data => {
+      //   console.log('data', data);
+      // });
+
       client.on('end', () => {
         // console.log('Client disconnected');
       });
@@ -121,7 +160,9 @@ class SocketWithParser extends AbstController {
    * Close Connect
    */
   async disconnect() {
+    // BU.CLI('disconnect');
     if (!_.isEmpty(this.client)) {
+      // BU.CLI('destroy');
       this.client.destroy();
     } else {
       this.notifyDisconnect();

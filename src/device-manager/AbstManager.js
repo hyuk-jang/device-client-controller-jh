@@ -1,4 +1,6 @@
 const _ = require('lodash');
+const net = require('net');
+
 const { BU } = require('base-util-jh');
 
 const EventEmitter = require('events');
@@ -8,10 +10,13 @@ class AbstManager extends EventEmitter {
     super();
     /** @type {AbstMediator} */
     this.mediator;
+    /** @type {AbstController} */
     this.deviceController = null;
     this.id = '';
     /** @type {commandStorage} */
     this.commandStorage = {};
+
+    this.isOnDataClose = false;
   }
 
   /** 초기화할 내용이 필요할 경우 */
@@ -27,10 +32,28 @@ class AbstManager extends EventEmitter {
 
   /**
    * Device가 접속되어 있는지 체크
-   * @return {Promise<boolean>}
+   * @return {boolean}
    */
-  get hasConnected() {
+  get isConnectedDevice() {
     return !_.isEmpty(this.deviceController.client);
+  }
+
+  /** DLC에 명령을 요청해도 되는지 여부 */
+  get isAliveDLC() {
+    // 장치가 붙어있다면 살아있음
+    if (this.isConnectedDevice) return true;
+
+    // 장치 데이터 처리 후 접속 종료 옵션이 활성화되어있을 경우
+    if (this.isOnDataClose) return true;
+
+    return false;
+  }
+
+  /**
+   * Device Controller가 Socket Type인지 여부
+   */
+  get isSocketTypeDC() {
+    return this.deviceController.connectorType === net.Socket;
   }
 
   /**

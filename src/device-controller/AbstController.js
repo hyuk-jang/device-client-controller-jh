@@ -17,13 +17,15 @@ const {
 class AbstController extends EventEmitter {
   /**
    * Device Controller 객체를 생성하기 위한 설정 정보
-   * @param {deviceInfo} mainConfig
+   * @param {deviceInfo} config
    */
-  constructor(mainConfig) {
+  constructor(config) {
     super();
-    this.mainConfig = mainConfig;
+    /** logOption과 controlInfo 정보를 사용하기 위함  */
+    this.config = config;
     /** @type {Array.<AbstManager>}  */
     this.observers = [];
+    /** children Controller 설정 정보 */
     this.configInfo = null;
     this.client = {};
 
@@ -36,6 +38,9 @@ class AbstController extends EventEmitter {
 
     // TEST
     this.requestConnectCount = 0;
+
+    // Controller Type(장치 연결 타입)
+    this.connectorType = null;
   }
 
   setInit() {
@@ -56,7 +61,7 @@ class AbstController extends EventEmitter {
       // BU.CLI('doConnect()', this.configInfo);
       // 장치 접속 관리 객체가 없다면 접속 수행
       if (_.isEmpty(this.client)) {
-        writeLogFile(this, 'mainConfig.logOption.hasDcEvent', 'event', 'doConnect()');
+        writeLogFile(this, 'config.logOption.hasDcEvent', 'event', 'doConnect()');
         await this.connect();
 
         // BU.CLI('Failed Connect')
@@ -72,7 +77,7 @@ class AbstController extends EventEmitter {
       // 장치 접속 요청 실패 이벤트 발생
       this.notifyDisconnect(error);
       // 새로운 타이머 할당
-      if (_.get(this.mainConfig.controlInfo, 'hasReconnect') === true) {
+      if (_.get(this.config.controlInfo, 'hasReconnect') === true) {
         this.connectTimer = new CU.Timer(() => {
           _.isEmpty(this.client) ? this.doConnect() : this.notifyConnect();
           // 장치 접속 시도 후 타이머 제거
@@ -84,7 +89,6 @@ class AbstController extends EventEmitter {
   /** @return {Promise} 접속 성공시 Resolve, 실패시 Reject  */
   async connect() {
     this.requestConnectCount += 1;
-    BU.CLI('?', this.requestConnectCount);
   }
 
   // TODO 장치와의 연결 접속 해제 필요시 작성
@@ -121,7 +125,7 @@ class AbstController extends EventEmitter {
   /** 장치와의 연결이 수립되었을 경우 */
   notifyConnect() {
     // BU.CLI('notifyConnect');
-    writeLogFile(this, 'mainConfig.logOption.hasDcEvent', 'event', 'notifyConnect');
+    writeLogFile(this, 'config.logOption.hasDcEvent', 'event', 'notifyConnect');
     // BU.CLI(this.hasConnect, _.isEmpty(this.client));
     if (!this.hasConnect && !_.isEmpty(this.client)) {
       this.hasConnect = true;
@@ -135,7 +139,7 @@ class AbstController extends EventEmitter {
 
   /** 장치와의 연결이 해제되었을 경우 */
   notifyDisconnect() {
-    writeLogFile(this, 'mainConfig.logOption.hasDcEvent', 'event', 'notifyDisconnect');
+    writeLogFile(this, 'config.logOption.hasDcEvent', 'event', 'notifyDisconnect');
     // 장치와의 연결이 계속해제된 상태였다면 이벤트를 보내지 않음
     // BU.CLIS(this.hasConnect, _.isEmpty(this.client));
     if (this.hasConnect !== false && _.isEmpty(this.client)) {
@@ -146,7 +150,7 @@ class AbstController extends EventEmitter {
       // BU.CLIS(this.connectTimer);
       // 이벤트 발송 및 약간의 장치와의 접속 딜레이를 1초 줌
       // 재접속 옵션이 있을 경우에만 자동 재접속 수행
-      if (_.get(this, 'mainConfig.controlInfo.hasReconnect', false) === true) {
+      if (_.get(this.config.controlInfo, 'hasReconnect') === true) {
         Promise.delay(1000).then(() => {
           if (
             // 접속 클라이언트가 비어있고
@@ -169,7 +173,7 @@ class AbstController extends EventEmitter {
    */
   notifyError(error) {
     // BU.CLI('notifyError', error);
-    writeLogFile(this, 'mainConfig.logOption.hasDcEvent', 'event', 'notifyError', error);
+    writeLogFile(this, 'config.logOption.hasDcEvent', 'event', 'notifyError', error);
     // 장치에서 이미 에러 내역을 발송한 상태라면 이벤트를 보내지 않음
     this.notifyDisconnect();
   }
@@ -179,6 +183,12 @@ class AbstController extends EventEmitter {
    */
   notifyData(data) {
     // BU.CLI('notifyData', data, this.observers.length);
+
+    // // 데이터 취득 시 종료 옵션 존재 시 장치 접속 해제
+    // if (_.get(this.config.controlInfo, 'hasOnDataClose') === true) {
+    //   this.disconnect();
+    // }
+
     this.observers.forEach(observer => {
       _.get(observer, 'onData') && observer.onData(data);
     });
@@ -189,7 +199,7 @@ class AbstController extends EventEmitter {
    * 메시지 전송 실패 시 재 전송을 위해 알려줌
    */
   notifyTransferFail(msg) {
-    writeLogFile(this, 'mainConfig.logOption.hasReceiveData', 'data', 'onData', msg);
+    writeLogFile(this, 'config.logOption.hasReceiveData', 'data', 'onData', msg);
 
     this.observers.forEach(observer => {
       _.get(observer, 'onTranferFail') && observer.onTranferFail(msg);

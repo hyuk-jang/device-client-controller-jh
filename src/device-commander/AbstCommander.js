@@ -25,8 +25,13 @@ class AbstCommander {
 
   /** Device Client에서 요청하는 부분 */
 
-  /** 장치의 연결이 되어있는지 여부 @return {boolean} */
-  get hasConnectedDevice() {
+  /** 장치의 연결이 되어있는지 여부 */
+  get isConnectedDevice() {
+    return false;
+  }
+
+  /** DLC에 명령을 요청해도 되는지 여부 */
+  get isAliveDLC() {
     return false;
   }
 

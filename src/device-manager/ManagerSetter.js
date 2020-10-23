@@ -34,7 +34,10 @@ class ManagerSetter extends Manager {
     let deviceController = null;
     let Controller = null;
 
-    const { connect_info: connectInfo = {} } = config;
+    let { connect_info: connectInfo = {} } = config;
+
+    connectInfo = BU.IsJsonString(connectInfo) ? JSON.parse(connectInfo) : connectInfo;
+
     // _.assign(connectInfo, { key: BU.GUID() });
     // 재시도 횟수와 id는 connect_info 객체 식별 요소에서 제외
     this.id = _.omit(connectInfo, ['id', 'retryChance']);
@@ -97,6 +100,7 @@ class ManagerSetter extends Manager {
     }
 
     if (_.isNull(Controller)) {
+      // BU.CLI(connectInfo);
       throw new Error('There is no such device.');
     } else {
       deviceController = new Controller(config, connectInfo);
@@ -112,6 +116,9 @@ class ManagerSetter extends Manager {
       // observer 등록
       deviceController.attach(this);
       this.config = config;
+      // AbstManager로 끌어올림
+      this.isOnDataClose = config.controlInfo.hasOnDataClose;
+
       this.hasPerformCommand = false;
       // Manager에 Device 등록
       /** @type {AbstController} */

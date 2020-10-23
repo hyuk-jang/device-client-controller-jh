@@ -1,7 +1,5 @@
 const _ = require('lodash');
-const { BU, CU } = require('base-util-jh');
-
-const AbstManager = require('../device-manager/AbstManager');
+const { BU } = require('base-util-jh');
 
 // @param {logObj: Object, path: string, eventType: string, dataTitle: string, data:*=} logInfo
 
@@ -134,8 +132,10 @@ exports.initManager = initManager;
  */
 function getDefaultControlInfo() {
   return {
-    hasReconnect: false,
     hasErrorHandling: false,
+    hasOneAndOne: false,
+    hasReconnect: false,
+    hasOnDataClose: true,
   };
 }
 exports.getDefaultControlInfo = getDefaultControlInfo;

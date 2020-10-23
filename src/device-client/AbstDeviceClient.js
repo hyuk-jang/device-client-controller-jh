@@ -38,6 +38,28 @@ class AbstDeviceClient extends EventEmitter {
     this.definedOperationError = definedOperationError;
   }
 
+  /** 장치의 연결이 되어있는지 여부 */
+  get isConnectedDevice() {
+    // BU.CLIN(this.commander, 2)
+    return this.commander.isConnectedDevice;
+  }
+
+  /** DLC에 명령을 요청해도 되는지 여부 */
+  get isAliveDLC() {
+    // BU.CLIN(this.commander, 2)
+    return this.commander.isAliveDLC;
+  }
+
+  /** 현재 발생되고 있는 시스템 에러 리스트
+   * @return {Array.<{code: string, msg: string, occur_date: Date }>}
+   */
+  get systemErrorList() {
+    // BU.CLI(this.commander.systemErrorList);
+    return this.commander.systemErrorList === undefined
+      ? []
+      : this.commander.systemErrorList;
+  }
+
   /**
    * 접속되어 있는 SerialPort List를 반환
    * @return {Promise.<{comName: string, serialNumber: Buffer, pnpId: string}[]>}}
@@ -120,7 +142,9 @@ class AbstDeviceClient extends EventEmitter {
       },
       controlInfo: {
         hasErrorHandling: false,
+        hasOneAndOne: false,
         hasReconnect: false,
+        hasOnDataClose: true,
       },
     };
 
@@ -150,25 +174,6 @@ class AbstDeviceClient extends EventEmitter {
    */
   filterCommandStorage(filterInfo) {
     return this.commander.filterCommandStorage(filterInfo);
-  }
-
-  /** 장치의 연결이 되어있는지 여부 @return {boolean} */
-  get hasConnectedDevice() {
-    // BU.CLIN(this.commander, 2)
-    const isConnected = _.get(this, 'commander.hasConnectedDevice', false);
-
-    return isConnected;
-    // return this.commander.hasConnectedDevice;
-  }
-
-  /** 현재 발생되고 있는 시스템 에러 리스트
-   * @return {Array.<{code: string, msg: string, occur_date: Date }>}
-   */
-  get systemErrorList() {
-    // BU.CLI(this.commander.systemErrorList);
-    return this.commander.systemErrorList === undefined
-      ? []
-      : this.commander.systemErrorList;
   }
 
   /* Client가 요청 */

@@ -215,7 +215,7 @@ async function init() {
 
   /** 5. Passive CLient가 접속을 끊었을 경우 disconnect이벤트 메시지가 제대로 Commander에게 전달되는지 */
   await Promise.delay(1000);
-  if (selectedUser.hasConnectedDevice) {
+  if (selectedUser.isConnectedDevice) {
     throw new Error('The client must be disconnected.');
   }
 

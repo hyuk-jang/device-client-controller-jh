@@ -60,6 +60,23 @@ class Commander extends AbstCommander {
     this.systemErrorList = [];
   }
 
+  /** Device Client에서 요청하는 부분 */
+  /**
+   * @override
+   * 장치의 연결이 되어있는지 여부
+   */
+  get isConnectedDevice() {
+    return this.manager.isConnectedDevice;
+  }
+
+  /**
+   * @override
+   * DLC에 명령을 요청해도 되는지 여부
+   */
+  get isAliveDLC() {
+    return this.manager.isAliveDLC;
+  }
+
   /* Mediator에서 Set 함 */
   /**
    * deviceMediator 을 정의
@@ -68,17 +85,6 @@ class Commander extends AbstCommander {
    */
   setMediator(deviceMediator) {
     this.mediator = deviceMediator;
-  }
-
-  /** Device Client에서 요청하는 부분 */
-
-  /** 장치의 연결이 되어있는지 여부 @return {boolean} */
-  get hasConnectedDevice() {
-    const hasDisConnected = _.chain(this.manager)
-      .get('deviceController.client', {})
-      .isEmpty()
-      .value();
-    return !hasDisConnected;
   }
 
   /**
