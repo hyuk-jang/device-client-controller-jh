@@ -49,17 +49,20 @@ class SocketWithParser extends AbstController {
     // BU.CLI('settingParser', this.parserInfo);
     if (this.parserInfo !== undefined && this.parserInfo.parser !== undefined) {
       let stream = null;
+      let parserOption = this.parserInfo.option;
       switch (this.parserInfo.parser) {
         case 'delimiterParser':
-          stream = client.pipe(split(this.parserInfo.option));
+          parserOption = Buffer.from(parserOption).toString();
+          stream = client.pipe(split(parserOption));
           stream.on('data', data => {
-            data += this.parserInfo.option;
+            data += parserOption;
             // BU.CLI(data);
             this.notifyData(data);
           });
           break;
         case 'readLineParser':
-          stream = client.pipe(split(this.parserInfo.option));
+          parserOption = Buffer.from(parserOption).toString();
+          stream = client.pipe(split(parserOption));
           stream.on('data', data => {
             this.notifyData(data);
           });
@@ -68,7 +71,7 @@ class SocketWithParser extends AbstController {
         case 'byteLengthParser':
           client.on('data', data => {
             this.setTimer && clearTimeout(this.setTimer);
-            const { option: byteLength } = this.parserInfo;
+            const byteLength = parserOption;
 
             this.data = Buffer.concat([this.data, data]);
 
@@ -88,8 +91,6 @@ class SocketWithParser extends AbstController {
             }
 
             this.notifyData(currData);
-
-            client.destroy();
           });
           break;
         default:

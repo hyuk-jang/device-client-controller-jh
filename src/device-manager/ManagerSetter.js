@@ -165,6 +165,7 @@ class ManagerSetter extends Manager {
         }
         break;
       default:
+        Controller = SocketClient;
         break;
     }
 
