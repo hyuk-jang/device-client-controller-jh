@@ -235,19 +235,21 @@ class AbstDeviceClient extends EventEmitter {
   updatedDcEventOnDevice(dcEvent) {
     const managerIdInfo = _.get(dcEvent.spreader, 'id');
 
+    const omitList = ['addConfigInfo', 'hasOnDataClose'];
+
     let strManagerInfo = '';
     if (_.isObject(managerIdInfo)) {
       _.forEach(managerIdInfo, (info, key) => {
-        strManagerInfo += `${key}: ${info}, `;
+        strManagerInfo += omitList.includes(key) ? '' : `, ${key}: ${info}`;
       });
     } else {
-      strManagerInfo = _.get(dcEvent.spreader, 'configInfo');
+      strManagerInfo = _.get(dcEvent.spreader, 'configInfo', '');
     }
     BU.CLIS(
       `${dcEvent.eventName} --> commander: ${_.get(
         this.commander,
         'id',
-      )}, connInfo: ${strManagerInfo}`,
+      )}${strManagerInfo}`,
     );
 
     try {

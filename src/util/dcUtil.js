@@ -41,8 +41,6 @@ async function writeLogFile(logObj, path, eventType, dataTitle, data, date = new
     } else {
       let realData = '';
 
-      // BU.IsJsonString(data) && (data = JSON.parse(data));
-
       if (Buffer.isBuffer(data)) {
         // // FIXME: Hex 파일 형태로 저장할 경우 보완
         // if(eventType === 'data' && dataTitle === 'onData'){
@@ -51,14 +49,19 @@ async function writeLogFile(logObj, path, eventType, dataTitle, data, date = new
         // }
         // realData = data.toString('hex');
 
+        // [ or { 로 시작하면 JSON 객체라고 판단
+        const isJson =
+          data.equals(Buffer.from('5B', 'hex')) || data.equals(Buffer.from('7B', 'hex'));
+
         realData = data.toString();
-        // xbee 저장
-        if (eventType === 'data' && dataTitle === 'onData' && BU.IsJsonString(realData)) {
-          const parseData = JSON.parse(realData);
-          // BU.CLI(parseData);
-          if (_.get(parseData, 'data.type') === 'Buffer') {
-            parseData.data = Buffer.from(parseData.data).toString();
-            realData = JSON.stringify(parseData);
+
+        if (eventType === 'data' && dataTitle === 'onData' && isJson) {
+          if (BU.IsJsonString(realData)) {
+            const parseData = JSON.parse(realData);
+            if (_.get(parseData, 'data.type') === 'Buffer') {
+              parseData.data = Buffer.from(parseData.data).toString();
+              realData = JSON.stringify(parseData);
+            }
           }
         } else {
           realData = data.toString('hex');
