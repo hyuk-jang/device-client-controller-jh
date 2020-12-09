@@ -118,7 +118,7 @@ class SocketWithParser extends AbstController {
           // client.pipe(this.outStream);
 
           client.on('data', data => {
-            BU.CLI(`${this.port}@@@${data}`);
+            // BU.CLI(`${this.port}@@@${data}`);
             // this.notifyData(data);
             this.data = Buffer.concat([this.data, data]);
             this.setTimer && clearTimeout(this.setTimer);
@@ -174,7 +174,7 @@ class SocketWithParser extends AbstController {
    * @return {promise} Promise 반환 객체
    */
   async write(msg) {
-    BU.CLI(`${this.port}@@${msg}`);
+    // BU.CLI(`${this.port}@@${msg}`);
     if (_.isEmpty(this.client)) {
       return Promise.reject(new Error('The client did not connect.'));
     }
