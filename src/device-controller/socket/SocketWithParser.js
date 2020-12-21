@@ -1,7 +1,6 @@
 const _ = require('lodash');
 const net = require('net');
 const split = require('split');
-const { Duplex, Writable, Readable } = require('stream');
 
 const { BU } = require('base-util-jh');
 
@@ -188,8 +187,9 @@ class SocketWithParser extends AbstController {
 
   /** 장치 접속 시도 */
   connect() {
-    BU.log('Try Connect : ', this.port);
+    // BU.log('Try Connect : ', this.port);
     /** 접속 중인 상태라면 접속 시도하지 않음 */
+
     return new Promise((resolve, reject) => {
       if (!_.isEmpty(this.client)) {
         reject(new Error(`Already connected. ${this.port}`));
@@ -243,6 +243,7 @@ class SocketWithParser extends AbstController {
   async disconnect() {
     // BU.CLI('disconnect');
     if (!_.isEmpty(this.client)) {
+      this.isManagerDestroy = true;
       // const symbol = Object.getOwnPropertySymbols(this.client).find(sym => {
       //   return String(sym) === 'Symbol(asyncId)';
       // });
@@ -251,7 +252,7 @@ class SocketWithParser extends AbstController {
       // BU.CLI(`${this.port}@@${result} @@ destroy`);
       this.client.destroy();
     } else {
-      this.notifyDisconnect();
+      // this.notifyDisconnect();
     }
   }
 }

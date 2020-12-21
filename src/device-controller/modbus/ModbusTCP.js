@@ -123,6 +123,7 @@ class ModbusTCP extends AbstController {
    */
   async disconnect() {
     if (!_.isEmpty(this.client)) {
+      this.isManagerDestroy = true;
       this.client.close();
     } else {
       this.notifyDisconnect();

@@ -93,6 +93,7 @@ class Serial extends AbstController {
    */
   async disconnect() {
     if (!_.isEmpty(this.client)) {
+      this.isManagerDestroy = true;
       this.client.close();
     } else {
       this.notifyDisconnect();
@@ -100,96 +101,3 @@ class Serial extends AbstController {
   }
 }
 module.exports = Serial;
-
-if (require !== undefined && require.main === module) {
-  const serialport = new Serial({}, { port: 'COM2', baudRate: 9600 });
-  // setTimeout(() => {
-  //   serialport.write(
-  //     Buffer.from([
-  //       0x7e,
-  //       0x00,
-  //       0x12,
-  //       0x10,
-  //       0x01,
-  //       0x00,
-  //       0x13,
-  //       0xa2,
-  //       0x00,
-  //       0x40,
-  //       0xf7,
-  //       0xb4,
-  //       0x7e,
-  //       0xff,
-  //       0xfe,
-  //       0x00,
-  //       0x00,
-  //       0x40,
-  //       0x73,
-  //       0x74,
-  //       0x73,
-  //       0x39,
-  //     ]),
-  //   );
-  // }, 2000);
-
-  // serialport.connect();
-
-  // setTimeout(() => {
-  //   serialport.write(
-  //     Buffer.from([
-  //       0x7e,
-  //       0x00,
-  //       0x12,
-  //       0x10,
-  //       0x01,
-  //       0x00,
-  //       0x13,
-  //       0xa2,
-  //       0x00,
-  //       0x40,
-  //       0xf7,
-  //       0xb4,
-  //       0x7e,
-  //       0xff,
-  //       0xfe,
-  //       0x00,
-  //       0x00,
-  //       0x40,
-  //       0x73,
-  //       0x74,
-  //       0x73,
-  //       0x39,
-  //     ]),
-  //   );
-  // }, 1000);
-
-  serialport.connect().then(() => {
-    console.log('18');
-    serialport.write(
-      Buffer.from([
-        0x7e,
-        0x00,
-        0x12,
-        0x10,
-        0x01,
-        0x00,
-        0x13,
-        0xa2,
-        0x00,
-        0x40,
-        0xf7,
-        0xb4,
-        0x7e,
-        0xff,
-        0xfe,
-        0x00,
-        0x00,
-        0x40,
-        0x73,
-        0x74,
-        0x73,
-        0x39,
-      ]),
-    );
-  });
-}

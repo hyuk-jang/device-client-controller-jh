@@ -340,7 +340,7 @@ class Manager extends AbstManager {
    * 4. Unexpected Exception
    * @param {number=} retryChance 데이터가 있다면 재 설정. 아니라면 초기 설정
    */
-  requestProcessingCommand(retryChance) {
+  async requestProcessingCommand(retryChance) {
     try {
       const { currentCommand } = this.iterator;
 
@@ -365,7 +365,7 @@ class Manager extends AbstManager {
         this.updateOperationStatus(definedOperationStatus.PROCESSING_DELEAY_COMMAND);
         return this.manageProcessingCommand();
       }
-      return this.transferCommandToDevice();
+      await this.transferCommandToDevice();
     } catch (error) {
       // 장치로 명령을 요청하는 중에 예기치 못한 에러가 발생하였을 경우
       this.updateOperationStatus(definedOperationStatus.E_UNEXPECTED);

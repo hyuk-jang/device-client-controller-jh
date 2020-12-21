@@ -100,9 +100,10 @@ class Socket extends AbstController {
    */
   async disconnect() {
     if (!_.isEmpty(this.client)) {
+      this.isManagerDestroy = 1;
       this.client.destroy();
     } else {
-      this.notifyDisconnect();
+      // this.notifyDisconnect();
     }
   }
 }

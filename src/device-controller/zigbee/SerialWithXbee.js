@@ -178,6 +178,7 @@ class SerialWithXbee extends AbstController {
    */
   async disconnect() {
     if (!_.isEmpty(this.client)) {
+      this.isManagerDestroy = true;
       this.client.close();
     } else {
       this.notifyDisconnect();
@@ -185,28 +186,3 @@ class SerialWithXbee extends AbstController {
   }
 }
 module.exports = SerialWithXbee;
-
-// if __main process
-if (require !== undefined && require.main === module) {
-  const serialport = new SerialWithXbee({}, { port: 'COM2', baudRate: 9600 });
-  // setImmediate(() =>
-  setTimeout(() => {
-    // serialport.write({
-    //   destination64: '0013A20040F7B47E',
-    //   data: '@sts',
-    //   id: '01',
-    //   type: 0x10,
-    // });
-  }, 5000);
-  // );
-
-  // serialport.connect().then(() => {
-  //   console.log('18');
-  //   serialport.write({
-  //     destination64: '0013A20040F7B47E',
-  //     data: '@sts',
-  //     id: '01',
-  //     type: 0x10,
-  //   });
-  // });
-}

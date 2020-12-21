@@ -94,6 +94,7 @@ class UDP extends AbstController {
   async disconnect() {
     // BU.CLI('disconnect');
     if (!_.isEmpty(this.client)) {
+      this.isManagerDestroy = true;
       this.client.close();
     } else {
       this.notifyDisconnect();
