@@ -29,6 +29,8 @@ class AbstController extends EventEmitter {
     this.configInfo = null;
     this.client = {};
 
+    this.isInitConnect = true;
+
     // 초기 상태는 undefined
     this.hasConnect = false;
     this.connectTimer;
@@ -39,11 +41,15 @@ class AbstController extends EventEmitter {
 
     // Controller Type(장치 연결 타입)
     this.connectorType = null;
+
     // 데이터 받으면 접속 종료 여부
     this.isOnDataClose = _.get(this.config, 'connect_info.hasOnDataClose', true);
-
     // 시스템 Manager가 연결을 종료하라고 하는 flag
+
     this.isManagerDestroy = false;
+
+    // 데이터 로거 재접속 수행 여부
+    this.isDoReconnect = _.get(this.config, 'controlInfo.hasReconnect', true);
   }
 
   setInit() {
@@ -80,7 +86,7 @@ class AbstController extends EventEmitter {
       // 장치 접속 요청 실패 이벤트 발생
       // this.notifyDisconnect(error);
       // 새로운 타이머 할당
-      if (_.get(this.config.controlInfo, 'hasReconnect') === true) {
+      if (this.isDoReconnect) {
         this.connectTimer = new CU.Timer(() => {
           _.isEmpty(this.client) ? this.doConnect() : this.notifyConnect();
           // 장치 접속 시도 후 타이머 제거
@@ -126,7 +132,7 @@ class AbstController extends EventEmitter {
   }
 
   notifyEvent(eventName) {
-    BU.CLI(`notifyEvent ${eventName}`, this.configInfo);
+    // BU.CLI(`notifyEvent ${eventName}`, this.configInfo);
     this.observers.forEach(observer => {
       _.get(observer, 'onEvent') && observer.onEvent(eventName);
     });
@@ -136,7 +142,7 @@ class AbstController extends EventEmitter {
   notifyConnect() {
     // BU.CLI('notifyConnect');
     writeLogFile(this, 'config.logOption.hasDcEvent', 'event', 'notifyConnect');
-    // BU.CLI(this.hasConnect, _.isEmpty(this.client));
+
     if (this.hasConnect === false && _.isEmpty(this.client) === false) {
       this.hasConnect = true;
       this.notifyEvent(CONNECT);
@@ -151,10 +157,21 @@ class AbstController extends EventEmitter {
   notifyDisconnect() {
     // BU.error('notifyDisconnect', this.port);
 
+    // BU.CLIS(
+    //   this.isOnDataClose,
+    //   this.isManagerDestroy,
+    //   this.hasConnect,
+    //   _.isEmpty(this.client),
+    // );
+
+    const isDisconnect = this.hasConnect === true && _.isEmpty(this.client);
     // 의도된 종료
     if (this.isOnDataClose && this.isManagerDestroy) {
       this.isManagerDestroy = false;
-    } else if (this.hasConnect && _.isEmpty(this.client)) {
+    } else if (this.isInitConnect || isDisconnect) {
+      // 첫시도 disable
+      this.isInitConnect = false;
+      // hasConnect 가 undefined 인 첫시도때는 실행
       // 장치와의 연결이 계속해제된 상태였다면 이벤트를 보내지 않음
       writeLogFile(this, 'config.logOption.hasDcEvent', 'event', 'notifyDisconnect');
       this.hasConnect = false;
@@ -162,7 +179,7 @@ class AbstController extends EventEmitter {
 
       // 이벤트 발송 및 약간의 장치와의 접속 딜레이를 1초 줌
       // 재접속 옵션이 있을 경우에만 자동 재접속 수행
-      if (_.get(this.config.controlInfo, 'hasReconnect') === true) {
+      if (this.isDoReconnect) {
         Promise.delay(1000).then(() => {
           if (
             // 접속 클라이언트가 비어있고

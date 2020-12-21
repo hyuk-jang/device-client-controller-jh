@@ -292,6 +292,7 @@ class Manager extends AbstManager {
     // 장치 연결은 되어있지 않으나 controlInfo.hasOnDataClose flag가 활성화될 경우
     if (this.isConnectedDevice === false && this.isAliveDLC) {
       await this.deviceController.connect();
+      this.deviceController.notifyConnect();
     }
 
     await this.deviceController.write(currentMsg);
