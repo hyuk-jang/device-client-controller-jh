@@ -40,7 +40,6 @@ class AbstManager extends EventEmitter {
 
   /** DLC에 명령을 요청해도 되는지 여부 */
   get isAliveDLC() {
-    // BU.CLIS('isAliveDLC', this.isConnectedDevice, this.isOnDataClose);
     // 장치가 붙어있다면 살아있음
     if (this.isConnectedDevice) return true;
 
